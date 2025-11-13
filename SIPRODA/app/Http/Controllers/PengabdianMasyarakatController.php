@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PengabdianMasyarakat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class PengabdianMasyarakatController extends Controller
 {
@@ -16,8 +17,8 @@ class PengabdianMasyarakatController extends Controller
         $query = PengabdianMasyarakat::with(['user', 'verifiedBy']);
 
         // Filter by user role
-        if (auth()->user()->isDosen()) {
-            $query->where('user_id', auth()->id());
+        if (Auth::check() && Auth::user()->isDosen()) {
+            $query->where('user_id', Auth::id());
         }
 
         // Search
@@ -90,7 +91,7 @@ class PengabdianMasyarakatController extends Controller
             'catatan' => 'nullable|string',
         ]);
 
-        $validated['user_id'] = auth()->id();
+        $validated['user_id'] = Auth::id();
         $validated['status_verifikasi'] = 'pending';
 
         // Convert arrays to JSON
@@ -129,7 +130,7 @@ class PengabdianMasyarakatController extends Controller
     public function show(PengabdianMasyarakat $pengma)
     {
         // Authorization check
-        if (auth()->user()->isDosen() && $pengma->user_id !== auth()->id()) {
+        if (Auth::check() && Auth::user()->isDosen() && $pengma->user_id !== Auth::id()) {
             abort(403, 'Anda tidak memiliki akses ke pengabdian masyarakat ini.');
         }
 
@@ -144,7 +145,7 @@ class PengabdianMasyarakatController extends Controller
     public function edit(PengabdianMasyarakat $pengma)
     {
         // Authorization check
-        if (auth()->user()->isDosen() && $pengma->user_id !== auth()->id()) {
+        if (Auth::check() && Auth::user()->isDosen() && $pengma->user_id !== Auth::id()) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit pengabdian masyarakat ini.');
         }
 
@@ -157,7 +158,7 @@ class PengabdianMasyarakatController extends Controller
     public function update(Request $request, PengabdianMasyarakat $pengma)
     {
         // Authorization check
-        if (auth()->user()->isDosen() && $pengma->user_id !== auth()->id()) {
+        if (Auth::check() && Auth::user()->isDosen() && $pengma->user_id !== Auth::id()) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit pengabdian masyarakat ini.');
         }
 
@@ -237,7 +238,7 @@ class PengabdianMasyarakatController extends Controller
     public function destroy(PengabdianMasyarakat $pengma)
     {
         // Authorization check
-        if (auth()->user()->isDosen() && $pengma->user_id !== auth()->id()) {
+        if (Auth::check() && Auth::user()->isDosen() && $pengma->user_id !== Auth::id()) {
             abort(403, 'Anda tidak memiliki akses untuk menghapus pengabdian masyarakat ini.');
         }
 
@@ -264,7 +265,7 @@ class PengabdianMasyarakatController extends Controller
     public function verify(Request $request, PengabdianMasyarakat $pengma)
     {
         // Authorization check
-        if (!auth()->user()->canVerify()) {
+        if (!Auth::check() || !Auth::user()->canVerify()) {
             abort(403, 'Anda tidak memiliki akses untuk verifikasi.');
         }
 
@@ -275,7 +276,7 @@ class PengabdianMasyarakatController extends Controller
 
         $pengma->update([
             'status_verifikasi' => $validated['status_verifikasi'],
-            'verified_by' => auth()->id(),
+            'verified_by' => Auth::id(),
             'verified_at' => now(),
             'catatan_verifikasi' => $validated['catatan_verifikasi'] ?? null,
         ]);

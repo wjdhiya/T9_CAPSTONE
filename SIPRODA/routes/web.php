@@ -26,6 +26,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('penelitian/{penelitian}/verify', [PenelitianController::class, 'verify'])
         ->name('penelitian.verify')
         ->middleware('role:super_admin,kaprodi');
+    Route::post('/penelitian', [PenelitianController::class, 'store'])->name('penelitian.store');
 
     // Publikasi routes
     Route::resource('publikasi', PublikasiController::class);

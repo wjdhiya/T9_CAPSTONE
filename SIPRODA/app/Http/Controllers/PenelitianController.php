@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Penelitian;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class PenelitianController extends Controller
 {
@@ -16,8 +17,8 @@ class PenelitianController extends Controller
         $query = Penelitian::with('user', 'verifiedBy');
         
         // Filter by user role
-        if (auth()->user()->isDosen()) {
-            $query->where('user_id', auth()->id());
+        if (Auth::check() && Auth::user()->isDosen()) {
+            $query->where('user_id', Auth::id());
         }
         
         // Search
@@ -67,47 +68,9 @@ class PenelitianController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'judul' => 'required|string|max:500',
-            'abstrak' => 'nullable|string',
-            'jenis' => 'required|in:internal,eksternal,mandiri',
-            'sumber_dana' => 'nullable|string|max:255',
-            'dana' => 'nullable|numeric|min:0',
-            'tahun' => 'required|integer|min:2000|max:2100',
-            'semester' => 'required|in:ganjil,genap',
-            'tanggal_mulai' => 'nullable|date',
-            'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
-            'status' => 'required|in:proposal,berjalan,selesai,ditolak',
-            'file_proposal' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
-            'file_laporan' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
-            'anggota' => 'nullable|array',
-            'anggota.*' => 'string',
-            'mahasiswa_terlibat' => 'nullable|array',
-            'mahasiswa_terlibat.*' => 'string',
-            'catatan' => 'nullable|string',
-        ]);
-        
-        // Handle file uploads
-        if ($request->hasFile('file_proposal')) {
-            $validated['file_proposal'] = $request->file('file_proposal')
-                ->store('penelitian/proposal', 'public');
-        }
-        
-        if ($request->hasFile('file_laporan')) {
-            $validated['file_laporan'] = $request->file('file_laporan')
-                ->store('penelitian/laporan', 'public');
-        }
-        
-        // Set user_id
-        $validated['user_id'] = auth()->id();
-        
-        // Set default verification status
-        $validated['status_verifikasi'] = 'pending';
-        
-        Penelitian::create($validated);
-        
-        return redirect()->route('penelitian.index')
-            ->with('success', 'Data penelitian berhasil ditambahkan.');
+        // Validasi dan simpan data
+        Penelitian::create($request->all());
+        return redirect()->route('penelitian.index')->with('success', 'Data berhasil disimpan');
     }
 
     /**
@@ -116,7 +79,7 @@ class PenelitianController extends Controller
     public function show(Penelitian $penelitian)
     {
         // Check authorization
-        if (auth()->user()->isDosen() && $penelitian->user_id !== auth()->id()) {
+        if (Auth::check() && Auth::user()->isDosen() && $penelitian->user_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
         
@@ -131,7 +94,7 @@ class PenelitianController extends Controller
     public function edit(Penelitian $penelitian)
     {
         // Check authorization
-        if (auth()->user()->isDosen() && $penelitian->user_id !== auth()->id()) {
+        if (Auth::check() && Auth::user()->isDosen() && $penelitian->user_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
         
@@ -144,10 +107,10 @@ class PenelitianController extends Controller
     public function update(Request $request, Penelitian $penelitian)
     {
         // Check authorization
-        if (auth()->user()->isDosen() && $penelitian->user_id !== auth()->id()) {
+        if (Auth::check() && Auth::user()->isDosen() && $penelitian->user_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
-        
+
         $validated = $request->validate([
             'judul' => 'required|string|max:500',
             'abstrak' => 'nullable|string',
@@ -207,10 +170,10 @@ class PenelitianController extends Controller
     public function destroy(Penelitian $penelitian)
     {
         // Check authorization
-        if (auth()->user()->isDosen() && $penelitian->user_id !== auth()->id()) {
+        if (Auth::check() && Auth::user()->isDosen() && $penelitian->user_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
-        
+
         // Delete files
         if ($penelitian->file_proposal) {
             Storage::disk('public')->delete($penelitian->file_proposal);
@@ -231,7 +194,7 @@ class PenelitianController extends Controller
     public function verify(Request $request, Penelitian $penelitian)
     {
         // Check authorization
-        if (!auth()->user()->canVerify()) {
+        if (!Auth::check() || !Auth::user()->canVerify()) {
             abort(403, 'Unauthorized action.');
         }
         
@@ -240,7 +203,7 @@ class PenelitianController extends Controller
             'catatan_verifikasi' => 'nullable|string',
         ]);
         
-        $validated['verified_by'] = auth()->id();
+        $validated['verified_by'] = Auth::id();
         $validated['verified_at'] = now();
         
         $penelitian->update($validated);

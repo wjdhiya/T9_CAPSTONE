@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -70,24 +69,40 @@ class User extends Authenticatable
         return $this->hasMany(PengabdianMasyarakat::class);
     }
 
-    // Helper methods
-    public function isSuperAdmin()
+    // Role constants
+    public const ROLE_SUPER = 'super_admin';
+    public const ROLE_KAPRODI = 'kaprodi';
+    public const ROLE_DOSEN = 'dosen';
+
+    // Role checks
+    public function isSuperAdmin(): bool
     {
-        return $this->role === 'super_admin';
+        return $this->role === self::ROLE_SUPER;
     }
 
-    public function isKaprodi()
+    public function isKaprodi(): bool
     {
-        return $this->role === 'kaprodi';
+        return $this->role === self::ROLE_KAPRODI;
     }
 
-    public function isDosen()
+    public function isDosen(): bool
     {
-        return $this->role === 'dosen';
+        return $this->role === self::ROLE_DOSEN;
     }
 
-    public function canVerify()
+    // Permission helper
+    /**
+     * Check if user can verify (admin)
+     */
+    public function canVerify(): bool
     {
-        return in_array($this->role, ['super_admin', 'kaprodi']);
+        // jika ingin kedua role punya akses verifikasi:
+        return in_array($this->role, [self::ROLE_SUPER, self::ROLE_KAPRODI], true);
+    }
+
+    // backward compatibility (opsional)
+    public function isAdmin(): bool
+    {
+        return $this->canVerify();
     }
 }

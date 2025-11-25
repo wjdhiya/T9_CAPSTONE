@@ -109,15 +109,6 @@
                             <textarea name="catatan" id="catatan" rows="3" class="w-full rounded-md border-gray-300 shadow-sm">{{ old('catatan') }}</textarea>
                         </div>
 
-                        <!-- Tahun -->
-                        <div class="mb-4">
-                            <label for="tahun" class="block text-sm font-medium text-gray-700 mb-2">Tahun (contoh: 2025) <span class="text-red-500">*</span></label>
-                            <input type="text" name="tahun" id="tahun" value="{{ old('tahun') }}" required class="w-full rounded-md border-gray-300 shadow-sm @error('tahun') border-red-500 @enderror">
-                            @error('tahun')
-                                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                            @enderror
-                        </div>
-
                         <!-- Buttons -->
                         <div class="flex justify-end space-x-3">
                             <a href="{{ route('penelitian.index') }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition">

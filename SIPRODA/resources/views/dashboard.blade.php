@@ -48,9 +48,35 @@
                                 </svg>
                             </div>
                         </div>
+
                         <div class="mt-4 flex items-center text-sm">
                             <span class="text-green-600 font-semibold">{{ $stats['penelitian']['verified'] ?? 0 }}</span>
                             <span class="text-gray-600 ml-2">Terverifikasi</span>
+                        </div>
+
+                        <!-- Buttons styled like Quick Actions -->
+                        <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <a href="{{ route('penelitian.index') }}"
+                               class="flex items-center p-4 rounded-lg transition"
+                               style="background-color: #fee2e2;"
+                               onmouseover="this.style.backgroundColor='#fecaca'"
+                               onmouseout="this.style.backgroundColor='#fee2e2'">
+                                <svg class="w-6 h-6 mr-3" style="color: #a02127;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="font-medium" style="color: #a02127;">Lihat Data Penelitian</span>
+                            </a>
+
+                            <a href="{{ route('penelitian.create') }}"
+                               class="flex items-center p-4 rounded-lg transition"
+                               style="background-color: #ffffff; border: 1px solid #fee2e2;"
+                               onmouseover="this.style.backgroundColor='#fff7f7'"
+                               onmouseout="this.style.backgroundColor='#ffffff'">
+                                <svg class="w-6 h-6 mr-3" style="color: #a02127;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                <span class="font-medium" style="color: #a02127;">Tambah Penelitian</span>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -73,6 +99,31 @@
                             <span class="text-green-600 font-semibold">{{ $stats['publikasi']['verified'] ?? 0 }}</span>
                             <span class="text-gray-600 ml-2">Terverifikasi</span>
                         </div>
+
+                        <!-- Buttons styled like Quick Actions -->
+                        <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <a href="{{ route('publikasi.index') }}"
+                               class="flex items-center p-4 rounded-lg transition"
+                               style="background-color: #d1fae5;"
+                               onmouseover="this.style.backgroundColor='#a7f3d0'"
+                               onmouseout="this.style.backgroundColor='#d1fae5'">
+                                <svg class="w-6 h-6 mr-3" style="color: #10784b;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"></path>
+                                </svg>
+                                <span class="font-medium" style="color: #10784b;">Lihat Data Publikasi</span>
+                            </a>
+
+                            <a href="{{ route('publikasi.create') }}"
+                               class="flex items-center p-4 rounded-lg transition"
+                               style="background-color: #ffffff; border: 1px solid #d1fae5;"
+                               onmouseover="this.style.backgroundColor='#f7fff9'"
+                               onmouseout="this.style.backgroundColor='#ffffff'">
+                                <svg class="w-6 h-6 mr-3" style="color: #10784b;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                <span class="font-medium" style="color: #10784b;">Tambah Publikasi</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -94,33 +145,31 @@
                             <span class="text-green-600 font-semibold">{{ $stats['pengmas']['verified'] ?? 0 }}</span>
                             <span class="text-gray-600 ml-2">Terverifikasi</span>
                         </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Quick Actions -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Aksi Cepat</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <a href="{{ route('penelitian.create') }}" class="flex items-center p-4 rounded-lg transition" style="background-color: #fee2e2;" onmouseover="this.style.backgroundColor='#fecaca'" onmouseout="this.style.backgroundColor='#fee2e2'">
-                            <svg class="w-6 h-6 mr-3" style="color: #a02127;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                            </svg>
-                            <span class="font-medium" style="color: #a02127;">Tambah Penelitian</span>
-                        </a>
-                        <a href="{{ route('publikasi.create') }}" class="flex items-center p-4 rounded-lg transition" style="background-color: #d1fae5;" onmouseover="this.style.backgroundColor='#a7f3d0'" onmouseout="this.style.backgroundColor='#d1fae5'">
-                            <svg class="w-6 h-6 mr-3" style="color: #10784b;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                            </svg>
-                            <span class="font-medium" style="color: #10784b;">Tambah Publikasi</span>
-                        </a>
-                        <a href="{{ route('pengmas.create') }}" class="flex items-center p-4 rounded-lg transition" style="background-color: #f3f4f6;" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">
-                            <svg class="w-6 h-6 mr-3" style="color: #585858;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                            </svg>
-                            <span class="font-medium" style="color: #585858;">Tambah Pengabdian Masyarakat</span>
-                        </a>
+                        <!-- Buttons styled like Quick Actions -->
+                        <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <a href="{{ route('pengmas.index') }}"
+                               class="flex items-center p-4 rounded-lg transition"
+                               style="background-color: #f3f4f6;"
+                               onmouseover="this.style.backgroundColor='#e5e7eb'"
+                               onmouseout="this.style.backgroundColor='#f3f4f6'">
+                                <svg class="w-6 h-6 mr-3" style="color: #585858;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                                </svg>
+                                <span class="font-medium" style="color: #585858;">Lihat Data Pengabdian</span>
+                            </a>
+
+                            <a href="{{ route('pengmas.create') }}"
+                               class="flex items-center p-4 rounded-lg transition"
+                               style="background-color: #ffffff; border: 1px solid #f3f4f6;"
+                               onmouseover="this.style.backgroundColor='#fbfbfb'"
+                               onmouseout="this.style.backgroundColor='#ffffff'">
+                                <svg class="w-6 h-6 mr-3" style="color: #585858;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                <span class="font-medium" style="color: #585858;">Tambah Pengabdian Masyarakat</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

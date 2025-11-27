@@ -1,5 +1,5 @@
 # ✅ CHECKLIST LAPORAN CAPSTONE
-## Sistem Informasi Produktivitas Dosen (SIPRODA)
+## Sistem Informasi Produktivitas Dosen (siprodo)
 
 ---
 

@@ -1,5 +1,5 @@
 # LAPORAN METODE PROTOTYPE
-## Pengembangan Sistem Informasi Produktivitas Dosen (SIPRODA)
+## Pengembangan Sistem Informasi Produktivitas Dosen (siprodo)
 ### Telkom University Jakarta
 
 ---
@@ -8,7 +8,7 @@
 
 ### 1.1 Latar Belakang Pemilihan Metode
 
-Metode **Prototype** dipilih untuk pengembangan sistem SIPRODA karena beberapa alasan strategis:
+Metode **Prototype** dipilih untuk pengembangan sistem siprodo karena beberapa alasan strategis:
 
 1. **Ketidakpastian Kebutuhan Awal**
    - Stakeholder (Kaprodi) belum memiliki gambaran jelas tentang sistem yang diinginkan
@@ -164,7 +164,7 @@ Sehingga data yang dilaporkan akurat.
 
 ```
 ┌─────────────────────────────────────────────────┐
-│  SIPRODA - Dashboard                    [User▼] │
+│  siprodo - Dashboard                    [User▼] │
 ├─────────────────────────────────────────────────┤
 │ [Dashboard] [Penelitian] [Publikasi] [Pengmas] │
 ├─────────────────────────────────────────────────┤
@@ -220,7 +220,7 @@ Sehingga data yang dilaporkan akurat.
 
 1. **Setup Environment**
    ```bash
-   composer create-project laravel/laravel siproda
+   composer create-project laravel/laravel siprodo
    npm install tailwindcss
    ```
 
@@ -600,7 +600,7 @@ Berdasarkan feedback evaluasi, dilakukan perbaikan:
 
 ### 4.1 Kesimpulan
 
-Metode Prototype terbukti **sangat efektif** untuk pengembangan sistem SIPRODA karena:
+Metode Prototype terbukti **sangat efektif** untuk pengembangan sistem siprodo karena:
 
 1. Memungkinkan stakeholder melihat dan mengevaluasi sistem sejak awal
 2. Fleksibel terhadap perubahan requirement

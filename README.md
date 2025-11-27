@@ -1,4 +1,4 @@
-# 🎓 SIPRODA - Sistem Informasi Produktivitas Dosen
+# 🎓 siprodo - Sistem Informasi Produktivitas Dosen
 ## Sistem Informasi Inventaris Penelitian, Publikasi, dan Pengabdian Masyarakat
 
 [![Laravel](https://img.shields.io/badge/Laravel-11.x-red.svg)](https://laravel.com)
@@ -11,7 +11,7 @@
 
 ## 📖 Tentang Proyek
 
-**SIPRODA** adalah sistem informasi berbasis web yang dirancang untuk mengelola data penelitian, publikasi, dan pengabdian masyarakat dosen di **Telkom University Jakarta**. Sistem ini dikembangkan sebagai **Capstone Design Project** menggunakan **metode Prototype** untuk mengatasi permasalahan pengelolaan data manual yang memakan waktu dan tidak efisien.
+**siprodo** adalah sistem informasi berbasis web yang dirancang untuk mengelola data penelitian, publikasi, dan pengabdian masyarakat dosen di **Telkom University Jakarta**. Sistem ini dikembangkan sebagai **Capstone Design Project** menggunakan **metode Prototype** untuk mengatasi permasalahan pengelolaan data manual yang memakan waktu dan tidak efisien.
 
 ### 🎯 Permasalahan yang Diselesaikan
 
@@ -115,8 +115,8 @@ Berdasarkan hasil wawancara dengan Ibu Kaprodi Sistem Informasi:
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/your-username/siproda.git
-cd siproda/SIPRODA
+git clone https://github.com/your-username/siprodo.git
+cd siprodo/siprodo
 ```
 
 ### 2. Install Dependencies
@@ -147,7 +147,7 @@ Edit file `.env` dan sesuaikan konfigurasi database:
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=siproda
+DB_DATABASE=siprodo
 DB_USERNAME=root
 DB_PASSWORD=
 ```
@@ -293,7 +293,7 @@ Proyek ini dilengkapi dengan dokumentasi komprehensif untuk keperluan laporan Ca
    - Timeline pengembangan
    - Next steps
 
-7. **[SIPRODA/COMMANDS.md](SIPRODA/COMMANDS.md)** - 300+ baris
+7. **[siprodo/COMMANDS.md](siprodo/COMMANDS.md)** - 300+ baris
    - Daftar lengkap command Laravel
    - Command untuk development
    - Command untuk deployment
@@ -375,7 +375,7 @@ Jika Anda mengalami masalah atau memiliki pertanyaan:
 
 - 📧 Email: support@telkomuniversity.ac.id
 - 📱 WhatsApp: +62 812-3456-7890
-- 🐛 Issues: [GitHub Issues](https://github.com/your-username/siproda/issues)
+- 🐛 Issues: [GitHub Issues](https://github.com/your-username/siprodo/issues)
 
 ---
 

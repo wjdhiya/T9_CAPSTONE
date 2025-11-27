@@ -1,5 +1,5 @@
 # 🛠️ TOOLS DAN TEKNOLOGI YANG DIGUNAKAN
-## Sistem Informasi Produktivitas Dosen (SIPRODA)
+## Sistem Informasi Produktivitas Dosen (siprodo)
 
 ---
 
@@ -52,7 +52,7 @@
 
 **Features yang Digunakan:**
 
-| Feature | Fungsi dalam SIPRODA |
+| Feature | Fungsi dalam siprodo |
 |---------|----------------------|
 | **Eloquent ORM** | Database operations, relationships |
 | **Blade Templates** | View rendering |

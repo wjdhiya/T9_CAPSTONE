@@ -1,4 +1,4 @@
-# 📘 PANDUAN INSTALASI SIPRODA
+# 📘 PANDUAN INSTALASI siprodo
 ## Sistem Informasi Produktivitas Dosen - Telkom University Jakarta
 
 ---
@@ -84,8 +84,8 @@
 
 ```cmd
 # Clone repository
-git clone https://github.com/your-username/siproda.git
-cd siproda\SIPRODA
+git clone https://github.com/your-username/siprodo.git
+cd siprodo\siprodo
 
 # Install dependencies
 composer install
@@ -97,7 +97,7 @@ php artisan key:generate
 
 # Create database
 mysql -u root -p
-CREATE DATABASE siproda;
+CREATE DATABASE siprodo;
 exit;
 
 # Run migrations
@@ -158,8 +158,8 @@ mysql_secure_installation
 
 ```bash
 # Clone repository
-git clone https://github.com/your-username/siproda.git
-cd siproda/SIPRODA
+git clone https://github.com/your-username/siprodo.git
+cd siprodo/siprodo
 
 # Install dependencies
 composer install
@@ -171,7 +171,7 @@ php artisan key:generate
 
 # Create database
 mysql -u root -p
-CREATE DATABASE siproda;
+CREATE DATABASE siprodo;
 exit;
 
 # Run migrations
@@ -233,8 +233,8 @@ sudo mysql_secure_installation
 
 ```bash
 # Clone repository
-git clone https://github.com/your-username/siproda.git
-cd siproda/SIPRODA
+git clone https://github.com/your-username/siprodo.git
+cd siprodo/siprodo
 
 # Install dependencies
 composer install
@@ -246,7 +246,7 @@ php artisan key:generate
 
 # Create database
 sudo mysql -u root -p
-CREATE DATABASE siproda;
+CREATE DATABASE siprodo;
 exit;
 
 # Run migrations
@@ -274,7 +274,7 @@ Edit file `.env`:
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=siproda
+DB_DATABASE=siprodo
 DB_USERNAME=root
 DB_PASSWORD=your_password
 ```
@@ -302,7 +302,7 @@ Edit file `.env`:
 DB_CONNECTION=pgsql
 DB_HOST=127.0.0.1
 DB_PORT=5432
-DB_DATABASE=siproda
+DB_DATABASE=siprodo
 DB_USERNAME=postgres
 DB_PASSWORD=your_password
 ```
@@ -432,7 +432,7 @@ Jika masih mengalami masalah:
 
 ---
 
-**Selamat! SIPRODA sudah siap digunakan! 🎉**
+**Selamat! siprodo sudah siap digunakan! 🎉**
 
 Akses aplikasi di: `http://localhost:8000`
 

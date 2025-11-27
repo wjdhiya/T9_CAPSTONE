@@ -1,11 +1,11 @@
 # 📚 INDEX DOKUMENTASI CAPSTONE
-## SIPRODA - Sistem Informasi Produktivitas Dosen
+## siprodo - Sistem Informasi Produktivitas Dosen
 
 ---
 
 ## 🎯 SELAMAT DATANG!
 
-Selamat datang di dokumentasi lengkap **Capstone Design Project** untuk pengembangan **SIPRODA** (Sistem Informasi Produktivitas Dosen) Telkom University Jakarta.
+Selamat datang di dokumentasi lengkap **Capstone Design Project** untuk pengembangan **siprodo** (Sistem Informasi Produktivitas Dosen) Telkom University Jakarta.
 
 Dokumentasi ini disusun secara komprehensif menggunakan **metode Prototype** dan mencakup semua aspek pengembangan dari analisis kebutuhan hingga deployment.
 
@@ -28,7 +28,7 @@ Jika Anda baru pertama kali membuka proyek ini, ikuti urutan berikut:
    - Konfigurasi database
    - Troubleshooting
 
-3. **[SIPRODA/COMMANDS.md](SIPRODA/COMMANDS.md)**
+3. **[siprodo/COMMANDS.md](siprodo/COMMANDS.md)**
    - Command reference
    - Development workflow
    - Useful aliases
@@ -67,7 +67,7 @@ Jika Anda ingin melanjutkan development, baca:
    - Alasan pemilihan
    - Konfigurasi detail
 
-2. **[SIPRODA/COMMANDS.md](SIPRODA/COMMANDS.md)**
+2. **[siprodo/COMMANDS.md](siprodo/COMMANDS.md)**
    - Command reference
    - Development workflow
    - Troubleshooting
@@ -97,7 +97,7 @@ T9_CAPSTONE/
 │   └── PANDUAN_INSTALASI.md             ← Instalasi guide (300+ baris)
 │
 └── 💻 APLIKASI
-    └── SIPRODA/
+    └── siprodo/
         ├── app/                          ← Laravel application
         ├── database/                     ← Migrations & seeders
         ├── resources/                    ← Views & assets
@@ -291,7 +291,7 @@ T9_CAPSTONE/
 
 ---
 
-### 8. SIPRODA/COMMANDS.md
+### 8. siprodo/COMMANDS.md
 **Ukuran:** ~300 baris  
 **Tujuan:** Command reference untuk development  
 **Isi:**
@@ -331,7 +331,7 @@ T9_CAPSTONE/
 **Langkah:**
 1. Baca **README.md** untuk overview
 2. Ikuti **PANDUAN_INSTALASI.md** untuk setup
-3. Gunakan **SIPRODA/COMMANDS.md** untuk development
+3. Gunakan **siprodo/COMMANDS.md** untuk development
 4. Baca **TOOLS_DAN_TEKNOLOGI.md** untuk memahami stack
 
 ### Skenario 2: Menyusun Laporan Capstone
@@ -349,13 +349,13 @@ T9_CAPSTONE/
 1. Baca **SUMMARY_CAPSTONE.md** untuk key points
 2. Gunakan screenshot dari **README.md**
 3. Referensi **LAPORAN_METODE_PROTOTYPE.md** untuk tahapan
-4. Siapkan demo menggunakan **SIPRODA/COMMANDS.md**
+4. Siapkan demo menggunakan **siprodo/COMMANDS.md**
 
 ### Skenario 4: Troubleshooting
 
 **Langkah:**
 1. Cek **PANDUAN_INSTALASI.md** bagian Troubleshooting
-2. Cek **SIPRODA/COMMANDS.md** bagian Troubleshooting
+2. Cek **siprodo/COMMANDS.md** bagian Troubleshooting
 3. Cek log di `storage/logs/laravel.log`
 
 ---
@@ -371,7 +371,7 @@ T9_CAPSTONE/
 | TOOLS_DAN_TEKNOLOGI.md | ~300 | Technical |
 | PANDUAN_INSTALASI.md | ~300 | Guide |
 | CHECKLIST_LAPORAN_CAPSTONE.md | ~300 | Checklist |
-| SIPRODA/COMMANDS.md | ~300 | Reference |
+| siprodo/COMMANDS.md | ~300 | Reference |
 | **TOTAL** | **~2400** | **8 Files** |
 
 ---

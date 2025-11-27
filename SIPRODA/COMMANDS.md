@@ -1,4 +1,4 @@
-# 🚀 COMMAND REFERENCE - SIPRODA
+# 🚀 COMMAND REFERENCE - siprodo
 ## Daftar Command Penting untuk Development & Deployment
 
 ---
@@ -9,7 +9,7 @@
 ```bash
 # Clone repository
 git clone <repository-url>
-cd SIPRODA
+cd siprodo
 
 # Install PHP dependencies
 composer install
@@ -28,7 +28,7 @@ touch database/database.sqlite
 
 # Or create MySQL database
 mysql -u root -p
-CREATE DATABASE siproda;
+CREATE DATABASE siprodo;
 exit;
 ```
 

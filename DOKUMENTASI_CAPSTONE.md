@@ -1,5 +1,5 @@
 # DOKUMENTASI CAPSTONE DESIGN PROJECT
-## Sistem Informasi Inventaris Penelitian, Publikasi, dan Pengabdian Masyarakat (SIPRODA)
+## Sistem Informasi Inventaris Penelitian, Publikasi, dan Pengabdian Masyarakat (siprodo)
 ### Telkom University Jakarta
 
 ---
@@ -148,7 +148,7 @@ Berdasarkan hasil wawancara dengan Ibu Kaprodi Sistem Informasi Telkom Universit
 
 ### 3.1 Arsitektur Sistem
 
-Sistem SIPRODA menggunakan arsitektur **MVC (Model-View-Controller)** dengan framework Laravel:
+Sistem siprodo menggunakan arsitektur **MVC (Model-View-Controller)** dengan framework Laravel:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -323,7 +323,7 @@ Sistem SIPRODA menggunakan arsitektur **MVC (Model-View-Controller)** dengan fra
 ### 4.1 Struktur Folder Project
 
 ```
-SIPRODA/
+siprodo/
 ├── app/
 │   ├── Http/
 │   │   ├── Controllers/
@@ -435,7 +435,7 @@ colors: {
 
 ### 6.1 Tahapan Metode Prototype
 
-Pengembangan sistem SIPRODA menggunakan **Metode Prototype** dengan tahapan sebagai berikut:
+Pengembangan sistem siprodo menggunakan **Metode Prototype** dengan tahapan sebagai berikut:
 
 #### Tahap 1: Pengumpulan Kebutuhan (Requirements Gathering)
 **Aktivitas:**
@@ -519,7 +519,7 @@ Tahap 3-5 diulang hingga sistem memenuhi semua kebutuhan dan mendapat approval f
 - Test reports
 - Deployment guide
 
-### 6.2 Keunggulan Metode Prototype untuk SIPRODA
+### 6.2 Keunggulan Metode Prototype untuk siprodo
 
 1. **Feedback Cepat**: Stakeholder dapat melihat dan mengevaluasi sistem sejak awal
 2. **Fleksibilitas**: Mudah melakukan perubahan berdasarkan kebutuhan yang berkembang
@@ -603,7 +603,7 @@ Testing dengan user sebenarnya (Kaprodi dan Dosen):
 
 ### 8.1 Kesimpulan
 
-1. Sistem SIPRODA berhasil dirancang untuk mengatasi permasalahan pengelolaan data penelitian, publikasi, dan pengabdian masyarakat di Telkom University Jakarta
+1. Sistem siprodo berhasil dirancang untuk mengatasi permasalahan pengelolaan data penelitian, publikasi, dan pengabdian masyarakat di Telkom University Jakarta
 
 2. Implementasi menggunakan Laravel 11 dengan Tailwind CSS menghasilkan sistem yang modern, responsive, dan mudah digunakan
 
@@ -660,7 +660,7 @@ Testing dengan user sebenarnya (Kaprodi dan Dosen):
 ```bash
 # Clone repository
 git clone <repository-url>
-cd SIPRODA
+cd siprodo
 
 # Install dependencies
 composer install

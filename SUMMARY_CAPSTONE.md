@@ -1,12 +1,12 @@
 # 📊 SUMMARY CAPSTONE DESIGN PROJECT
-## SIPRODA - Sistem Informasi Produktivitas Dosen
+## siprodo - Sistem Informasi Produktivitas Dosen
 ### Telkom University Jakarta
 
 ---
 
 ## 🎯 EXECUTIVE SUMMARY
 
-**Nama Sistem:** SIPRODA (Sistem Informasi Produktivitas Dosen)
+**Nama Sistem:** siprodo (Sistem Informasi Produktivitas Dosen)
 
 **Tujuan:** Mengembangkan sistem informasi berbasis web untuk mengelola data penelitian, publikasi, dan pengabdian masyarakat dosen di Telkom University Jakarta
 
@@ -206,7 +206,7 @@ Berdasarkan hasil wawancara dengan Ibu Kaprodi Sistem Informasi Telkom Universit
 
 ```
 T9_CAPSTONE/
-├── SIPRODA/                          # Main application
+├── siprodo/                          # Main application
 │   ├── app/
 │   │   ├── Http/
 │   │   │   ├── Controllers/
@@ -266,7 +266,7 @@ T9_CAPSTONE/
 ```bash
 # 1. Clone repository
 git clone <repository-url>
-cd T9_CAPSTONE/SIPRODA
+cd T9_CAPSTONE/siprodo
 
 # 2. Install dependencies
 composer install
@@ -411,7 +411,7 @@ Untuk informasi lebih detail, lihat:
 
 ## 🏆 KESIMPULAN
 
-Sistem SIPRODA berhasil dikembangkan dengan metode Prototype dalam waktu 12 minggu. Sistem ini mengatasi semua permasalahan yang diidentifikasi dari hasil wawancara dengan stakeholder.
+Sistem siprodo berhasil dikembangkan dengan metode Prototype dalam waktu 12 minggu. Sistem ini mengatasi semua permasalahan yang diidentifikasi dari hasil wawancara dengan stakeholder.
 
 ### Key Achievements
 

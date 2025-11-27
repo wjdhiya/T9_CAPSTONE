@@ -28,11 +28,11 @@
                             <input type="text" name="search" value="{{ request('search') }}" placeholder="Judul penelitian..." class="w-full rounded-md border-gray-300 shadow-sm">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Tahun</label>
-                            <select name="tahun" class="w-full rounded-md border-gray-300 shadow-sm">
-                                <option value="">Semua Tahun</option>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tahun Akademik</label>
+                            <select name="tahun_akademik" class="w-full rounded-md border-gray-300 shadow-sm">
+                                <option value="">Semua Tahun Akademik</option>
                                 @for($year = date('Y'); $year >= date('Y') - 5; $year--)
-                                    <option value="{{ $year }}" {{ request('tahun') == $year ? 'selected' : '' }}>{{ $year }}</option>
+                                    <option value="{{ $year }}" {{ request('tahun_akademik') == $year ? 'selected' : '' }}>{{ $year }}</option>
                                 @endfor
                             </select>
                         </div>
@@ -64,7 +64,7 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Judul</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dosen</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jenis</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tahun</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tahun Akademik</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Verifikasi</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>

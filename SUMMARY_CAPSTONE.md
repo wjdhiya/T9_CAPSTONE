@@ -46,7 +46,7 @@ Berdasarkan hasil wawancara dengan Ibu Kaprodi Sistem Informasi Telkom Universit
 
 3. **Dashboard & Analytics**
    - Real-time statistics
-   - Grafik trend 5 tahun
+   - Grafik trend 5 tahun_akademik
    - Rasio produktivitas
 
 4. **Automated Reporting**
@@ -162,7 +162,7 @@ Berdasarkan hasil wawancara dengan Ibu Kaprodi Sistem Informasi Telkom Universit
 ### 5. Dashboard & Analytics
 - ✅ Dashboard berbeda untuk Admin dan Dosen
 - ✅ Statistik real-time
-- ✅ Grafik trend 5 tahun
+- ✅ Grafik trend 5 tahun_akademik
 - ✅ Rasio produktivitas
 - ✅ Recent activities feed
 
@@ -438,7 +438,7 @@ Sistem siprodo berhasil dikembangkan dengan metode Prototype dalam waktu 12 ming
 **Capstone Design Project**  
 Program Studi Sistem Informasi  
 Telkom University Jakarta  
-Tahun 2025
+tahun_akademik 2025
 
 ---
 

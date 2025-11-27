@@ -176,7 +176,7 @@ Sehingga data yang dilaporkan akurat.
 │  └──────────┘ └──────────┘ └──────────┘        │
 │                                                  │
 │  ┌────────────────────────────────────────┐    │
-│  │  Grafik Produktivitas 5 Tahun          │    │
+│  │  Grafik Produktivitas 5 tahun_akademik          │    │
 │  │  [Chart visualization]                 │    │
 │  └────────────────────────────────────────┘    │
 │                                                  │
@@ -372,7 +372,7 @@ Berdasarkan feedback evaluasi, dilakukan perbaikan:
 - Upload dokumentasi
 
 **3. Enhancement Dashboard**
-- Grafik trend 5 tahun
+- Grafik trend 5 tahun_akademik
 - Rasio produktivitas
 - Filter by year/semester
 - Recent activities feed
@@ -630,5 +630,5 @@ Metode Prototype **tidak direkomendasikan** untuk:
 **Dokumen ini merupakan bagian dari Laporan Capstone Design Project**  
 **Program Studi Sistem Informasi**  
 **Telkom University Jakarta**  
-**Tahun 2025**
+**tahun_akademik 2025**
 

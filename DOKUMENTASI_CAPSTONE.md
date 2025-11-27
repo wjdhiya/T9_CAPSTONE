@@ -72,7 +72,7 @@ Berdasarkan hasil wawancara dengan Ibu Kaprodi Sistem Informasi Telkom Universit
 | 1 | Tidak ada alur kerja baku dalam pengumpulan data | Perancangan alur kerja standar (SOP) pengelolaan data penelitian, publikasi, dan pengmas |
 | 2 | Pengelolaan data masih manual menggunakan Excel | Pengembangan sistem informasi berbasis web yang dapat mengelola data secara terpusat |
 | 3 | Sistem pengmas yang ada hanya bersifat individual | Integrasi sistem pengmas agar dapat diakses oleh dosen, admin, dan Kaprodi dengan peran berbeda |
-| 4 | Rekapitulasi data membutuhkan waktu lama | Perancangan fitur rekapitulasi otomatis untuk laporan periodik (semesteran/tahunan) |
+| 4 | Rekapitulasi data membutuhkan waktu lama | Perancangan fitur rekapitulasi otomatis untuk laporan periodik (semesteran/tahun_akademikan) |
 | 5 | Tidak adanya monitoring produktivitas dosen | Pengembangan dashboard analitik yang dapat menampilkan produktivitas dosen secara visual dan real-time |
 
 ### 2.2 Functional Requirements
@@ -105,13 +105,13 @@ Berdasarkan hasil wawancara dengan Ibu Kaprodi Sistem Informasi Telkom Universit
 #### FR-05: Dashboard dan Monitoring
 - FR-05.1: Sistem dapat menampilkan dashboard produktivitas dosen
 - FR-05.2: Sistem dapat menampilkan statistik penelitian, publikasi, dan pengmas
-- FR-05.3: Sistem dapat menampilkan grafik trend per tahun/semester
+- FR-05.3: Sistem dapat menampilkan grafik trend per tahun_akademik/semester
 - FR-05.4: Sistem dapat menampilkan rasio produktivitas (penelitian/dosen, publikasi/dosen, pengmas/dosen)
 
 #### FR-06: Pelaporan dan Export
 - FR-06.1: Sistem dapat generate laporan dalam format Excel
 - FR-06.2: Sistem dapat generate laporan dalam format PDF
-- FR-06.3: Sistem dapat filter laporan berdasarkan tahun, semester, jenis, status
+- FR-06.3: Sistem dapat filter laporan berdasarkan tahun_akademik, semester, jenis, status
 - FR-06.4: Sistem dapat export data untuk kebutuhan akreditasi
 
 ### 2.3 Non-Functional Requirements
@@ -201,7 +201,7 @@ Sistem siprodo menggunakan arsitektur **MVC (Model-View-Controller)** dengan fra
 | jenis | ENUM | internal, eksternal, mandiri |
 | sumber_dana | VARCHAR(255) | Sumber pendanaan |
 | dana | DECIMAL(15,2) | Jumlah dana |
-| tahun | YEAR | Tahun pelaksanaan |
+| tahun_akademik | YEAR | tahun_akademik pelaksanaan |
 | semester | ENUM | ganjil, genap |
 | tanggal_mulai | DATE | Tanggal mulai |
 | tanggal_selesai | DATE | Tanggal selesai |
@@ -234,7 +234,7 @@ Sistem siprodo menggunakan arsitektur **MVC (Model-View-Controller)** dengan fra
 | volume | VARCHAR(20) | Volume |
 | nomor | VARCHAR(20) | Nomor |
 | halaman | VARCHAR(20) | Halaman |
-| tahun | YEAR | Tahun terbit |
+| tahun_akademik | YEAR | tahun_akademik terbit |
 | semester | ENUM | ganjil, genap |
 | tanggal_terbit | DATE | Tanggal terbit |
 | quartile | ENUM | Q1, Q2, Q3, Q4, non-quartile |
@@ -263,7 +263,7 @@ Sistem siprodo menggunakan arsitektur **MVC (Model-View-Controller)** dengan fra
 | jenis | ENUM | internal, eksternal, mandiri |
 | sumber_dana | VARCHAR(255) | Sumber pendanaan |
 | dana | DECIMAL(15,2) | Jumlah dana |
-| tahun | YEAR | Tahun pelaksanaan |
+| tahun_akademik | YEAR | tahun_akademik pelaksanaan |
 | semester | ENUM | ganjil, genap |
 | tanggal_mulai | DATE | Tanggal mulai |
 | tanggal_selesai | DATE | Tanggal selesai |
@@ -561,7 +561,7 @@ public function test_dosen_can_create_penelitian()
     $response = $this->actingAs($user)->post('/penelitian', [
         'judul' => 'Test Penelitian',
         'jenis' => 'internal',
-        'tahun' => 2024,
+        'tahun_akademik' => 2024,
         'semester' => 'ganjil',
     ]);
     
@@ -702,5 +702,5 @@ GET    /api/reports/export      - Export reports
 **Dokumen ini dibuat sebagai bagian dari Capstone Design Project**
 **Program Studi Sistem Informasi**
 **Telkom University Jakarta**
-**Tahun 2025**
+**tahun_akademik 2025**
 

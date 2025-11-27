@@ -17,13 +17,13 @@ class ReportController extends Controller
     public function index(Request $request)
     {
         // Get filter parameters
-        $tahun = $request->get('tahun', date('Y'));
+        $tahun_akademik = $request->get('tahun_akademik', date('Y'));
         $semester = $request->get('semester');
         $jenis = $request->get('jenis', 'all'); // all, penelitian, publikasi, pengmas
         $user_id = $request->get('user_id');
 
         // Get statistics
-        $stats = $this->getStatistics($tahun, $semester, $user_id);
+        $stats = $this->getStatistics($tahun_akademik, $semester, $user_id);
 
         // Get users for filter
         $users = User::where('role', 'dosen')
@@ -34,18 +34,18 @@ class ReportController extends Controller
         // Get available years
         $years = range(date('Y'), date('Y') - 5);
 
-        return view('reports.index', compact('stats', 'users', 'years', 'tahun', 'semester', 'jenis', 'user_id'));
+        return view('reports.index', compact('stats', 'users', 'years', 'tahun_akademik', 'semester', 'jenis', 'user_id'));
     }
 
     /**
      * Get statistics for reports
      */
-    private function getStatistics($tahun, $semester = null, $user_id = null)
+    private function getStatistics($tahun_akademik, $semester = null, $user_id = null)
     {
         $stats = [];
 
         // Penelitian statistics
-        $penelitianQuery = Penelitian::whereYear('tanggal_mulai', $tahun);
+        $penelitianQuery = Penelitian::whereYear('tanggal_mulai', $tahun_akademik);
         if ($semester) {
             $penelitianQuery->where('semester', $semester);
         }
@@ -65,7 +65,7 @@ class ReportController extends Controller
         ];
 
         // Publikasi statistics
-        $publikasiQuery = Publikasi::whereYear('tanggal_publikasi', $tahun);
+        $publikasiQuery = Publikasi::whereYear('tanggal_publikasi', $tahun_akademik);
         if ($user_id) {
             $publikasiQuery->where('user_id', $user_id);
         }
@@ -87,7 +87,7 @@ class ReportController extends Controller
         ];
 
         // Pengabdian Masyarakat statistics
-        $pengmasQuery = PengabdianMasyarakat::whereYear('tanggal_mulai', $tahun);
+        $pengmasQuery = PengabdianMasyarakat::whereYear('tanggal_mulai', $tahun_akademik);
         if ($semester) {
             $pengmasQuery->where('semester', $semester);
         }
@@ -121,7 +121,7 @@ class ReportController extends Controller
      */
     public function exportExcel(Request $request)
     {
-        $tahun = $request->get('tahun', date('Y'));
+        $tahun_akademik = $request->get('tahun_akademik', date('Y'));
         $semester = $request->get('semester');
         $jenis = $request->get('jenis', 'all');
         $user_id = $request->get('user_id');
@@ -129,22 +129,22 @@ class ReportController extends Controller
         // For now, return a simple CSV
         // TODO: Implement proper Excel export using Laravel Excel package
 
-        $filename = "laporan_{$jenis}_{$tahun}.csv";
+        $filename = "laporan_{$jenis}_{$tahun_akademik}.csv";
         
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ];
 
-        $callback = function() use ($tahun, $semester, $jenis, $user_id) {
+        $callback = function() use ($tahun_akademik, $semester, $jenis, $user_id) {
             $file = fopen('php://output', 'w');
 
             if ($jenis === 'all' || $jenis === 'penelitian') {
                 // Penelitian header
                 fputcsv($file, ['LAPORAN PENELITIAN']);
-                fputcsv($file, ['Judul', 'Dosen', 'Jenis', 'Tahun', 'Semester', 'Dana', 'Status', 'Verifikasi']);
+                fputcsv($file, ['Judul', 'Dosen', 'Jenis', 'tahun_akademik', 'Semester', 'Dana', 'Status', 'Verifikasi']);
 
-                $query = Penelitian::with('user')->whereYear('tanggal_mulai', $tahun);
+                $query = Penelitian::with('user')->whereYear('tanggal_mulai', $tahun_akademik);
                 if ($semester) $query->where('semester', $semester);
                 if ($user_id) $query->where('user_id', $user_id);
 
@@ -168,7 +168,7 @@ class ReportController extends Controller
                 fputcsv($file, ['LAPORAN PUBLIKASI']);
                 fputcsv($file, ['Judul', 'Penulis', 'Jenis', 'Penerbit', 'Tanggal', 'Indexing', 'Quartile', 'Verifikasi']);
 
-                $query = Publikasi::with('user')->whereYear('tanggal_publikasi', $tahun);
+                $query = Publikasi::with('user')->whereYear('tanggal_publikasi', $tahun_akademik);
                 if ($user_id) $query->where('user_id', $user_id);
 
                 foreach ($query->get() as $item) {
@@ -189,9 +189,9 @@ class ReportController extends Controller
             if ($jenis === 'all' || $jenis === 'pengmas') {
                 // Pengmas header
                 fputcsv($file, ['LAPORAN PENGABDIAN MASYARAKAT']);
-                fputcsv($file, ['Judul', 'Dosen', 'Lokasi', 'Mitra', 'Peserta', 'Tahun', 'Semester', 'Status', 'Verifikasi']);
+                fputcsv($file, ['Judul', 'Dosen', 'Lokasi', 'Mitra', 'Peserta', 'tahun_akademik', 'Semester', 'Status', 'Verifikasi']);
 
-                $query = PengabdianMasyarakat::with('user')->whereYear('tanggal_mulai', $tahun);
+                $query = PengabdianMasyarakat::with('user')->whereYear('tanggal_mulai', $tahun_akademik);
                 if ($semester) $query->where('semester', $semester);
                 if ($user_id) $query->where('user_id', $user_id);
 
@@ -221,31 +221,31 @@ class ReportController extends Controller
      */
     public function exportPdf(Request $request)
     {
-        $tahun = $request->get('tahun', date('Y'));
+        $tahun_akademik = $request->get('tahun_akademik', date('Y'));
         $semester = $request->get('semester');
         $jenis = $request->get('jenis', 'all');
         $user_id = $request->get('user_id');
 
-        $stats = $this->getStatistics($tahun, $semester, $user_id);
+        $stats = $this->getStatistics($tahun_akademik, $semester, $user_id);
 
         // Get data
         $data = [];
         
         if ($jenis === 'all' || $jenis === 'penelitian') {
-            $query = Penelitian::with('user')->whereYear('tanggal_mulai', $tahun);
+            $query = Penelitian::with('user')->whereYear('tanggal_mulai', $tahun_akademik);
             if ($semester) $query->where('semester', $semester);
             if ($user_id) $query->where('user_id', $user_id);
             $data['penelitian'] = $query->get();
         }
 
         if ($jenis === 'all' || $jenis === 'publikasi') {
-            $query = Publikasi::with('user')->whereYear('tanggal_publikasi', $tahun);
+            $query = Publikasi::with('user')->whereYear('tanggal_publikasi', $tahun_akademik);
             if ($user_id) $query->where('user_id', $user_id);
             $data['publikasi'] = $query->get();
         }
 
         if ($jenis === 'all' || $jenis === 'pengmas') {
-            $query = PengabdianMasyarakat::with('user')->whereYear('tanggal_mulai', $tahun);
+            $query = PengabdianMasyarakat::with('user')->whereYear('tanggal_mulai', $tahun_akademik);
             if ($semester) $query->where('semester', $semester);
             if ($user_id) $query->where('user_id', $user_id);
             $data['pengmas'] = $query->get();
@@ -253,7 +253,7 @@ class ReportController extends Controller
 
         // For now, return HTML view
         // TODO: Implement proper PDF export using DomPDF or similar
-        return view('reports.pdf', compact('stats', 'data', 'tahun', 'semester', 'jenis'));
+        return view('reports.pdf', compact('stats', 'data', 'tahun_akademik', 'semester', 'jenis'));
     }
 
     /**
@@ -261,7 +261,7 @@ class ReportController extends Controller
      */
     public function productivity(Request $request)
     {
-        $tahun = $request->get('tahun', date('Y'));
+        $tahun_akademik = $request->get('tahun_akademik', date('Y'));
 
         // Get all active dosen
         $dosens = User::where('role', 'dosen')
@@ -274,15 +274,15 @@ class ReportController extends Controller
             $productivity[] = [
                 'dosen' => $dosen,
                 'penelitian' => Penelitian::where('user_id', $dosen->id)
-                    ->whereYear('tanggal_mulai', $tahun)
+                    ->whereYear('tanggal_mulai', $tahun_akademik)
                     ->where('status_verifikasi', 'verified')
                     ->count(),
                 'publikasi' => Publikasi::where('user_id', $dosen->id)
-                    ->whereYear('tanggal_publikasi', $tahun)
+                    ->whereYear('tanggal_publikasi', $tahun_akademik)
                     ->where('status_verifikasi', 'verified')
                     ->count(),
                 'pengmas' => PengabdianMasyarakat::where('user_id', $dosen->id)
-                    ->whereYear('tanggal_mulai', $tahun)
+                    ->whereYear('tanggal_mulai', $tahun_akademik)
                     ->where('status_verifikasi', 'verified')
                     ->count(),
             ];
@@ -297,7 +297,7 @@ class ReportController extends Controller
 
         $years = range(date('Y'), date('Y') - 5);
 
-        return view('reports.productivity', compact('productivity', 'years', 'tahun'));
+        return view('reports.productivity', compact('productivity', 'years', 'tahun_akademik'));
     }
 }
 

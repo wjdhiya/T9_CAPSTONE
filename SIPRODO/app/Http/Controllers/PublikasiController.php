@@ -31,8 +31,8 @@ class PublikasiController extends Controller
         }
 
         // Filter by year
-        if ($request->filled('tahun')) {
-            $query->whereYear('tanggal_publikasi', $request->tahun);
+        if ($request->filled('tahun_akademik')) {
+            $query->whereYear('tanggal_publikasi', $request->tahun_akademik);
         }
 
         // Filter by jenis

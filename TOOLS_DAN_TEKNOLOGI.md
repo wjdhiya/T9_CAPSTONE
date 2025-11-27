@@ -234,7 +234,7 @@ export default {
 
 **Charts yang Digunakan:**
 - Line chart (Trend produktivitas)
-- Bar chart (Perbandingan per tahun)
+- Bar chart (Perbandingan per tahun_akademik)
 - Pie chart (Distribusi jenis penelitian)
 - Doughnut chart (Status verifikasi)
 
@@ -649,5 +649,5 @@ public function test_dosen_can_create_penelitian()
 **Dokumen ini merupakan bagian dari Laporan Capstone Design Project**  
 **Program Studi Sistem Informasi**  
 **Telkom University Jakarta**  
-**Tahun 2025**
+**tahun_akademik 2025**
 

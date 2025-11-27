@@ -130,7 +130,7 @@ class PenelitianController extends Controller
         $validated = $request->validate([
             'judul' => 'required|string|max:500',
             'abstrak' => 'nullable|string',
-            'jenis' => 'required|in:internal,eksternal,mandiri',
+            'jenis' => 'required|in:internal,eksternal,mandiri,hibah_internal,hibah_eksternal,kerjasama',
             'sumber_dana' => 'nullable|string|max:255',
             'dana' => 'nullable|numeric|min:0',
             'tahun_akademik' => 'required|string|max:20',

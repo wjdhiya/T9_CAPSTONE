@@ -19,7 +19,7 @@ class PengabdianMasyarakat extends Model
         'jenis',
         'sumber_dana',
         'dana',
-        'tahun',
+        'tahun_akademik',
         'semester',
         'tanggal_mulai',
         'tanggal_selesai',
@@ -72,7 +72,7 @@ class PengabdianMasyarakat extends Model
 
     public function scopeByYear($query, $year)
     {
-        return $query->where('tahun', $year);
+        return $query->where('tahun_akademik', 'like', "%$year%");
     }
 
     public function scopeBySemester($query, $semester)

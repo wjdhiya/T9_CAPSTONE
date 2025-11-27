@@ -19,7 +19,7 @@ class Penelitian extends Model
         'jenis',
         'sumber_dana',
         'dana',
-        'tahun',             // year(4) di DB
+        'tahun_akademik', // gunakan ini saja
         'semester',
         'tanggal_mulai',
         'tanggal_selesai',
@@ -73,7 +73,7 @@ class Penelitian extends Model
 
     public function scopeByYear($query, $year)
     {
-        return $query->where('tahun', $year);
+        return $query->where('tahun_akademik', 'like', "%$year%");
     }
 
     public function scopeBySemester($query, $semester)

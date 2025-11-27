@@ -63,14 +63,14 @@ Berdasarkan hasil wawancara dengan Ibu Kaprodi Sistem Informasi:
 ### 📊 Dashboard & Analytics
 - ✅ Dashboard berbeda untuk Admin dan Dosen
 - ✅ Statistik real-time (total penelitian, publikasi, pengmas)
-- ✅ Grafik trend 5 tahun terakhir
+- ✅ Grafik trend 5 tahun_akademik terakhir
 - ✅ Rasio produktivitas (penelitian/dosen, publikasi/dosen, pengmas/dosen)
 - ✅ Recent activities feed
 
 ### 📄 Reporting & Export
 - ✅ Export data ke Excel
 - ✅ Export data ke PDF
-- ✅ Filter laporan (tahun, semester, jenis, status)
+- ✅ Filter laporan (tahun_akademik, semester, jenis, status)
 - ✅ Laporan produktivitas dosen
 - ✅ Laporan untuk akreditasi
 
@@ -365,7 +365,7 @@ Project ini dilisensikan di bawah [MIT License](LICENSE).
 **Capstone Design Project**  
 Program Studi Sistem Informasi  
 Telkom University Jakarta  
-Tahun 2025
+tahun_akademik 2025
 
 ---
 

@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('volume')->nullable();
             $table->string('nomor')->nullable();
             $table->string('halaman')->nullable();
-            $table->year('tahun');
+            $table->year('tahun_akademik');
             $table->enum('semester', ['ganjil', 'genap']);
             $table->date('tanggal_terbit')->nullable();
             $table->enum('quartile', ['Q1', 'Q2', 'Q3', 'Q4', 'non-quartile'])->nullable();

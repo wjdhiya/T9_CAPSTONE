@@ -33,7 +33,7 @@
 
                     <div class="grid grid-cols-3 gap-4 mb-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Tahun Akademik <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">tahun_akademik <span class="text-red-500">*</span></label>
                             <input type="text" name="tahun_akademik" value="{{ old('tahun_akademik', $pengabdianMasyarakat->tahun_akademik) }}" required class="w-full rounded-md border-gray-300">
                         </div>
                         <div>

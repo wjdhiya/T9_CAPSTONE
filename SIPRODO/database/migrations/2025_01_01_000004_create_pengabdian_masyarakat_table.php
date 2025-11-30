@@ -19,7 +19,7 @@ return new class extends Migration
             $table->enum('jenis', ['internal', 'eksternal', 'mandiri']);
             $table->string('sumber_dana')->nullable();
             $table->decimal('dana', 15, 2)->nullable();
-            $table->year('tahun_akademik');
+            $table->string('tahun_akademik');
             $table->enum('semester', ['ganjil', 'genap']);
             $table->date('tanggal_mulai')->nullable();
             $table->date('tanggal_selesai')->nullable();

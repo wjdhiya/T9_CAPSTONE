@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PengabdianMasyarakat;
-use App\Models\User; // already present
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +19,7 @@ class PengabdianMasyarakatController extends Controller
 
         // Filter by user role
         /** @var User|null $user */
-        $user = Auth::user(); // <--- ensure typed
+        $user = Auth::user();
         if ($user && $user->isDosen()) {
             $query->where('user_id', $user->id);
         }
@@ -71,14 +71,22 @@ class PengabdianMasyarakatController extends Controller
      */
     public function store(Request $request)
     {
+        // 1. VALIDASI
         $validated = $request->validate([
             'judul' => 'required|string|max:500',
-            'abstrak' => 'required|string',
+            
+            // Terima input 'deskripsi' (sesuai form) atau 'abstrak'
+            'deskripsi' => 'nullable|string', 
+            'abstrak'   => 'nullable|string',
+
             'lokasi' => 'required|string|max:255',
             'mitra' => 'required|string|max:255',
             'jumlah_peserta' => 'required|integer|min:1',
             'tahun_akademik' => 'required|string|max:20',
-            'semester' => 'required|in:ganjil,genap',
+            
+            // Terima string biasa agar menerima "Ganjil" (Huruf Besar)
+            'semester' => 'required|string', 
+            
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'dana' => 'nullable|numeric|min:0',
@@ -87,12 +95,33 @@ class PengabdianMasyarakatController extends Controller
             'anggota.*' => 'string|max:255',
             'mahasiswa_terlibat' => 'nullable|array',
             'mahasiswa_terlibat.*' => 'string|max:255',
-            'status' => 'required|in:proposal,berjalan,selesai,ditolak',
+            
+            // Terima string biasa agar menerima "Proposal" (Huruf Besar)
+            'status' => 'required|string', 
+            
             'file_proposal' => 'nullable|file|mimes:pdf|max:10240',
             'file_laporan' => 'nullable|file|mimes:pdf|max:10240',
             'file_dokumentasi' => 'nullable|file|mimes:pdf,jpg,jpeg,png,zip|max:20480',
             'catatan' => 'nullable|string',
         ]);
+
+        // 2. MAPPING DATA
+        
+        // Jika form mengirim 'deskripsi', kita pindahkan isinya ke 'abstrak'
+        if (isset($validated['deskripsi']) && !isset($validated['abstrak'])) {
+            $validated['abstrak'] = $validated['deskripsi'];
+        }
+        // Hapus key 'deskripsi' karena di database tidak ada kolom itu
+        unset($validated['deskripsi']);
+
+        // Pastikan abstrak terisi (jika wajib)
+        if (empty($validated['abstrak'])) {
+            $validated['abstrak'] = '-'; 
+        }
+
+        // Format Semester & Status jadi huruf kecil semua
+        $validated['semester'] = strtolower($validated['semester']); 
+        $validated['status'] = strtolower($validated['status']);    
 
         $validated['user_id'] = Auth::id();
         $validated['status_verifikasi'] = 'pending';
@@ -133,14 +162,17 @@ class PengabdianMasyarakatController extends Controller
     public function show(PengabdianMasyarakat $pengma)
     {
         /** @var User|null $user */
-        $user = Auth::user(); // <--- added/ensure typed
+        $user = Auth::user();
         if ($user && $user->isDosen() && $pengma->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses ke pengabdian masyarakat ini.');
         }
 
         $pengma->load(['user', 'verifiedBy']);
 
-        return view('pengmas.show', compact('pengma'));
+        // PERBAIKAN: Mengirim variabel dengan nama 'pengabdianMasyarakat'
+        return view('pengmas.show', [
+            'pengabdianMasyarakat' => $pengma
+        ]);
     }
 
     /**
@@ -149,12 +181,16 @@ class PengabdianMasyarakatController extends Controller
     public function edit(PengabdianMasyarakat $pengma)
     {
         /** @var User|null $user */
-        $user = Auth::user(); // <--- added/ensure typed
+        $user = Auth::user();
         if ($user && $user->isDosen() && $pengma->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit pengabdian masyarakat ini.');
         }
 
-        return view('pengmas.edit', compact('pengma'));
+        // PERBAIKAN: Mengirim variabel dengan nama 'pengabdianMasyarakat' (bukan $pengma)
+        // Ini agar cocok dengan file edit.blade.php kamu.
+        return view('pengmas.edit', [
+            'pengabdianMasyarakat' => $pengma
+        ]);
     }
 
     /**
@@ -163,19 +199,20 @@ class PengabdianMasyarakatController extends Controller
     public function update(Request $request, PengabdianMasyarakat $pengma)
     {
         /** @var User|null $user */
-        $user = Auth::user(); // <--- added/ensure typed
+        $user = Auth::user();
         if ($user && $user->isDosen() && $pengma->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit pengabdian masyarakat ini.');
         }
 
         $validated = $request->validate([
             'judul' => 'required|string|max:500',
-            'abstrak' => 'required|string',
+            'deskripsi' => 'nullable|string', 
+            'abstrak'   => 'nullable|string',
             'lokasi' => 'required|string|max:255',
             'mitra' => 'required|string|max:255',
             'jumlah_peserta' => 'required|integer|min:1',
             'tahun_akademik' => 'required|string|max:20',
-            'semester' => 'required|in:ganjil,genap',
+            'semester' => 'required|string',
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'dana' => 'nullable|numeric|min:0',
@@ -184,12 +221,22 @@ class PengabdianMasyarakatController extends Controller
             'anggota.*' => 'string|max:255',
             'mahasiswa_terlibat' => 'nullable|array',
             'mahasiswa_terlibat.*' => 'string|max:255',
-            'status' => 'required|in:proposal,berjalan,selesai,ditolak',
+            'status' => 'required|string',
             'file_proposal' => 'nullable|file|mimes:pdf|max:10240',
             'file_laporan' => 'nullable|file|mimes:pdf|max:10240',
             'file_dokumentasi' => 'nullable|file|mimes:pdf,jpg,jpeg,png,zip|max:20480',
             'catatan' => 'nullable|string',
         ]);
+
+        // MAPPING DATA UPDATE
+        if (isset($validated['deskripsi']) && !isset($validated['abstrak'])) {
+            $validated['abstrak'] = $validated['deskripsi'];
+        }
+        unset($validated['deskripsi']);
+        
+        // Format string ke lowercase
+        $validated['semester'] = strtolower($validated['semester']);
+        $validated['status'] = strtolower($validated['status']);
 
         // Convert arrays to JSON
         if (isset($validated['anggota'])) {
@@ -244,7 +291,7 @@ class PengabdianMasyarakatController extends Controller
     public function destroy(PengabdianMasyarakat $pengma)
     {
         /** @var User|null $user */
-        $user = Auth::user(); // <--- added/ensure typed
+        $user = Auth::user();
         if ($user && $user->isDosen() && $pengma->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk menghapus pengabdian masyarakat ini.');
         }
@@ -272,7 +319,7 @@ class PengabdianMasyarakatController extends Controller
     public function verify(Request $request, PengabdianMasyarakat $pengma)
     {
         /** @var User|null $user */
-        $user = Auth::user(); // <--- added/ensure typed
+        $user = Auth::user();
         if (!($user && $user->canVerify())) {
             abort(403, 'Anda tidak memiliki akses untuk verifikasi.');
         }
@@ -295,4 +342,3 @@ class PengabdianMasyarakatController extends Controller
             ->with('success', "Pengabdian Masyarakat berhasil {$status}.");
     }
 }
-

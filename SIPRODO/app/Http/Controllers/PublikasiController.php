@@ -17,7 +17,7 @@ class PublikasiController extends Controller
         $query = Publikasi::with(['user', 'penelitian', 'verifiedBy']);
 
         // Filter by user role
-        if (auth()->user()->isDosen()) {
+        if (auth()->check() && auth()->user()->isDosen()) {
             $query->where('user_id', auth()->id());
         }
 
@@ -32,7 +32,7 @@ class PublikasiController extends Controller
 
         // Filter by year
         if ($request->filled('tahun_akademik')) {
-            $query->whereYear('tanggal_publikasi', $request->tahun_akademik);
+            $query->whereYear('tanggal_terbit', $request->tahun_akademik);
         }
 
         // Filter by jenis
@@ -74,30 +74,34 @@ class PublikasiController extends Controller
     {
         $validated = $request->validate([
             'judul' => 'required|string|max:500',
-            'penulis' => 'required|string|max:500',
-            'jenis' => 'required|in:jurnal,prosiding,buku,paten,hki',
-            'penerbit' => 'required|string|max:255',
-            'tanggal_publikasi' => 'required|date',
+            'penulis' => 'nullable|string',
+            'jenis' => 'required|in:jurnal,prosiding,buku,book_chapter,paten,hki',
+            'penerbit' => 'nullable|string|max:255',
+            'tanggal_terbit' => 'nullable|date',
             'issn_isbn' => 'nullable|string|max:50',
             'volume' => 'nullable|string|max:50',
             'nomor' => 'nullable|string|max:50',
             'halaman' => 'nullable|string|max:50',
             'url' => 'nullable|url|max:500',
             'doi' => 'nullable|string|max:255',
-            'indexing' => 'nullable|in:scopus,wos,sinta_1,sinta_2,sinta_3,sinta_4,sinta_5,sinta_6,none',
-            'quartile' => 'nullable|in:q1,q2,q3,q4',
+            'indexing' => 'nullable|in:scopus,wos,sinta1,sinta2,sinta3,sinta4,sinta5,sinta6,non-indexed',
+            'quartile' => 'nullable|in:Q1,Q2,Q3,Q4,non-quartile',
+            'tahun_akademik' => 'required|integer|min:1900|max:' . (date('Y') + 1),
+            'semester' => 'required|in:ganjil,genap',
             'penelitian_id' => 'nullable|exists:penelitian,id',
             'file_publikasi' => 'nullable|file|mimes:pdf|max:10240',
             'catatan' => 'nullable|string',
         ]);
+
+        $validated['nama_publikasi'] = $validated['judul'];
 
         $validated['user_id'] = auth()->id();
         $validated['status_verifikasi'] = 'pending';
 
         // Handle file upload
         if ($request->hasFile('file_publikasi')) {
-            $validated['file_publikasi'] = $request->file('file_publikasi')
-                ->store('publikasi', 'public');
+        $validated['file_publikasi'] = $request->file('file_publikasi')
+            ->store('publikasi', 'public');
         }
 
         Publikasi::create($validated);

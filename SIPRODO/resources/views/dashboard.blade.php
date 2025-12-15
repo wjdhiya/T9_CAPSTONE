@@ -14,8 +14,7 @@
                 </div>
             @endif
 
-            <!-- Welcome Message -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
+            <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg mb-6">
                 <div class="p-6 text-gray-900">
                     <h3 class="text-2xl font-bold mb-2" style="color: #a02127;">
                         Selamat Datang, {{ auth()->user()->name }}!
@@ -32,10 +31,9 @@
                 </div>
             </div>
 
-            <!-- Statistics Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <!-- Penelitian Card -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                
+                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
                     <div class="p-6">
                         <div class="flex items-center justify-between">
                             <div>
@@ -54,7 +52,6 @@
                             <span class="text-gray-600 ml-2">Terverifikasi</span>
                         </div>
 
-                        <!-- Buttons styled like Quick Actions -->
                         <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <a href="{{ route('penelitian.index') }}"
                                class="flex items-center p-4 rounded-lg transition"
@@ -81,8 +78,7 @@
                     </div>
                 </div>
 
-                <!-- Publikasi Card -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
                     <div class="p-6">
                         <div class="flex items-center justify-between">
                             <div>
@@ -100,7 +96,6 @@
                             <span class="text-gray-600 ml-2">Terverifikasi</span>
                         </div>
 
-                        <!-- Buttons styled like Quick Actions -->
                         <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <a href="{{ route('publikasi.index') }}"
                                class="flex items-center p-4 rounded-lg transition"
@@ -127,8 +122,7 @@
                     </div>
                 </div>
 
-                <!-- Pengmas Card -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
                     <div class="p-6">
                         <div class="flex items-center justify-between">
                             <div>
@@ -146,7 +140,6 @@
                             <span class="text-gray-600 ml-2">Terverifikasi</span>
                         </div>
 
-                        <!-- Buttons styled like Quick Actions -->
                         <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <a href="{{ route('pengmas.index') }}"
                                class="flex items-center p-4 rounded-lg transition"
@@ -175,10 +168,8 @@
             </div>
 
             @if($isSuperAdmin ?? false)
-                <!-- Super Admin Dashboard -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-                    <!-- Top Lecturers Chart -->
-                    <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow">
+                    <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-xl">
                         <h3 class="text-lg font-semibold mb-4" style="color: #a02127;">
                             Dosen Paling Aktif Semester {{ $currentSemester }} {{ $currentYear }}
                         </h3>
@@ -187,8 +178,7 @@
                         </div>
                     </div>
 
-                    <!-- Verification Queue -->
-                    <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="bg-white p-6 rounded-lg shadow-xl">
                         <h3 class="text-lg font-semibold mb-4" style="color: #a02127;">
                             Antrian Verifikasi
                         </h3>
@@ -219,7 +209,6 @@
                             </a>
                         </div>
 
-                        <!-- Export Section -->
                         <div class="mt-6 pt-6 border-t">
                             <h3 class="text-lg font-semibold mb-4" style="color: #a02127;">
                                 Ekspor Data Tridharma

@@ -15,11 +15,11 @@ Route::get('/', function () {
 
 // Dashboard - using our custom DashboardController
 Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth'])
     ->name('dashboard');
 
 // Protected routes
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
 
     // Penelitian routes
     Route::resource('penelitian', PenelitianController::class);

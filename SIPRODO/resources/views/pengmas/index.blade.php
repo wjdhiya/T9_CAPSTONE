@@ -64,7 +64,7 @@
                             </td>
                             <td class="px-6 py-4 text-sm font-medium">
                                 <a href="{{ route('pengmas.show', $item) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Lihat</a>
-                                @if(auth()->user()->isDosen() && $item->user_id === auth()->id())
+                                @if ($item->status_verifikasi !== 'verified' && auth()->user()->isDosen() && $item->user_id === auth()->id())
                                     <a href="{{ route('pengmas.edit', $item) }}" class="text-blue-600 hover:text-blue-900">Edit</a>
                                 @endif
                             </td>

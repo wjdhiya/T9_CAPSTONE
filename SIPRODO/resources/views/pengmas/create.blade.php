@@ -1,3 +1,6 @@
+@php
+    use Illuminate\Support\Str;
+@endphp
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl leading-tight" style="color: #003366;">
@@ -188,8 +191,9 @@
                             {{-- File Proposal --}}
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">File Proposal (PDF)</label>
-                                <input type="file" name="file_proposal" accept=".pdf" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-telkom-blue file:text-white hover:file:bg-blue-800">
+                                <input type="file" id="file_proposal" name="file_proposal" accept=".pdf" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-telkom-blue file:text-white hover:file:bg-blue-800">
                                 @if(isset($pengabdianMasyarakat) && $pengabdianMasyarakat->file_proposal)
+                                    <p class="text-xs text-gray-600 mt-1">{{ Str::limit(preg_replace('/^\d+_/', '', basename($pengabdianMasyarakat->file_proposal)), 30, '...') }}</p>
                                     <a href="{{ Storage::url($pengabdianMasyarakat->file_proposal) }}" target="_blank" class="text-xs text-telkom-blue mt-1 hover:underline">Lihat file saat ini</a>
                                 @endif
                                 @error('file_proposal')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
@@ -198,8 +202,9 @@
                             {{-- File Laporan --}}
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">File Laporan (PDF)</label>
-                                <input type="file" name="file_laporan" accept=".pdf" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-telkom-blue file:text-white hover:file:bg-blue-800">
+                                <input type="file" id="file_laporan" name="file_laporan" accept=".pdf" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-telkom-blue file:text-white hover:file:bg-blue-800">
                                 @if(isset($pengabdianMasyarakat) && $pengabdianMasyarakat->file_laporan)
+                                    <p class="text-xs text-gray-600 mt-1">{{ Str::limit(preg_replace('/^\d+_/', '', basename($pengabdianMasyarakat->file_laporan)), 30, '...') }}</p>
                                     <a href="{{ Storage::url($pengabdianMasyarakat->file_laporan) }}" target="_blank" class="text-xs text-telkom-blue mt-1 hover:underline">Lihat file saat ini</a>
                                 @endif
                             </div>
@@ -207,8 +212,9 @@
                             {{-- Dokumentasi --}}
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Dokumentasi (Foto/ZIP)</label>
-                                <input type="file" name="file_dokumentasi" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-telkom-blue file:text-white hover:file:bg-blue-800">
+                                <input type="file" id="file_dokumentasi" name="file_dokumentasi" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-telkom-blue file:text-white hover:file:bg-blue-800">
                                 @if(isset($pengabdianMasyarakat) && $pengabdianMasyarakat->file_dokumentasi)
+                                    <p class="text-xs text-gray-600 mt-1">{{ Str::limit(preg_replace('/^\d+_/', '', basename($pengabdianMasyarakat->file_dokumentasi)), 30, '...') }}</p>
                                     <a href="{{ Storage::url($pengabdianMasyarakat->file_dokumentasi) }}" target="_blank" class="text-xs text-telkom-blue mt-1 hover:underline">Lihat file saat ini</a>
                                 @endif
                             </div>
@@ -228,4 +234,72 @@
             </form>
         </div>
     </div>
+
+    <script>
+        // Function to limit string length
+        function limitString(str, maxLength = 30) {
+            if (str.length <= maxLength) return str;
+            return str.substring(0, maxLength - 3) + '...';
+        }
+
+        // Function to handle file input change
+        function handleFileChange(inputId, cardId) {
+            const input = document.getElementById(inputId);
+            const existingCard = document.getElementById(cardId);
+
+            input.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    // Create or update file card
+                    let card = existingCard;
+                    if (!card) {
+                        card = document.createElement('div');
+                        card.id = cardId;
+                        card.className = 'p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card mt-2';
+                        input.parentNode.insertBefore(card, input.nextSibling);
+                    }
+
+                    const iconClass = file.type.startsWith('image/') ? 'fas fa-file-image w-6 h-6 text-blue-500' : 
+                                    file.name.endsWith('.zip') ? 'fas fa-file-archive w-6 h-6 text-yellow-500' : 
+                                    'fas fa-file-pdf w-6 h-6 text-red-500';
+
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center flex-1 min-w-0 mr-3">
+                                <i class="${iconClass} mr-3 flex-shrink-0"></i>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-sm font-medium text-gray-900 truncate">${limitString(file.name)}</p>
+                                    <p class="text-xs text-gray-500">File dipilih</p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="removeFile('${inputId}', '${cardId}')" class="text-red-500 hover:text-red-700 text-sm flex-shrink-0">
+                                <i class="fas fa-times"></i> Hapus
+                            </button>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        // Function to remove selected file
+        function removeFile(inputId, cardId) {
+            const input = document.getElementById(inputId);
+            const card = document.getElementById(cardId);
+
+            // Clear input
+            input.value = '';
+
+            // Hide card
+            if (card) {
+                card.style.display = 'none';
+            }
+        }
+
+        // Initialize file handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            handleFileChange('file_proposal', 'file_proposal_card');
+            handleFileChange('file_laporan', 'file_laporan_card');
+            handleFileChange('file_dokumentasi', 'file_dokumentasi_card');
+        });
+    </script>
 </x-app-layout>

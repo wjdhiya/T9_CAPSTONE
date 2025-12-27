@@ -3,9 +3,6 @@
         <div class="flex justify-between items-center">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">Detail Pengabdian Masyarakat</h2>
             <div class="flex space-x-2">
-                @if(auth()->user()->isDosen() && $pengabdianMasyarakat->user_id === auth()->id())
-                    <a href="{{ route('pengmas.edit', $pengabdianMasyarakat) }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Edit</a>
-                @endif
                 <a href="{{ route('pengmas.index') }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg">Kembali</a>
             </div>
         </div>
@@ -74,16 +71,73 @@
 
                 @if($pengabdianMasyarakat->file_proposal || $pengabdianMasyarakat->file_laporan || $pengabdianMasyarakat->file_dokumentasi)
                 <div class="mb-4">
-                    <p class="text-sm text-gray-600 mb-2">Dokumen</p>
-                    <div class="grid grid-cols-3 gap-4">
+                    <p class="text-sm text-gray-600 mb-3">Dokumen</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         @if($pengabdianMasyarakat->file_proposal)
-                        <a href="{{ Storage::url($pengabdianMasyarakat->file_proposal) }}" target="_blank" class="text-blue-600 hover:underline">Download Proposal</a>
+                            <div class="border rounded-lg p-4">
+                                <p class="text-sm text-gray-600 mb-2">File Proposal</p>
+                                @if(auth()->user()->canVerify())
+                                    <a href="{{ route('pengmas.download.proposal', $pengabdianMasyarakat) }}" target="_blank" class="text-blue-600 hover:underline flex items-center">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                        Download File
+                                    </a>
+                                @else
+                                    <a href="{{ Storage::url($pengabdianMasyarakat->file_proposal) }}" target="_blank" class="text-blue-600 hover:underline flex items-center">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                        View File
+                                    </a>
+                                @endif
+                            </div>
                         @endif
                         @if($pengabdianMasyarakat->file_laporan)
-                        <a href="{{ Storage::url($pengabdianMasyarakat->file_laporan) }}" target="_blank" class="text-blue-600 hover:underline">Download Laporan</a>
+                            <div class="border rounded-lg p-4">
+                                <p class="text-sm text-gray-600 mb-2">File Laporan</p>
+                                @if(auth()->user()->canVerify())
+                                    <a href="{{ route('pengmas.download.laporan', $pengabdianMasyarakat) }}" target="_blank" class="text-blue-600 hover:underline flex items-center">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                        Download File
+                                    </a>
+                                @else
+                                    <a href="{{ Storage::url($pengabdianMasyarakat->file_laporan) }}" target="_blank" class="text-blue-600 hover:underline flex items-center">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                        View File
+                                    </a>
+                                @endif
+                            </div>
                         @endif
                         @if($pengabdianMasyarakat->file_dokumentasi)
-                        <a href="{{ Storage::url($pengabdianMasyarakat->file_dokumentasi) }}" target="_blank" class="text-blue-600 hover:underline">Lihat Dokumentasi</a>
+                            <div class="border rounded-lg p-4">
+                                <p class="text-sm text-gray-600 mb-2">File Dokumentasi</p>
+                                @if(auth()->user()->canVerify())
+                                    <a href="{{ route('pengmas.download.dokumentasi', $pengabdianMasyarakat) }}" target="_blank" class="text-blue-600 hover:underline flex items-center">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                        Download File
+                                    </a>
+                                @else
+                                    <a href="{{ Storage::url($pengabdianMasyarakat->file_dokumentasi) }}" target="_blank" class="text-blue-600 hover:underline flex items-center">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                        View File
+                                    </a>
+                                @endif
+                            </div>
                         @endif
                     </div>
                 </div>

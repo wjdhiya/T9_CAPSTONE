@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
 
 class PengabdianMasyarakatController extends Controller
 {
@@ -136,18 +137,21 @@ class PengabdianMasyarakatController extends Controller
 
         // Handle file uploads
         if ($request->hasFile('file_proposal')) {
-            $validated['file_proposal'] = $request->file('file_proposal')
-                ->store('pengmas/proposal', 'public');
+            $originalName = $request->file('file_proposal')->getClientOriginalName();
+            $safeName = time() . '_' . preg_replace('/[^a-zA-Z0-9\._-]/', '_', $originalName);
+            $validated['file_proposal'] = $request->file('file_proposal')->storeAs('pengmas/proposal', $safeName, 'public');
         }
 
         if ($request->hasFile('file_laporan')) {
-            $validated['file_laporan'] = $request->file('file_laporan')
-                ->store('pengmas/laporan', 'public');
+            $originalName = $request->file('file_laporan')->getClientOriginalName();
+            $safeName = time() . '_' . preg_replace('/[^a-zA-Z0-9\._-]/', '_', $originalName);
+            $validated['file_laporan'] = $request->file('file_laporan')->storeAs('pengmas/laporan', $safeName, 'public');
         }
 
         if ($request->hasFile('file_dokumentasi')) {
-            $validated['file_dokumentasi'] = $request->file('file_dokumentasi')
-                ->store('pengmas/dokumentasi', 'public');
+            $originalName = $request->file('file_dokumentasi')->getClientOriginalName();
+            $safeName = time() . '_' . preg_replace('/[^a-zA-Z0-9\._-]/', '_', $originalName);
+            $validated['file_dokumentasi'] = $request->file('file_dokumentasi')->storeAs('pengmas/dokumentasi', $safeName, 'public');
         }
 
         PengabdianMasyarakat::create($validated);
@@ -251,24 +255,27 @@ class PengabdianMasyarakatController extends Controller
             if ($pengma->file_proposal) {
                 Storage::disk('public')->delete($pengma->file_proposal);
             }
-            $validated['file_proposal'] = $request->file('file_proposal')
-                ->store('pengmas/proposal', 'public');
+            $originalName = $request->file('file_proposal')->getClientOriginalName();
+            $safeName = time() . '_' . preg_replace('/[^a-zA-Z0-9\._-]/', '_', $originalName);
+            $validated['file_proposal'] = $request->file('file_proposal')->storeAs('pengmas/proposal', $safeName, 'public');
         }
 
         if ($request->hasFile('file_laporan')) {
             if ($pengma->file_laporan) {
                 Storage::disk('public')->delete($pengma->file_laporan);
             }
-            $validated['file_laporan'] = $request->file('file_laporan')
-                ->store('pengmas/laporan', 'public');
+            $originalName = $request->file('file_laporan')->getClientOriginalName();
+            $safeName = time() . '_' . preg_replace('/[^a-zA-Z0-9\._-]/', '_', $originalName);
+            $validated['file_laporan'] = $request->file('file_laporan')->storeAs('pengmas/laporan', $safeName, 'public');
         }
 
         if ($request->hasFile('file_dokumentasi')) {
             if ($pengma->file_dokumentasi) {
                 Storage::disk('public')->delete($pengma->file_dokumentasi);
             }
-            $validated['file_dokumentasi'] = $request->file('file_dokumentasi')
-                ->store('pengmas/dokumentasi', 'public');
+            $originalName = $request->file('file_dokumentasi')->getClientOriginalName();
+            $safeName = time() . '_' . preg_replace('/[^a-zA-Z0-9\._-]/', '_', $originalName);
+            $validated['file_dokumentasi'] = $request->file('file_dokumentasi')->storeAs('pengmas/dokumentasi', $safeName, 'public');
         }
 
         // Reset verification status if data changed
@@ -340,5 +347,92 @@ class PengabdianMasyarakatController extends Controller
 
         return redirect()->back()
             ->with('success', "Pengabdian Masyarakat berhasil {$status}.");
+    }
+
+    /**
+     * Download proposal file (Admin/Kaprodi only)
+     * 
+     * @param PengabdianMasyarakat $pengma
+     * @return BinaryFileResponse
+     * 
+     * @method BinaryFileResponse download(string $path, string|null $name = null, array $headers = [])
+     */
+    public function downloadProposal(PengabdianMasyarakat $pengma)
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!($user && $user->canVerify())) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if (!$pengma->file_proposal || !Storage::disk('public')->exists($pengma->file_proposal)) {
+            abort(404, 'File not found.');
+        }
+
+        $filename = basename($pengma->file_proposal);
+        // Remove timestamp prefix (format: timestamp_filename)
+        $originalName = preg_replace('/^\d+_/', '', $filename);
+        
+        $filePath = Storage::disk('public')->path($pengma->file_proposal);
+        /** @phpstan-ignore-next-line */
+        return Response::download($filePath, $originalName);
+    }
+
+    /**
+     * Download laporan file (Admin/Kaprodi only)
+     * 
+     * @param PengabdianMasyarakat $pengma
+     * @return BinaryFileResponse
+     * 
+     * @method BinaryFileResponse download(string $path, string|null $name = null, array $headers = [])
+     */
+    public function downloadLaporan(PengabdianMasyarakat $pengma)
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!($user && $user->canVerify())) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if (!$pengma->file_laporan || !Storage::disk('public')->exists($pengma->file_laporan)) {
+            abort(404, 'File not found.');
+        }
+
+        $filename = basename($pengma->file_laporan);
+        // Remove timestamp prefix (format: timestamp_filename)
+        $originalName = preg_replace('/^\d+_/', '', $filename);
+        
+        $filePath = Storage::disk('public')->path($pengma->file_laporan);
+        /** @phpstan-ignore-next-line */
+        return Response::download($filePath, $originalName);
+    }
+
+    /**
+     * Download dokumentasi file (Admin/Kaprodi only)
+     * 
+     * @param PengabdianMasyarakat $pengma
+     * @return BinaryFileResponse
+     * 
+     * @method BinaryFileResponse download(string $path, string|null $name = null, array $headers = [])
+     */
+    public function downloadDokumentasi(PengabdianMasyarakat $pengma)
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!($user && $user->canVerify())) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if (!$pengma->file_dokumentasi || !Storage::disk('public')->exists($pengma->file_dokumentasi)) {
+            abort(404, 'File not found.');
+        }
+
+        $filename = basename($pengma->file_dokumentasi);
+        // Remove timestamp prefix (format: timestamp_filename)
+        $originalName = preg_replace('/^\d+_/', '', $filename);
+        
+        $filePath = Storage::disk('public')->path($pengma->file_dokumentasi);
+        /** @phpstan-ignore-next-line */
+        return Response::download($filePath, $originalName);
     }
 }

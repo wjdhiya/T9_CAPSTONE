@@ -6,6 +6,8 @@ use App\Models\Publikasi;
 use App\Models\Penelitian;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Auth;
 
 class PublikasiController extends Controller
 {
@@ -17,8 +19,10 @@ class PublikasiController extends Controller
         $query = Publikasi::with(['user', 'penelitian', 'verifiedBy']);
 
         // Filter by user role
-        if (auth()->check() && auth()->user()->isDosen()) {
-            $query->where('user_id', auth()->id());
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if ($user && $user->isDosen()) {
+            $query->where('user_id', $user->id);
         }
 
         // Search
@@ -52,7 +56,15 @@ class PublikasiController extends Controller
 
         $publikasi = $query->latest()->paginate(10);
 
-        return view('publikasi.index', compact('publikasi'));
+        // Get statistics
+        $stats = [
+            'total' => Publikasi::count(),
+            'verified' => Publikasi::where('status_verifikasi', 'verified')->count(),
+            'pending' => Publikasi::where('status_verifikasi', 'pending')->count(),
+            'high_impact' => Publikasi::whereIn('indexing', ['scopus', 'wos'])->count(),
+        ];
+
+        return view('publikasi.index', compact('publikasi', 'stats'));
     }
 
     /**
@@ -60,7 +72,7 @@ class PublikasiController extends Controller
      */
     public function create()
     {
-        $penelitianList = Penelitian::where('user_id', auth()->id())
+        $penelitianList = Penelitian::where('user_id', Auth::id())
             ->where('status_verifikasi', 'verified')
             ->get();
 
@@ -95,13 +107,14 @@ class PublikasiController extends Controller
 
         $validated['nama_publikasi'] = $validated['judul'];
 
-        $validated['user_id'] = auth()->id();
+        $validated['user_id'] = Auth::id();
         $validated['status_verifikasi'] = 'pending';
 
         // Handle file upload
         if ($request->hasFile('file_publikasi')) {
-        $validated['file_publikasi'] = $request->file('file_publikasi')
-            ->store('publikasi', 'public');
+            $originalName = $request->file('file_publikasi')->getClientOriginalName();
+            $safeName = time() . '_' . preg_replace('/[^a-zA-Z0-9\._-]/', '_', $originalName);
+            $validated['file_publikasi'] = $request->file('file_publikasi')->storeAs('publikasi', $safeName, 'public');
         }
 
         Publikasi::create($validated);
@@ -116,7 +129,9 @@ class PublikasiController extends Controller
     public function show(Publikasi $publikasi)
     {
         // Authorization check
-        if (auth()->user()->isDosen() && $publikasi->user_id !== auth()->id()) {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if ($user && $user->isDosen() && $publikasi->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses ke publikasi ini.');
         }
 
@@ -131,11 +146,13 @@ class PublikasiController extends Controller
     public function edit(Publikasi $publikasi)
     {
         // Authorization check
-        if (auth()->user()->isDosen() && $publikasi->user_id !== auth()->id()) {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if ($user && $user->isDosen() && $publikasi->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit publikasi ini.');
         }
 
-        $penelitianList = Penelitian::where('user_id', auth()->id())
+        $penelitianList = Penelitian::where('user_id', Auth::id())
             ->where('status_verifikasi', 'verified')
             ->get();
 
@@ -148,7 +165,9 @@ class PublikasiController extends Controller
     public function update(Request $request, Publikasi $publikasi)
     {
         // Authorization check
-        if (auth()->user()->isDosen() && $publikasi->user_id !== auth()->id()) {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if ($user && $user->isDosen() && $publikasi->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit publikasi ini.');
         }
 
@@ -177,9 +196,9 @@ class PublikasiController extends Controller
             if ($publikasi->file_publikasi) {
                 Storage::disk('public')->delete($publikasi->file_publikasi);
             }
-
-            $validated['file_publikasi'] = $request->file('file_publikasi')
-                ->store('publikasi', 'public');
+            $originalName = $request->file('file_publikasi')->getClientOriginalName();
+            $safeName = time() . '_' . preg_replace('/[^a-zA-Z0-9\._-]/', '_', $originalName);
+            $validated['file_publikasi'] = $request->file('file_publikasi')->storeAs('publikasi', $safeName, 'public');
         }
 
         // Reset verification status if data changed
@@ -202,7 +221,9 @@ class PublikasiController extends Controller
     public function destroy(Publikasi $publikasi)
     {
         // Authorization check
-        if (auth()->user()->isDosen() && $publikasi->user_id !== auth()->id()) {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if ($user && $user->isDosen() && $publikasi->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk menghapus publikasi ini.');
         }
 
@@ -223,7 +244,9 @@ class PublikasiController extends Controller
     public function verify(Request $request, Publikasi $publikasi)
     {
         // Authorization check
-        if (!auth()->user()->canVerify()) {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if (!$user || !$user->canVerify()) {
             abort(403, 'Anda tidak memiliki akses untuk verifikasi.');
         }
 
@@ -234,7 +257,7 @@ class PublikasiController extends Controller
 
         $publikasi->update([
             'status_verifikasi' => $validated['status_verifikasi'],
-            'verified_by' => auth()->id(),
+            'verified_by' => Auth::id(),
             'verified_at' => now(),
             'catatan_verifikasi' => $validated['catatan_verifikasi'] ?? null,
         ]);
@@ -243,6 +266,35 @@ class PublikasiController extends Controller
 
         return redirect()->back()
             ->with('success', "Publikasi berhasil {$status}.");
+    }
+
+    /**
+     * Download publikasi file (Admin/Kaprodi only)
+     * 
+     * @param Publikasi $publikasi
+     * @return BinaryFileResponse
+     * 
+     * @method BinaryFileResponse download(string $path, string|null $name = null, array $headers = [])
+     */
+    public function downloadPublikasi(Publikasi $publikasi)
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if (!$user || !$user->canVerify()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if (!$publikasi->file_publikasi || !Storage::disk('public')->exists($publikasi->file_publikasi)) {
+            abort(404, 'File not found.');
+        }
+
+        $filename = basename($publikasi->file_publikasi);
+        // Remove timestamp prefix (format: timestamp_filename)
+        $originalName = preg_replace('/^\d+_/', '', $filename);
+        
+        $filePath = Storage::disk('public')->path($publikasi->file_publikasi);
+        /** @phpstan-ignore-next-line */
+        return Response::download($filePath, $originalName);
     }
 }
 

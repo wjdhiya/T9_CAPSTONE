@@ -7,6 +7,13 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Contracts\Filesystem\Filesystem;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+
+/**
+ * @property Filesystem $storage
+ */
 
 class PenelitianController extends Controller
 {
@@ -83,11 +90,15 @@ class PenelitianController extends Controller
         $validated['status_verifikasi'] = 'pending';
 
         if ($request->hasFile('file_proposal')) {
-            $validated['file_proposal'] = $request->file('file_proposal')->store('penelitian/proposal', 'public');
+            $originalName = $request->file('file_proposal')->getClientOriginalName();
+            $safeName = time() . '_' . preg_replace('/[^a-zA-Z0-9\._-]/', '_', $originalName);
+            $validated['file_proposal'] = $request->file('file_proposal')->storeAs('penelitian/proposal', $safeName, 'public');
         }
 
         if ($request->hasFile('file_laporan')) {
-            $validated['file_laporan'] = $request->file('file_laporan')->store('penelitian/laporan', 'public');
+            $originalName = $request->file('file_laporan')->getClientOriginalName();
+            $safeName = time() . '_' . preg_replace('/[^a-zA-Z0-9\._-]/', '_', $originalName);
+            $validated['file_laporan'] = $request->file('file_laporan')->storeAs('penelitian/laporan', $safeName, 'public');
         }
 
         Penelitian::create($validated);
@@ -147,14 +158,18 @@ class PenelitianController extends Controller
             if ($penelitian->file_proposal) {
                 Storage::disk('public')->delete($penelitian->file_proposal);
             }
-            $validated['file_proposal'] = $request->file('file_proposal')->store('penelitian/proposal', 'public');
+            $originalName = $request->file('file_proposal')->getClientOriginalName();
+            $safeName = time() . '_' . preg_replace('/[^a-zA-Z0-9\._-]/', '_', $originalName);
+            $validated['file_proposal'] = $request->file('file_proposal')->storeAs('penelitian/proposal', $safeName, 'public');
         }
 
         if ($request->hasFile('file_laporan')) {
             if ($penelitian->file_laporan) {
                 Storage::disk('public')->delete($penelitian->file_laporan);
             }
-            $validated['file_laporan'] = $request->file('file_laporan')->store('penelitian/laporan', 'public');
+            $originalName = $request->file('file_laporan')->getClientOriginalName();
+            $safeName = time() . '_' . preg_replace('/[^a-zA-Z0-9\._-]/', '_', $originalName);
+            $validated['file_laporan'] = $request->file('file_laporan')->storeAs('penelitian/laporan', $safeName, 'public');
         }
 
         if ($penelitian->status_verifikasi === 'verified') {
@@ -191,7 +206,15 @@ class PenelitianController extends Controller
             ->with('success', 'Data penelitian berhasil dihapus.');
     }
 
-    public function verify(Request $request, Penelitian $penelitian)
+    /**
+     * Download proposal file (Admin/Kaprodi only)
+     * 
+     * @param Penelitian $penelitian
+     * @return BinaryFileResponse
+     * 
+     * @method BinaryFileResponse download(string $path, string|null $name = null, array $headers = [])
+     */
+    public function downloadProposal(Penelitian $penelitian)
     {
         /** @var User|null $user */
         $user = Auth::user();
@@ -199,17 +222,75 @@ class PenelitianController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        if (!$penelitian->file_proposal || !Storage::disk('public')->exists($penelitian->file_proposal)) {
+            abort(404, 'File not found.');
+        }
+
+        $filename = basename($penelitian->file_proposal);
+        // Remove timestamp prefix (format: timestamp_filename)
+        $originalName = preg_replace('/^\d+_/', '', $filename);
+        
+        $filePath = Storage::disk('public')->path($penelitian->file_proposal);
+        /** @phpstan-ignore-next-line */
+        return Response::download($filePath, $originalName);
+    }
+
+    /**
+     * Download laporan file (Admin/Kaprodi only)
+     * 
+     * @param Penelitian $penelitian
+     * @return BinaryFileResponse
+     * 
+     * @method BinaryFileResponse download(string $path, string|null $name = null, array $headers = [])
+     */
+    public function downloadLaporan(Penelitian $penelitian)
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!($user && $user->canVerify())) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if (!$penelitian->file_laporan || !Storage::disk('public')->exists($penelitian->file_laporan)) {
+            abort(404, 'File not found.');
+        }
+
+        $filename = basename($penelitian->file_laporan);
+        // Remove timestamp prefix (format: timestamp_filename)
+        $originalName = preg_replace('/^\d+_/', '', $filename);
+        
+        $filePath = Storage::disk('public')->path($penelitian->file_laporan);
+        /** @phpstan-ignore-next-line */
+        return Response::download($filePath, $originalName);
+    }
+
+    /**
+     * Verify penelitian (Admin/Kaprodi only)
+     */
+    public function verify(Request $request, Penelitian $penelitian)
+    {
+        // Authorization check
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!($user && $user->canVerify())) {
+            abort(403, 'Anda tidak memiliki akses untuk verifikasi.');
+        }
+
         $validated = $request->validate([
             'status_verifikasi' => 'required|in:verified,rejected',
-            'catatan_verifikasi' => 'nullable|string',
+            'catatan_verifikasi' => 'nullable|string|max:1000',
         ]);
 
-        $validated['verified_by'] = Auth::id();
-        $validated['verified_at'] = now();
+        $penelitian->update([
+            'status_verifikasi' => $validated['status_verifikasi'],
+            'verified_by' => Auth::id(),
+            'verified_at' => now(),
+            'catatan_verifikasi' => $validated['catatan_verifikasi'] ?? null,
+        ]);
 
-        $penelitian->update($validated);
+        $status = $validated['status_verifikasi'] === 'verified' ? 'diverifikasi' : 'ditolak';
 
         return redirect()->back()
-            ->with('success', 'Status verifikasi berhasil diperbarui.');
+            ->with('success', "Penelitian berhasil {$status}.");
     }
 }

@@ -190,34 +190,16 @@
                                         @endphp
                                         {!! $statusBadge !!}
                                     </td>
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center gap-2">
-                                            {{-- Tombol Lihat Detail (Selalu Ada) --}}
-                                            <a href="{{ route('publikasi.show', $item->id) }}" title="Lihat Detail" class="p-2 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors">
-                                                <i class="fas fa-eye w-4 h-4"></i>
-                                            </a>
-                                            
-                                            {{-- Tombol Aksi (Edit/Delete/Verifikasi) disesuaikan dengan status/role --}}
-                                            @if ($item->status_verifikasi !== 'verified' && (auth()->user()->isDosen() && $item->user_id === auth()->id()))
-                                                {{-- Edit Dosen --}}
-                                                <a href="{{ route('publikasi.edit', $item->id) }}" title="Edit" class="p-2 hover:bg-green-50 text-green-600 rounded-lg transition-colors">
-                                                    <i class="fas fa-edit w-4 h-4"></i>
-                                                </a>
-                                                {{-- Delete Dosen (Gunakan Form Delete) --}}
-                                                <button type="button" onclick="document.getElementById('delete-form-{{ $item->id }}').submit()" title="Hapus" class="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors">
-                                                    <i class="fas fa-trash-alt w-4 h-4"></i>
-                                                </button>
-                                                <form id="delete-form-{{ $item->id }}" action="{{ route('publikasi.destroy', $item->id) }}" method="POST" class="hidden">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                </form>
-                                            @elseif (auth()->user()->canVerify() && $item->status_verifikasi === 'pending')
-                                                {{-- Tombol Verifikasi untuk Admin/Kaprodi --}}
-                                                <a href="{{ route('publikasi.show', $item->id) }}" title="Verifikasi" class="p-2 bg-yellow-50 hover:bg-yellow-100 text-yellow-600 rounded-lg transition-colors">
-                                                    <i class="fas fa-clipboard-check w-4 h-4"></i>
-                                                </a>
-                                            @endif
-                                        </div>
+                                    <td class="px-6 py-4 text-sm font-medium">
+                                        <a href="{{ route('publikasi.show', $item->id) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Lihat</a>
+                                        @if ($item->status_verifikasi !== 'verified' && auth()->user()->isDosen() && $item->user_id === auth()->id())
+                                            <a href="{{ route('publikasi.edit', $item->id) }}" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
+                                            <button type="button" onclick="document.getElementById('delete-form-{{ $item->id }}').submit()" class="text-red-600 hover:text-red-900">Hapus</button>
+                                            <form id="delete-form-{{ $item->id }}" action="{{ route('publikasi.destroy', $item->id) }}" method="POST" class="hidden">
+                                                @csrf
+                                                @method('DELETE')
+                                            </form>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty

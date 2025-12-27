@@ -1,127 +1,236 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Tambah Penelitian Baru') }}
+        <h2 class="font-semibold text-xl leading-tight" style="color: #003366;">
+            {{ isset($penelitian) ? __('Edit Data Penelitian') : __('Tambah Data Penelitian Baru') }}
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="min-h-screen py-12" style="background-color: #f8f8f8;">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
-                    <form action="{{ route('penelitian.store') }}" method="POST" enctype="multipart/form-data">
-                        @csrf
+            
+            <form method="POST" action="{{ isset($penelitian) ? route('penelitian.update', $penelitian) : route('penelitian.store') }}" enctype="multipart/form-data">
+                @csrf
+                @if(isset($penelitian))
+                    @method('PUT')
+                @endif
+                
+                {{-- Header Card --}}
+                <div class="bg-white rounded-xl shadow-xl p-6 mb-6 border-l-4 border-telkom-green">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-telkom-blue-light rounded-lg flex items-center justify-center">
+                            <i class="fas fa-microscope w-6 h-6 text-telkom-blue"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-gray-900">Formulir Data Penelitian</h1>
+                            <p class="text-sm text-gray-600 mt-1">Lengkapi informasi penelitian Anda dengan detail</p>
+                        </div>
+                    </div>
+                </div>
 
-                        <!-- Judul -->
-                        <div class="mb-4">
-                            <label for="judul" class="block text-sm font-medium text-gray-700 mb-2">Judul Penelitian <span class="text-red-500">*</span></label>
-                            <input type="text" name="judul" id="judul" value="{{ old('judul') }}" required class="w-full rounded-md border-gray-300 shadow-sm @error('judul') border-red-500 @enderror">
-                            @error('judul')
-                                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                            @enderror
+                {{-- Section 1: Informasi Utama --}}
+                <div class="bg-white rounded-xl shadow-xl p-6 mb-6">
+                    <h2 class="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Informasi Utama</h2>
+                    
+                    <div class="space-y-6">
+                        
+                        <div>
+                            <label for="judul" class="block text-sm font-medium text-gray-700 mb-2">Judul Penelitian <span class="text-red-600">*</span></label>
+                            <input type="text" id="judul" name="judul" value="{{ old('judul', $penelitian->judul ?? '') }}" required
+                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
+                                   placeholder="Masukkan judul penelitian">
+                            @error('judul')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                         </div>
 
-                        <!-- Abstrak -->
-                        <div class="mb-4">
-                            <label for="abstrak" class="block text-sm font-medium text-gray-700 mb-2">Abstrak <span class="text-red-500">*</span></label>
-                            <textarea name="abstrak" id="abstrak" rows="4" required class="w-full rounded-md border-gray-300 shadow-sm @error('abstrak') border-red-500 @enderror">{{ old('abstrak') }}</textarea>
-                            @error('abstrak')
-                                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                            @enderror
+                        <div>
+                            <label for="abstrak" class="block text-sm font-medium text-gray-700 mb-2">Abstrak <span class="text-red-600">*</span></label>
+                            <textarea id="abstrak" name="abstrak" rows="4" required
+                                      class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all resize-none"
+                                      placeholder="Jelaskan secara singkat mengenai penelitian ini...">{{ old('abstrak', $penelitian->abstrak ?? '') }}</textarea>
+                            @error('abstrak')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                         </div>
 
-                        <!-- Jenis & tahun_akademik -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
-                                <label for="jenis" class="block text-sm font-medium text-gray-700 mb-2">Jenis Penelitian <span class="text-red-500">*</span></label>
-                                <select name="jenis" id="jenis" required class="w-full rounded-md border-gray-300 shadow-sm">
+                                <label for="jenis" class="block text-sm font-medium text-gray-700 mb-2">Jenis Penelitian <span class="text-red-600">*</span></label>
+                                <select id="jenis" name="jenis" required
+                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all bg-white">
                                     <option value="">Pilih Jenis</option>
-                                    <option value="mandiri" {{ old('jenis') == 'mandiri' ? 'selected' : '' }}>Mandiri</option>
-                                    <option value="hibah_internal" {{ old('jenis') == 'hibah_internal' ? 'selected' : '' }}>Hibah Internal</option>
-                                    <option value="hibah_eksternal" {{ old('jenis') == 'hibah_eksternal' ? 'selected' : '' }}>Hibah Eksternal</option>
-                                    <option value="kerjasama" {{ old('jenis') == 'kerjasama' ? 'selected' : '' }}>Kerjasama</option>
+                                    <option value="mandiri" {{ old('jenis', $penelitian->jenis ?? '') == 'mandiri' ? 'selected' : '' }}>Mandiri</option>
+                                    <option value="hibah_internal" {{ old('jenis', $penelitian->jenis ?? '') == 'hibah_internal' ? 'selected' : '' }}>Hibah Internal</option>
+                                    <option value="hibah_eksternal" {{ old('jenis', $penelitian->jenis ?? '') == 'hibah_eksternal' ? 'selected' : '' }}>Hibah Eksternal</option>
+                                    <option value="kerjasama" {{ old('jenis', $penelitian->jenis ?? '') == 'kerjasama' ? 'selected' : '' }}>Kerjasama</option>
                                 </select>
+                                @error('jenis')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
+
                             <div>
-                                <label for="tahun_akademik" class="block text-sm font-medium text-gray-700 mb-2">Tahun Akademik <span class="text-red-500">*</span></label>
-                                <input type="text" name="tahun_akademik" id="tahun_akademik" value="{{ old('tahun_akademik', date('Y') . '/' . (date('Y') + 1)) }}" placeholder="2024/2025" required class="w-full rounded-md border-gray-300 shadow-sm">
+                                <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status Penelitian <span class="text-red-600">*</span></label>
+                                <select id="status" name="status" required
+                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all bg-white">
+                                    <option value="">Pilih Status</option>
+                                    <option value="proposal" {{ old('status', $penelitian->status ?? '') == 'proposal' ? 'selected' : '' }}>📋 Proposal</option>
+                                    <option value="berjalan" {{ old('status', $penelitian->status ?? '') == 'berjalan' ? 'selected' : '' }}>🏃 Berjalan</option>
+                                    <option value="selesai" {{ old('status', $penelitian->status ?? '') == 'selesai' ? 'selected' : '' }}>✅ Selesai</option>
+                                </select>
+                                @error('status')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Section 2: Waktu & Pelaksanaan --}}
+                <div class="bg-white rounded-xl shadow-xl p-6 mb-6">
+                    <h2 class="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Waktu & Pelaksanaan</h2>
+                    
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label for="tahun_akademik" class="block text-sm font-medium text-gray-700 mb-2">Tahun Akademik <span class="text-red-600">*</span></label>
+                                <input type="text" id="tahun_akademik" name="tahun_akademik" value="{{ old('tahun_akademik', $penelitian->tahun_akademik ?? (date('Y') . '/' . (date('Y') + 1))) }}" required
+                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
+                                       placeholder="2024/2025">
+                                @error('tahun_akademik')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                            </div>
+
+                            <div>
+                                <label for="semester" class="block text-sm font-medium text-gray-700 mb-2">Semester <span class="text-red-600">*</span></label>
+                                <select id="semester" name="semester" required
+                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all bg-white">
+                                    <option value="">Pilih Semester</option>
+                                    <option value="ganjil" {{ old('semester', $penelitian->semester ?? '') == 'ganjil' ? 'selected' : '' }}>Ganjil</option>
+                                    <option value="genap" {{ old('semester', $penelitian->semester ?? '') == 'genap' ? 'selected' : '' }}>Genap</option>
+                                </select>
+                                @error('semester')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
                         </div>
 
-                        <!-- Semester & Tanggal -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
-                                <label for="semester" class="block text-sm font-medium text-gray-700 mb-2">Semester <span class="text-red-500">*</span></label>
-                                <select name="semester" id="semester" required class="w-full rounded-md border-gray-300 shadow-sm">
-                                    <option value="ganjil" {{ old('semester') == 'ganjil' ? 'selected' : '' }}>Ganjil</option>
-                                    <option value="genap" {{ old('semester') == 'genap' ? 'selected' : '' }}>Genap</option>
-                                </select>
+                                <label for="tanggal_mulai" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Mulai <span class="text-red-600">*</span></label>
+                                <input type="date" id="tanggal_mulai" name="tanggal_mulai" value="{{ old('tanggal_mulai', $penelitian->tanggal_mulai ?? '') }}" required
+                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all">
+                                @error('tanggal_mulai')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
+
                             <div>
-                                <label for="tanggal_mulai" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Mulai <span class="text-red-500">*</span></label>
-                                <input type="date" name="tanggal_mulai" id="tanggal_mulai" value="{{ old('tanggal_mulai') }}" required class="w-full rounded-md border-gray-300 shadow-sm">
-                            </div>
-                            <div>
-                                <label for="tanggal_selesai" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Selesai <span class="text-red-500">*</span></label>
-                                <input type="date" name="tanggal_selesai" id="tanggal_selesai" value="{{ old('tanggal_selesai') }}" required class="w-full rounded-md border-gray-300 shadow-sm">
+                                <label for="tanggal_selesai" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Selesai <span class="text-red-600">*</span></label>
+                                <input type="date" id="tanggal_selesai" name="tanggal_selesai" value="{{ old('tanggal_selesai', $penelitian->tanggal_selesai ?? '') }}" required
+                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all">
+                                @error('tanggal_selesai')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <!-- Dana & Sumber Dana -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                {{-- Section 3: Pendanaan --}}
+                <div class="bg-white rounded-xl shadow-xl p-6 mb-6">
+                    <h2 class="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Pendanaan</h2>
+                    
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
-                                <label for="dana" class="block text-sm font-medium text-gray-700 mb-2">Dana (Rp)</label>
-                                <input type="number" name="dana" id="dana" value="{{ old('dana') }}" min="0" class="w-full rounded-md border-gray-300 shadow-sm">
+                                <label for="dana" class="block text-sm font-medium text-gray-700 mb-2">Nominal Dana (Rp)</label>
+                                <input type="number" id="dana" name="dana" value="{{ old('dana', $penelitian->dana ?? '') }}" min="0"
+                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
+                                       placeholder="0">
+                                @error('dana')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
+
                             <div>
                                 <label for="sumber_dana" class="block text-sm font-medium text-gray-700 mb-2">Sumber Dana</label>
-                                <input type="text" name="sumber_dana" id="sumber_dana" value="{{ old('sumber_dana') }}" placeholder="Contoh: DIKTI, Internal, dll" class="w-full rounded-md border-gray-300 shadow-sm">
+                                <input type="text" id="sumber_dana" name="sumber_dana" value="{{ old('sumber_dana', $penelitian->sumber_dana ?? '') }}"
+                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
+                                       placeholder="Contoh: DIKTI, Internal, dll">
+                                @error('sumber_dana')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <!-- Status -->
-                        <div class="mb-4">
-                            <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status <span class="text-red-500">*</span></label>
-                            <select name="status" id="status" required class="w-full rounded-md border-gray-300 shadow-sm">
-                                <option value="proposal" {{ old('status') == 'proposal' ? 'selected' : '' }}>Proposal</option>
-                                <option value="berjalan" {{ old('status') == 'berjalan' ? 'selected' : '' }}>Berjalan</option>
-                                <option value="selesai" {{ old('status') == 'selesai' ? 'selected' : '' }}>Selesai</option>
-                            </select>
-                        </div>
-
-                        <!-- File Upload -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                {{-- Section 4: Dokumen --}}
+                <div class="bg-white rounded-xl shadow-xl p-6 mb-6">
+                    <h2 class="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Dokumen</h2>
+                    
+                    <div class="space-y-6">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            {{-- File Proposal --}}
                             <div>
                                 <label for="file_proposal" class="block text-sm font-medium text-gray-700 mb-2">File Proposal (PDF, max 10MB)</label>
-                                <input type="file" name="file_proposal" id="file_proposal" accept=".pdf" class="w-full">
-                                <p class="mt-1 text-xs text-gray-500">Format: PDF, Maksimal 10MB</p>
+                                
+                                @if(isset($penelitian) && $penelitian->file_proposal)
+                                    {{-- Tampilan jika file sudah ada --}}
+                                    <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg">
+                                        <p class="text-sm text-gray-900 font-medium">Dokumen Tersimpan: <a href="{{ Storage::url($penelitian->file_proposal) }}" target="_blank" class="text-telkom-blue underline">Lihat File</a></p>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
+                                    <input type="file" id="file_proposal" name="file_proposal" accept=".pdf"
+                                       class="mt-3 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-telkom-blue file:text-white hover:file:bg-blue-800">
+                                @else
+                                    {{-- Tampilan Upload Kosong (Gaya Dropzone) --}}
+                                    <label for="file_proposal" class="flex flex-col items-center justify-center w-full h-32 border-2 border-telkom-blue border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-blue-50 transition-colors">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <i class="fas fa-cloud-upload-alt w-8 h-8 text-telkom-blue mb-2"></i>
+                                            <p class="text-sm text-gray-600">
+                                                <span class="text-telkom-blue font-semibold">Klik untuk upload</span> atau drag and drop
+                                            </p>
+                                            <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
+                                        </div>
+                                        <input type="file" id="file_proposal" name="file_proposal" accept=".pdf" class="hidden">
+                                    </label>
+                                @endif
+                                @error('file_proposal')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
+
+                            {{-- File Laporan --}}
                             <div>
                                 <label for="file_laporan" class="block text-sm font-medium text-gray-700 mb-2">File Laporan (PDF, max 10MB)</label>
-                                <input type="file" name="file_laporan" id="file_laporan" accept=".pdf" class="w-full">
-                                <p class="mt-1 text-xs text-gray-500">Format: PDF, Maksimal 10MB</p>
+                                
+                                @if(isset($penelitian) && $penelitian->file_laporan)
+                                    {{-- Tampilan jika file sudah ada --}}
+                                    <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg">
+                                        <p class="text-sm text-gray-900 font-medium">Dokumen Tersimpan: <a href="{{ Storage::url($penelitian->file_laporan) }}" target="_blank" class="text-telkom-blue underline">Lihat File</a></p>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
+                                    <input type="file" id="file_laporan" name="file_laporan" accept=".pdf"
+                                       class="mt-3 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-telkom-blue file:text-white hover:file:bg-blue-800">
+                                @else
+                                    {{-- Tampilan Upload Kosong (Gaya Dropzone) --}}
+                                    <label for="file_laporan" class="flex flex-col items-center justify-center w-full h-32 border-2 border-telkom-blue border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-blue-50 transition-colors">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <i class="fas fa-cloud-upload-alt w-8 h-8 text-telkom-blue mb-2"></i>
+                                            <p class="text-sm text-gray-600">
+                                                <span class="text-telkom-blue font-semibold">Klik untuk upload</span> atau drag and drop
+                                            </p>
+                                            <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
+                                        </div>
+                                        <input type="file" id="file_laporan" name="file_laporan" accept=".pdf" class="hidden">
+                                    </label>
+                                @endif
+                                @error('file_laporan')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
                         </div>
 
-                        <!-- Catatan -->
-                        <div class="mb-6">
-                            <label for="catatan" class="block text-sm font-medium text-gray-700 mb-2">Catatan</label>
-                            <textarea name="catatan" id="catatan" rows="3" class="w-full rounded-md border-gray-300 shadow-sm">{{ old('catatan') }}</textarea>
+                        {{-- Catatan --}}
+                        <div>
+                            <label for="catatan" class="block text-sm font-medium text-gray-700 mb-2">Catatan (Opsional)</label>
+                            <textarea id="catatan" name="catatan" rows="4" placeholder="Tambahkan catatan atau informasi tambahan..."
+                                      class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all resize-none">{{ old('catatan', $penelitian->catatan ?? '') }}</textarea>
+                            @error('catatan')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                         </div>
-
-                        <!-- Buttons -->
-                        <div class="flex justify-end space-x-3">
-                            <a href="{{ route('penelitian.index') }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition">
-                                Batal
-                            </a>
-                            <button type="submit" class="px-4 py-2 text-white rounded-lg hover:opacity-90 transition" style="background-color: #a02127;">
-                                Simpan
-                            </button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
-            </div>
+
+                {{-- Action Buttons --}}
+                <div class="pt-6 flex justify-end gap-3">
+                    <a href="{{ route('penelitian.index') }}" class="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors shadow-sm font-medium">
+                        Batal
+                    </a>
+                    <button type="submit" class="px-6 py-2.5 bg-telkom-green text-white rounded-lg hover:bg-green-700 transition-colors shadow-md font-semibold">
+                        Simpan Penelitian
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </x-app-layout>
-

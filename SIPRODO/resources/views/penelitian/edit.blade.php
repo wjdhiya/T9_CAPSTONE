@@ -1,3 +1,6 @@
+@php
+    use Illuminate\Support\Str;
+@endphp
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl leading-tight" style="color: #003366;">
@@ -158,24 +161,35 @@
                                 
                                 @if($penelitian->file_proposal)
                                     {{-- Tampilan jika file sudah ada --}}
-                                    <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg">
-                                        <p class="text-sm text-gray-900 font-medium">Dokumen Tersimpan: <a href="{{ Storage::url($penelitian->file_proposal) }}" target="_blank" class="text-telkom-blue underline">Lihat File</a></p>
+                                    <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card" id="file_proposal_card">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center">
+                                                <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3"></i>
+                                                <div>
+                                                    <p class="text-sm font-medium text-gray-900">{{ Str::limit(preg_replace('/^\d+_/', '', basename($penelitian->file_proposal)), 30, '...') }}</p>
+                                                    <p class="text-xs text-gray-500">Dokumen tersimpan</p>
+                                                </div>
+                                            </div>
+                                            <a href="{{ Storage::url($penelitian->file_proposal) }}" target="_blank" class="text-telkom-blue hover:underline text-sm">Lihat</a>
+                                        </div>
                                     </div>
                                     <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
                                     <input type="file" id="file_proposal" name="file_proposal" accept=".pdf"
                                        class="mt-3 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-telkom-blue file:text-white hover:file:bg-blue-800">
                                 @else
                                     {{-- Tampilan Upload Kosong (Gaya Dropzone) --}}
-                                    <label for="file_proposal" class="flex flex-col items-center justify-center w-full h-32 border-2 border-telkom-blue border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-blue-50 transition-colors">
-                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                            <i class="fas fa-cloud-upload-alt w-8 h-8 text-telkom-blue mb-2"></i>
-                                            <p class="text-sm text-gray-600">
-                                                <span class="text-telkom-blue font-semibold">Klik untuk upload</span> atau drag and drop
-                                            </p>
-                                            <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
-                                        </div>
-                                        <input type="file" id="file_proposal" name="file_proposal" accept=".pdf" class="hidden">
-                                    </label>
+                                    <div class="file-upload-area" id="file_proposal_upload">
+                                        <label for="file_proposal" class="flex flex-col items-center justify-center w-full h-32 border-2 border-telkom-blue border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-blue-50 transition-colors">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-telkom-blue mb-2"></i>
+                                                <p class="text-sm text-gray-600">
+                                                    <span class="text-telkom-blue font-semibold">Klik untuk upload</span> atau drag and drop
+                                                </p>
+                                                <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
+                                            </div>
+                                            <input type="file" id="file_proposal" name="file_proposal" accept=".pdf" class="hidden">
+                                        </label>
+                                    </div>
                                 @endif
                                 @error('file_proposal')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
@@ -186,24 +200,35 @@
                                 
                                 @if($penelitian->file_laporan)
                                     {{-- Tampilan jika file sudah ada --}}
-                                    <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg">
-                                        <p class="text-sm text-gray-900 font-medium">Dokumen Tersimpan: <a href="{{ Storage::url($penelitian->file_laporan) }}" target="_blank" class="text-telkom-blue underline">Lihat File</a></p>
+                                    <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card" id="file_laporan_card">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center">
+                                                <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3"></i>
+                                                <div>
+                                                    <p class="text-sm font-medium text-gray-900">{{ Str::limit(preg_replace('/^\d+_/', '', basename($penelitian->file_laporan)), 30, '...') }}</p>
+                                                    <p class="text-xs text-gray-500">Dokumen tersimpan</p>
+                                                </div>
+                                            </div>
+                                            <a href="{{ Storage::url($penelitian->file_laporan) }}" target="_blank" class="text-telkom-blue hover:underline text-sm">Lihat</a>
+                                        </div>
                                     </div>
                                     <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
                                     <input type="file" id="file_laporan" name="file_laporan" accept=".pdf"
                                        class="mt-3 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-telkom-blue file:text-white hover:file:bg-blue-800">
                                 @else
                                     {{-- Tampilan Upload Kosong (Gaya Dropzone) --}}
-                                    <label for="file_laporan" class="flex flex-col items-center justify-center w-full h-32 border-2 border-telkom-blue border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-blue-50 transition-colors">
-                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                            <i class="fas fa-cloud-upload-alt w-8 h-8 text-telkom-blue mb-2"></i>
-                                            <p class="text-sm text-gray-600">
-                                                <span class="text-telkom-blue font-semibold">Klik untuk upload</span> atau drag and drop
-                                            </p>
-                                            <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
-                                        </div>
-                                        <input type="file" id="file_laporan" name="file_laporan" accept=".pdf" class="hidden">
-                                    </label>
+                                    <div class="file-upload-area" id="file_laporan_upload">
+                                        <label for="file_laporan" class="flex flex-col items-center justify-center w-full h-32 border-2 border-telkom-blue border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-blue-50 transition-colors">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-telkom-blue mb-2"></i>
+                                                <p class="text-sm text-gray-600">
+                                                    <span class="text-telkom-blue font-semibold">Klik untuk upload</span> atau drag and drop
+                                                </p>
+                                                <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
+                                            </div>
+                                            <input type="file" id="file_laporan" name="file_laporan" accept=".pdf" class="hidden">
+                                        </label>
+                                    </div>
                                 @endif
                                 @error('file_laporan')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
@@ -231,4 +256,76 @@
             </form>
         </div>
     </div>
+
+    <script>
+        // Function to handle file input change
+        function handleFileChange(inputId, uploadAreaId, cardId) {
+            const input = document.getElementById(inputId);
+            const uploadArea = document.getElementById(uploadAreaId);
+            const existingCard = document.getElementById(cardId);
+
+            input.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    // Hide upload area if it exists
+                    if (uploadArea) {
+                        uploadArea.style.display = 'none';
+                    }
+
+                    // Create or update file card
+                    let card = existingCard;
+                    if (!card) {
+                        card = document.createElement('div');
+                        card.id = cardId;
+                        card.className = 'p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card';
+                        const container = input.closest('div');
+                        container.insertBefore(card, input);
+                    }
+
+                    // Limit filename length
+                    const maxLength = 30;
+                    const displayName = file.name.length > maxLength ? file.name.substring(0, maxLength) + '...' : file.name;
+
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center flex-1 min-w-0 mr-3">
+                                <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3 flex-shrink-0"></i>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-sm font-medium text-gray-900 truncate">${displayName}</p>
+                                    <p class="text-xs text-gray-500">File dipilih</p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="removeFile('${inputId}', '${uploadAreaId}', '${cardId}')" class="text-red-500 hover:text-red-700 text-sm flex-shrink-0">
+                                <i class="fas fa-times"></i> Hapus
+                            </button>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        // Function to remove selected file
+        function removeFile(inputId, uploadAreaId, cardId) {
+            const input = document.getElementById(inputId);
+            const uploadArea = document.getElementById(uploadAreaId);
+            const card = document.getElementById(cardId);
+
+            // Clear input
+            input.value = '';
+
+            // Hide card and show upload area
+            if (card) {
+                card.style.display = 'none';
+            }
+            if (uploadArea) {
+                uploadArea.style.display = 'block';
+            }
+        }
+
+        // Initialize file handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            handleFileChange('file_proposal', 'file_proposal_upload', 'file_proposal_card');
+            handleFileChange('file_laporan', 'file_laporan_upload', 'file_laporan_card');
+        });
+    </script>
 </x-app-layout>

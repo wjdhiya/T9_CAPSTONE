@@ -108,6 +108,14 @@
                     {{ ucfirst($publikasi->status_verifikasi) }}
                 </span>
 
+                @if($publikasi->verified_by)
+                <div class="mb-2 mt-4">
+                    <p class="text-sm text-gray-600">Diverifikasi oleh</p>
+                    <p class="font-semibold">{{ $publikasi->verifiedBy->name }}</p>
+                    <p class="text-sm text-gray-500">{{ $publikasi->verified_at?->format('d M Y H:i') }}</p>
+                </div>
+                @endif
+
                 @if($publikasi->catatan_verifikasi)
                 <div class="mt-4 p-4 bg-gray-50 rounded-lg">
                     <p class="text-sm text-gray-600 mb-1">Catatan Verifikasi</p>

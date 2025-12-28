@@ -89,10 +89,11 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="px-2 text-xs font-semibold rounded-full 
-                                            @if($item->status === 'selesai') bg-green-100 text-green-800
-                                            @elseif($item->status === 'berjalan') bg-yellow-100 text-yellow-800
-                                            @else bg-gray-100 text-gray-800
-                                            @endif">
+                                            {{ $item->status === 'selesai'
+                                                ? 'bg-green-100 text-green-800'
+                                                : ($item->status === 'berjalan'
+                                                    ? 'bg-yellow-100 text-yellow-800'
+                                                    : 'bg-gray-100 text-gray-800') }}">
                                             {{ ucfirst($item->status) }}
                                         </span>
                                     </td>

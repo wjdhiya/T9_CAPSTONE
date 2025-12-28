@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('judul');
             $table->text('abstrak')->nullable();
-            $table->enum('jenis', ['internal', 'eksternal', 'mandiri']);
+            $table->enum('jenis', ['mandiri', 'hibah_internal', 'hibah_eksternal', 'kerjasama']);
             $table->string('sumber_dana')->nullable();
             $table->decimal('dana', 15, 2)->nullable();
             $table->year('tahun_akademik');

@@ -252,7 +252,7 @@
             <script>
                 document.addEventListener('DOMContentLoaded', function() {
                     const ctx = document.getElementById('topLecturersChart').getContext('2d');
-                    const lecturers = @json($topLecturers);
+                    const lecturers = JSON.parse('{{ json_encode($topLecturers) }}');
                     
                     new Chart(ctx, {
                         type: 'bar',

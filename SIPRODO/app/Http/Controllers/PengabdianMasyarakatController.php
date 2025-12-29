@@ -36,7 +36,7 @@ class PengabdianMasyarakatController extends Controller
 
         // Filter by year
         if ($request->filled('tahun_akademik')) {
-            $query->whereYear('tanggal_mulai', $request->tahun_akademik);
+            $query->where('tahun_akademik', 'like', $request->tahun_akademik . '%');
         }
 
         // Filter by semester

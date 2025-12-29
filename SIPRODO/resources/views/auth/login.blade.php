@@ -200,6 +200,29 @@
             transform: translateY(0);
         }
 
+        /* Styles untuk Register Link (Baru) */
+        .register-link {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 0.95rem;
+            color: #666;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .register-link a {
+            color: #a02127;
+            text-decoration: none;
+            font-weight: 700;
+            margin-left: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .register-link a:hover {
+            color: #8c1d22;
+            text-decoration: underline;
+        }
+
         .session-status {
             background: #d1fae5;
             color: #065f46;
@@ -271,7 +294,7 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('login', absolute: false) }}">
+            <form method="POST" action="{{ route('login') }}">
                 @csrf
 
                 <!-- Email Address -->
@@ -321,6 +344,13 @@
 
                 <!-- Login Button -->
                 <button type="submit" class="login-btn">Masuk</button>
+
+                <!-- REGISTER LINK SECTION -->
+                <div class="register-link">
+                    Belum punya akun? 
+                    <a href="{{ route('register') }}">Daftar Sekarang</a>
+                </div>
+
             </form>
         </div>
     </div>

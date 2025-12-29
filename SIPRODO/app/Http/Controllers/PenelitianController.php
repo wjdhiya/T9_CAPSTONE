@@ -37,7 +37,7 @@ class PenelitianController extends Controller
         }
 
         if ($request->has('tahun_akademik')) {
-            $query->where('tahun_akademik', $request->tahun_akademik);
+            $query->where('tahun_akademik', 'like', $request->tahun_akademik . '%');
         }
 
         if ($request->has('semester')) {

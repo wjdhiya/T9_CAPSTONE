@@ -217,6 +217,7 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Data</label>
                                     <select name="jenis" class="w-full border-gray-300 rounded-md shadow-sm focus:border-red-300 focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                                        <option value="all" selected>Semua Data</option>
                                         <option value="penelitian">Penelitian</option>
                                         <option value="publikasi">Publikasi</option>
                                         <option value="pengmas">Pengabdian Masyarakat</option>
@@ -224,15 +225,17 @@
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Semester</label>
-                                        <select name="semester" class="w-full border-gray-300 rounded-md shadow-sm focus:border-red-300 focus:ring focus:ring-red-200 focus:ring-opacity-50">
-                                            <option value="1">Ganjil (Jan-Jun)</option>
-                                            <option value="2" {{ $currentSemester == 2 ? 'selected' : '' }}>Genap (Jul-Des)</option>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Periode</label>
+                                        <select name="semester" id="semesterSelect" class="w-full border-gray-300 rounded-md shadow-sm focus:border-red-300 focus:ring focus:ring-red-200 focus:ring-opacity-50" onchange="toggleYearField()">
+                                            <option value="">Semua Periode (2022 - {{ date('Y') }})</option>
+                                            <option value="1">Ganjil</option>
+                                            <option value="2">Genap</option>
                                         </select>
                                     </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Tahun</label>
-                                        <input type="number" name="tahun_akademik" value="{{ $currentYear }}" min="2020" max="{{ date('Y') + 1 }}" class="w-full border-gray-300 rounded-md shadow-sm focus:border-red-300 focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                                    <div id="yearField">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Tahun Akademik</label>
+                                        <input type="number" name="tahun_akademik" value="{{ $currentYear }}" min="2022" max="{{ date('Y') + 1 }}" class="w-full border-gray-300 rounded-md shadow-sm focus:border-red-300 focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                                        <p class="text-xs text-gray-500 mt-1">Kosongkan jika ingin semua tahun</p>
                                     </div>
                                 </div>
                                 <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white" style="background-color: #a02127;" onmouseover="this.style.backgroundColor='#8c1d22'" onmouseout="this.style.backgroundColor='#a02127'">
@@ -250,6 +253,29 @@
         @push('scripts')
             <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
             <script>
+                // Toggle visibility field tahun akademik berdasarkan pilihan semester
+                function toggleYearField() {
+                    const semesterSelect = document.getElementById('semesterSelect');
+                    const yearField = document.getElementById('yearField');
+                    const yearInput = document.querySelector('input[name="tahun_akademik"]');
+                    
+                    if (semesterSelect.value === '') {
+                        // Semua Periode - sembunyikan field tahun
+                        yearField.style.display = 'none';
+                        yearInput.removeAttribute('required');
+                    } else {
+                        // Semester spesifik - tampilkan field tahun
+                        yearField.style.display = 'block';
+                        yearInput.setAttribute('required', 'required');
+                    }
+                }
+                
+                // Set initial state berdasarkan pilihan semester default
+                document.addEventListener('DOMContentLoaded', function() {
+                    toggleYearField();
+                });
+
+                // Chart.js untuk menampilkan grafik dosen paling aktif
                 document.addEventListener('DOMContentLoaded', function() {
                     const ctx = document.getElementById('topLecturersChart').getContext('2d');
                     const lecturers = JSON.parse('{{ json_encode($topLecturers) }}');

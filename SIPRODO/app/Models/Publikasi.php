@@ -90,5 +90,14 @@ class Publikasi extends Model
     {
         return $query->where('indexing', $indexing);
     }
+
+    public function scopeRentangTahunAkademik($query, int $startYear)
+    {
+        return $query->where(function ($q) use ($startYear) {
+            for ($year = $startYear; $year <= now()->year; $year++) {
+                $q->orWhere('tahun_akademik', 'like', $year . '%');
+            }
+        });
+    }
 }
 

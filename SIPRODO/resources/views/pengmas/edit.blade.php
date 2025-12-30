@@ -187,51 +187,150 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                             {{-- File Proposal --}}
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">File Proposal (PDF)</label>
-                                @if($pengabdianMasyarakat->file_proposal)
+                                <label class="block text-sm font-medium text-gray-700 mb-2">File Proposal (PDF, max 10MB)</label>
+                                
+                                @if(isset($pengabdianMasyarakat) && $pengabdianMasyarakat->file_proposal)
                                     {{-- Tampilan jika file sudah ada --}}
-                                    <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg">
-                                        <p class="text-sm text-gray-900 font-medium">Dokumen Tersimpan: <a href="{{ Storage::url($pengabdianMasyarakat->file_proposal) }}" target="_blank" class="text-telkom-blue underline">Lihat File</a></p>
+                                    <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card" id="file_proposal_card">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center">
+                                                <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3"></i>
+                                                <div>
+                                                    <p class="text-sm font-medium text-gray-900">{{ Str::limit(preg_replace('/^\d+_/', '', basename($pengabdianMasyarakat->file_proposal)), 30, '...') }}</p>
+                                                    <p class="text-xs text-gray-500">Dokumen tersimpan</p>
+                                                </div>
+                                            </div>
+                                            <a href="{{ Storage::url($pengabdianMasyarakat->file_proposal) }}" target="_blank" class="text-telkom-blue hover:underline text-sm">Lihat</a>
+                                        </div>
                                     </div>
                                     <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
-                                    <input type="file" name="file_proposal" accept=".pdf" class="mt-3 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-telkom-blue file:text-white hover:file:bg-blue-800">
+                                    {{-- Tampilan Upload Ganti File (Gaya Dropzone) --}}
+                                    <div class="file-upload-area" id="file_proposal_replace">
+                                        <label for="file_proposal" class="flex flex-col items-center justify-center w-full h-32 border-2 border-telkom-blue border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-blue-50 transition-colors">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-telkom-blue mb-2"></i>
+                                                <p class="text-sm text-gray-600">
+                                                    <span class="text-telkom-blue font-semibold">Klik untuk mengganti file</span> atau drag and drop
+                                                </p>
+                                                <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
+                                            </div>
+                                            <input type="file" id="file_proposal" name="file_proposal" accept=".pdf" class="hidden">
+                                        </label>
+                                    </div>
                                 @else
-                                    {{-- Tampilan Upload Kosong --}}
-                                    <input type="file" name="file_proposal" accept=".pdf" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-telkom-blue file:text-white hover:file:bg-blue-800">
+                                    {{-- Tampilan Upload Kosong (Gaya Dropzone) --}}
+                                    <div class="file-upload-area" id="file_proposal_upload">
+                                        <label for="file_proposal" class="flex flex-col items-center justify-center w-full h-32 border-2 border-telkom-blue border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-blue-50 transition-colors">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-telkom-blue mb-2"></i>
+                                                <p class="text-sm text-gray-600">
+                                                    <span class="text-telkom-blue font-semibold">Klik untuk upload</span> atau drag and drop
+                                                </p>
+                                                <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
+                                            </div>
+                                            <input type="file" id="file_proposal" name="file_proposal" accept=".pdf" class="hidden">
+                                        </label>
+                                    </div>
                                 @endif
                                 @error('file_proposal')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
 
                             {{-- File Laporan --}}
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">File Laporan (PDF)</label>
-                                @if($pengabdianMasyarakat->file_laporan)
+                                <label class="block text-sm font-medium text-gray-700 mb-2">File Laporan (PDF, max 10MB)</label>
+                                
+                                @if(isset($pengabdianMasyarakat) && $pengabdianMasyarakat->file_laporan)
                                     {{-- Tampilan jika file sudah ada --}}
-                                    <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg">
-                                        <p class="text-sm text-gray-900 font-medium">Dokumen Tersimpan: <a href="{{ Storage::url($pengabdianMasyarakat->file_laporan) }}" target="_blank" class="text-telkom-blue underline">Lihat File</a></p>
+                                    <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card" id="file_laporan_card">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center">
+                                                <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3"></i>
+                                                <div>
+                                                    <p class="text-sm font-medium text-gray-900">{{ Str::limit(preg_replace('/^\d+_/', '', basename($pengabdianMasyarakat->file_laporan)), 30, '...') }}</p>
+                                                    <p class="text-xs text-gray-500">Dokumen tersimpan</p>
+                                                </div>
+                                            </div>
+                                            <a href="{{ Storage::url($pengabdianMasyarakat->file_laporan) }}" target="_blank" class="text-telkom-blue hover:underline text-sm">Lihat</a>
+                                        </div>
                                     </div>
                                     <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
-                                    <input type="file" name="file_laporan" accept=".pdf" class="mt-3 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-telkom-blue file:text-white hover:file:bg-blue-800">
+                                    {{-- Tampilan Upload Ganti File (Gaya Dropzone) --}}
+                                    <div class="file-upload-area" id="file_laporan_replace">
+                                        <label for="file_laporan" class="flex flex-col items-center justify-center w-full h-32 border-2 border-telkom-blue border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-blue-50 transition-colors">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-telkom-blue mb-2"></i>
+                                                <p class="text-sm text-gray-600">
+                                                    <span class="text-telkom-blue font-semibold">Klik untuk mengganti file</span> atau drag and drop
+                                                </p>
+                                                <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
+                                            </div>
+                                            <input type="file" id="file_laporan" name="file_laporan" accept=".pdf" class="hidden">
+                                        </label>
+                                    </div>
                                 @else
-                                    {{-- Tampilan Upload Kosong --}}
-                                    <input type="file" name="file_laporan" accept=".pdf" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-telkom-blue file:text-white hover:file:bg-blue-800">
+                                    {{-- Tampilan Upload Kosong (Gaya Dropzone) --}}
+                                    <div class="file-upload-area" id="file_laporan_upload">
+                                        <label for="file_laporan" class="flex flex-col items-center justify-center w-full h-32 border-2 border-telkom-blue border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-blue-50 transition-colors">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-telkom-blue mb-2"></i>
+                                                <p class="text-sm text-gray-600">
+                                                    <span class="text-telkom-blue font-semibold">Klik untuk upload</span> atau drag and drop
+                                                </p>
+                                                <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
+                                            </div>
+                                            <input type="file" id="file_laporan" name="file_laporan" accept=".pdf" class="hidden">
+                                        </label>
+                                    </div>
                                 @endif
                                 @error('file_laporan')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
 
                             {{-- Dokumentasi --}}
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Dokumentasi (Foto/ZIP)</label>
-                                @if($pengabdianMasyarakat->file_dokumentasi)
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Dokumentasi (Foto/ZIP, max 10MB)</label>
+                                
+                                @if(isset($pengabdianMasyarakat) && $pengabdianMasyarakat->file_dokumentasi)
                                     {{-- Tampilan jika file sudah ada --}}
-                                    <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg">
-                                        <p class="text-sm text-gray-900 font-medium">Dokumen Tersimpan: <a href="{{ Storage::url($pengabdianMasyarakat->file_dokumentasi) }}" target="_blank" class="text-telkom-blue underline">Lihat File</a></p>
+                                    <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card" id="file_dokumentasi_card">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center">
+                                                <i class="fas fa-file-archive w-6 h-6 text-yellow-500 mr-3"></i>
+                                                <div>
+                                                    <p class="text-sm font-medium text-gray-900">{{ Str::limit(preg_replace('/^\d+_/', '', basename($pengabdianMasyarakat->file_dokumentasi)), 30, '...') }}</p>
+                                                    <p class="text-xs text-gray-500">Dokumen tersimpan</p>
+                                                </div>
+                                            </div>
+                                            <a href="{{ Storage::url($pengabdianMasyarakat->file_dokumentasi) }}" target="_blank" class="text-telkom-blue hover:underline text-sm">Lihat</a>
+                                        </div>
                                     </div>
                                     <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
-                                    <input type="file" name="file_dokumentasi" class="mt-3 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-telkom-blue file:text-white hover:file:bg-blue-800">
+                                    {{-- Tampilan Upload Ganti File (Gaya Dropzone) --}}
+                                    <div class="file-upload-area" id="file_dokumentasi_replace">
+                                        <label for="file_dokumentasi" class="flex flex-col items-center justify-center w-full h-32 border-2 border-telkom-blue border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-blue-50 transition-colors">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-telkom-blue mb-2"></i>
+                                                <p class="text-sm text-gray-600">
+                                                    <span class="text-telkom-blue font-semibold">Klik untuk mengganti file</span> atau drag and drop
+                                                </p>
+                                                <p class="text-xs text-gray-400 mt-1">JPG/PNG/ZIP (MAX. 10MB)</p>
+                                            </div>
+                                            <input type="file" id="file_dokumentasi" name="file_dokumentasi" class="hidden">
+                                        </label>
+                                    </div>
                                 @else
-                                    {{-- Tampilan Upload Kosong --}}
-                                    <input type="file" name="file_dokumentasi" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-telkom-blue file:text-white hover:file:bg-blue-800">
+                                    {{-- Tampilan Upload Kosong (Gaya Dropzone) --}}
+                                    <div class="file-upload-area" id="file_dokumentasi_upload">
+                                        <label for="file_dokumentasi" class="flex flex-col items-center justify-center w-full h-32 border-2 border-telkom-blue border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-blue-50 transition-colors">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-telkom-blue mb-2"></i>
+                                                <p class="text-sm text-gray-600">
+                                                    <span class="text-telkom-blue font-semibold">Klik untuk upload</span> atau drag and drop
+                                                </p>
+                                                <p class="text-xs text-gray-400 mt-1">JPG/PNG/ZIP (MAX. 10MB)</p>
+                                            </div>
+                                            <input type="file" id="file_dokumentasi" name="file_dokumentasi" class="hidden">
+                                        </label>
+                                    </div>
                                 @endif
                                 @error('file_dokumentasi')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
@@ -244,11 +343,98 @@
                     <a href="{{ route('pengmas.index') }}" class="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors shadow-sm font-medium">
                         Batal
                     </a>
-                    <button type="submit" class="px-6 py-2.5 bg-telkom-green text-white rounded-lg hover:bg-telkom-green hover:shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 font-semibold">
+                    <button type="submit" class="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 hover:shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 font-semibold">
                         Update Data
                     </button>
                 </div>
             </form>
         </div>
     </div>
+
+    <script>
+        // Function to limit string length
+        function limitString(str, maxLength = 30) {
+            if (str.length <= maxLength) return str;
+            return str.substring(0, maxLength - 3) + '...';
+        }
+
+        // Function to handle file input change
+        function handleFileChange(inputId, uploadAreaId, cardId) {
+            const input = document.getElementById(inputId);
+            const uploadArea = document.getElementById(uploadAreaId);
+            const existingCard = document.getElementById(cardId);
+
+            input.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    // Hide upload area
+                    uploadArea.style.display = 'none';
+
+                    // Create or update file card
+                    let card = existingCard;
+                    if (!card) {
+                        card = document.createElement('div');
+                        card.id = cardId;
+                        card.className = 'p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card mt-2';
+                        uploadArea.parentNode.insertBefore(card, uploadArea.nextSibling);
+                    }
+
+                    // Determine icon based on file type
+                    let iconClass = 'fas fa-file-pdf w-6 h-6 text-red-500';
+                    let fileType = 'File dipilih';
+                    
+                    if (file.type.startsWith('image/')) {
+                        iconClass = 'fas fa-file-image w-6 h-6 text-blue-500';
+                        fileType = 'Gambar dipilih';
+                    } else if (file.name.endsWith('.zip')) {
+                        iconClass = 'fas fa-file-archive w-6 h-6 text-yellow-500';
+                        fileType = 'Arsip ZIP dipilih';
+                    }
+
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center flex-1 min-w-0 mr-3">
+                                <i class="${iconClass} mr-3 flex-shrink-0"></i>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-sm font-medium text-gray-900 truncate">${limitString(file.name)}</p>
+                                    <p class="text-xs text-gray-500">${fileType}</p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="removeFile('${inputId}', '${uploadAreaId}', '${cardId}')" class="text-red-500 hover:text-red-700 text-sm flex-shrink-0">
+                                <i class="fas fa-times"></i> Hapus
+                            </button>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        // Function to remove selected file
+        function removeFile(inputId, uploadAreaId, cardId) {
+            const input = document.getElementById(inputId);
+            const uploadArea = document.getElementById(uploadAreaId);
+            const card = document.getElementById(cardId);
+
+            // Clear input
+            input.value = '';
+
+            // Hide card and show upload area
+            if (card) {
+                card.style.display = 'none';
+            }
+            if (uploadArea) {
+                uploadArea.style.display = 'block';
+            }
+        }
+
+        // Initialize file handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            handleFileChange('file_proposal', 'file_proposal_upload', 'file_proposal_card');
+            handleFileChange('file_proposal', 'file_proposal_replace', 'file_proposal_card');
+            handleFileChange('file_laporan', 'file_laporan_upload', 'file_laporan_card');
+            handleFileChange('file_laporan', 'file_laporan_replace', 'file_laporan_card');
+            handleFileChange('file_dokumentasi', 'file_dokumentasi_upload', 'file_dokumentasi_card');
+            handleFileChange('file_dokumentasi', 'file_dokumentasi_replace', 'file_dokumentasi_card');
+        });
+    </script>
 </x-app-layout>

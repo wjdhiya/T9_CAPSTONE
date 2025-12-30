@@ -54,25 +54,19 @@
 
                         <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <a href="{{ route('penelitian.index') }}"
-                               class="flex items-center p-4 rounded-lg transition"
-                               style="background-color: #fee2e2;"
-                               onmouseover="this.style.backgroundColor='#fecaca'"
-                               onmouseout="this.style.backgroundColor='#fee2e2'">
-                                <svg class="w-6 h-6 mr-3" style="color: #a02127;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="flex items-center p-4 rounded-lg bg-red-50 hover:bg-red-100 transition-colors border border-red-200">
+                                <svg class="w-6 h-6 mr-3 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                                 </svg>
-                                <span class="font-medium" style="color: #a02127;">Lihat Data Penelitian</span>
+                                <span class="font-medium text-red-700">Lihat Data Penelitian</span>
                             </a>
 
                             <a href="{{ route('penelitian.create') }}"
-                               class="flex items-center p-4 rounded-lg transition"
-                               style="background-color: #ffffff; border: 1px solid #fee2e2;"
-                               onmouseover="this.style.backgroundColor='#fff7f7'"
-                               onmouseout="this.style.backgroundColor='#ffffff'">
-                                <svg class="w-6 h-6 mr-3" style="color: #a02127;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="flex items-center p-4 rounded-lg bg-white hover:bg-red-50 transition-colors border border-red-200">
+                                <svg class="w-6 h-6 mr-3 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                 </svg>
-                                <span class="font-medium" style="color: #a02127;">Tambah Penelitian</span>
+                                <span class="font-medium text-red-700">Tambah Penelitian</span>
                             </a>
                         </div>
                     </div>
@@ -98,25 +92,19 @@
 
                         <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <a href="{{ route('publikasi.index') }}"
-                               class="flex items-center p-4 rounded-lg transition"
-                               style="background-color: #d1fae5;"
-                               onmouseover="this.style.backgroundColor='#a7f3d0'"
-                               onmouseout="this.style.backgroundColor='#d1fae5'">
-                                <svg class="w-6 h-6 mr-3" style="color: #10784b;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="flex items-center p-4 rounded-lg bg-green-50 hover:bg-green-100 transition-colors border border-green-200">
+                                <svg class="w-6 h-6 mr-3 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"></path>
                                 </svg>
-                                <span class="font-medium" style="color: #10784b;">Lihat Data Publikasi</span>
+                                <span class="font-medium text-green-700">Lihat Data Publikasi</span>
                             </a>
 
                             <a href="{{ route('publikasi.create') }}"
-                               class="flex items-center p-4 rounded-lg transition"
-                               style="background-color: #ffffff; border: 1px solid #d1fae5;"
-                               onmouseover="this.style.backgroundColor='#f7fff9'"
-                               onmouseout="this.style.backgroundColor='#ffffff'">
-                                <svg class="w-6 h-6 mr-3" style="color: #10784b;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="flex items-center p-4 rounded-lg bg-white hover:bg-green-50 transition-colors border border-green-200">
+                                <svg class="w-6 h-6 mr-3 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                 </svg>
-                                <span class="font-medium" style="color: #10784b;">Tambah Publikasi</span>
+                                <span class="font-medium text-green-700">Tambah Publikasi</span>
                             </a>
                         </div>
                     </div>
@@ -127,10 +115,10 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm font-medium text-gray-600">Total Pengabdian Masyarakat</p>
-                                <p class="text-3xl font-bold" style="color: #585858;">{{ $stats['pengmas']['total'] ?? 0 }}</p>
+                                <p class="text-3xl font-bold" style="color: #003366;">{{ $stats['pengmas']['total'] ?? 0 }}</p>
                             </div>
                             <div class="p-3 rounded-full" style="background-color: #f3f4f6;">
-                                <svg class="w-8 h-8" style="color: #585858;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-8 h-8" style="color: #003366;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                                 </svg>
                             </div>
@@ -142,25 +130,19 @@
 
                         <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <a href="{{ route('pengmas.index') }}"
-                               class="flex items-center p-4 rounded-lg transition"
-                               style="background-color: #f3f4f6;"
-                               onmouseover="this.style.backgroundColor='#e5e7eb'"
-                               onmouseout="this.style.backgroundColor='#f3f4f6'">
-                                <svg class="w-6 h-6 mr-3" style="color: #585858;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="flex items-center p-4 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors border border-blue-200">
+                                <svg class="w-6 h-6 mr-3 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                                 </svg>
-                                <span class="font-medium" style="color: #585858;">Lihat Data Pengabdian</span>
+                                <span class="font-medium text-blue-700">Lihat Data Pengabdian</span>
                             </a>
 
                             <a href="{{ route('pengmas.create') }}"
-                               class="flex items-center p-4 rounded-lg transition"
-                               style="background-color: #ffffff; border: 1px solid #f3f4f6;"
-                               onmouseover="this.style.backgroundColor='#fbfbfb'"
-                               onmouseout="this.style.backgroundColor='#ffffff'">
-                                <svg class="w-6 h-6 mr-3" style="color: #585858;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="flex items-center p-4 rounded-lg bg-white hover:bg-blue-50 transition-colors border border-blue-200">
+                                <svg class="w-6 h-6 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                 </svg>
-                                <span class="font-medium" style="color: #585858;">Tambah Pengabdian Masyarakat</span>
+                                <span class="font-medium text-blue-600">Tambah Pengabdian Masyarakat</span>
                             </a>
                         </div>
                     </div>
@@ -238,7 +220,7 @@
                                         <p class="text-xs text-gray-500 mt-1">Kosongkan jika ingin semua tahun</p>
                                     </div>
                                 </div>
-                                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white" style="background-color: #a02127;" onmouseover="this.style.backgroundColor='#8c1d22'" onmouseout="this.style.backgroundColor='#a02127'">
+                                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-700 hover:bg-red-800 transition-colors">
                                     Ekspor ke Excel
                                 </button>
                             </form>

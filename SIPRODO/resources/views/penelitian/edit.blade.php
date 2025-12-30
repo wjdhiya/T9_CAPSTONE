@@ -174,8 +174,19 @@
                                         </div>
                                     </div>
                                     <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
-                                    <input type="file" id="file_proposal" name="file_proposal" accept=".pdf"
-                                       class="mt-3 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-telkom-blue file:text-white hover:file:bg-blue-800">
+                                    {{-- Tampilan Upload Ganti File (Gaya Dropzone) --}}
+                                    <div class="file-upload-area" id="file_proposal_replace">
+                                        <label for="file_proposal" class="flex flex-col items-center justify-center w-full h-32 border-2 border-telkom-blue border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-blue-50 transition-colors">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-telkom-blue mb-2"></i>
+                                                <p class="text-sm text-gray-600">
+                                                    <span class="text-telkom-blue font-semibold">Klik untuk mengganti file</span> atau drag and drop
+                                                </p>
+                                                <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
+                                            </div>
+                                            <input type="file" id="file_proposal" name="file_proposal" accept=".pdf" class="hidden">
+                                        </label>
+                                    </div>
                                 @else
                                     {{-- Tampilan Upload Kosong (Gaya Dropzone) --}}
                                     <div class="file-upload-area" id="file_proposal_upload">
@@ -213,8 +224,19 @@
                                         </div>
                                     </div>
                                     <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
-                                    <input type="file" id="file_laporan" name="file_laporan" accept=".pdf"
-                                       class="mt-3 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-telkom-blue file:text-white hover:file:bg-blue-800">
+                                    {{-- Tampilan Upload Ganti File (Gaya Dropzone) --}}
+                                    <div class="file-upload-area" id="file_laporan_replace">
+                                        <label for="file_laporan" class="flex flex-col items-center justify-center w-full h-32 border-2 border-telkom-blue border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-blue-50 transition-colors">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-telkom-blue mb-2"></i>
+                                                <p class="text-sm text-gray-600">
+                                                    <span class="text-telkom-blue font-semibold">Klik untuk mengganti file</span> atau drag and drop
+                                                </p>
+                                                <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
+                                            </div>
+                                            <input type="file" id="file_laporan" name="file_laporan" accept=".pdf" class="hidden">
+                                        </label>
+                                    </div>
                                 @else
                                     {{-- Tampilan Upload Kosong (Gaya Dropzone) --}}
                                     <div class="file-upload-area" id="file_laporan_upload">
@@ -249,7 +271,7 @@
                     <a href="{{ route('penelitian.index') }}" class="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors shadow-sm font-medium">
                         Batal
                     </a>
-                    <button type="submit" class="px-6 py-2.5 bg-telkom-green text-white rounded-lg hover:bg-telkom-green hover:shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 font-semibold">
+                    <button type="submit" class="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 hover:shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 font-semibold">
                         Update Penelitian
                     </button>
                 </div>
@@ -325,7 +347,9 @@
         // Initialize file handlers
         document.addEventListener('DOMContentLoaded', function() {
             handleFileChange('file_proposal', 'file_proposal_upload', 'file_proposal_card');
+            handleFileChange('file_proposal', 'file_proposal_replace', 'file_proposal_card');
             handleFileChange('file_laporan', 'file_laporan_upload', 'file_laporan_card');
+            handleFileChange('file_laporan', 'file_laporan_replace', 'file_laporan_card');
         });
     </script>
 </x-app-layout>

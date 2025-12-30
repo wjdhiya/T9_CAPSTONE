@@ -25,18 +25,23 @@ class PublikasiController extends Controller
             $query->where('user_id', $user->id);
         }
 
-        // Search
+        // Search (Judul, Penulis, Penerbit, dan Nama Dosen/User)
         if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('judul', 'like', '%' . $request->search . '%')
-                  ->orWhere('penulis', 'like', '%' . $request->search . '%')
-                  ->orWhere('penerbit', 'like', '%' . $request->search . '%');
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('judul', 'like', '%' . $search . '%')
+                  ->orWhere('penulis', 'like', '%' . $search . '%') // Pencarian Penulis (Manual input)
+                  ->orWhere('penerbit', 'like', '%' . $search . '%')
+                  // Tambahan: Cari berdasarkan nama user (Dosen pemilik data)
+                  ->orWhereHas('user', function ($subQ) use ($search) {
+                      $subQ->where('name', 'like', '%' . $search . '%');
+                  });
             });
         }
 
         // Filter by year
         if ($request->filled('tahun_akademik')) {
-            $query->whereYear('tanggal_terbit', $request->tahun_akademik);
+            $query->where('tahun_akademik', $request->tahun_akademik);
         }
 
         // Filter by jenis
@@ -291,11 +296,8 @@ class PublikasiController extends Controller
 
     /**
      * Download publikasi file (Admin/Kaprodi only)
-     * 
-     * @param Publikasi $publikasi
-     * @return BinaryFileResponse
-     * 
-     * @method BinaryFileResponse download(string $path, string|null $name = null, array $headers = [])
+     * * @param Publikasi $publikasi
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function downloadPublikasi(Publikasi $publikasi)
     {
@@ -314,8 +316,7 @@ class PublikasiController extends Controller
         $originalName = preg_replace('/^\d+_/', '', $filename);
         
         $filePath = Storage::disk('public')->path($publikasi->file_publikasi);
-        /** @phpstan-ignore-next-line */
+        
         return Response::download($filePath, $originalName);
     }
 }
-

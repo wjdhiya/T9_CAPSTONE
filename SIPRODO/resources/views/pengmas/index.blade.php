@@ -39,7 +39,7 @@
                                 <i class="fas fa-search text-gray-400"></i>
                             </div>
                             <input type="text" id="search" name="search" value="{{ request('search') }}" 
-                                placeholder="Cari judul, lokasi..." 
+                                placeholder="Cari judul, dosen, lokasi..." 
                                 class="pl-10 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                         </div>
                     </div>
@@ -65,7 +65,8 @@
                             <option value="">Semua Status</option>
                             <option value="proposal" {{ request('status') == 'proposal' ? 'selected' : '' }}>Proposal</option>
                             <option value="berjalan" {{ request('status') == 'berjalan' ? 'selected' : '' }}>Berjalan</option>
-                            <option value="selesai" {{ request('status') == 'selesai' ? 'selected' : '' }}>Selesai</option                            <option value="ditolak" {{ request('status') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
+                            <option value="selesai" {{ request('status') == 'selesai' ? 'selected' : '' }}>Selesai</option>
+                            <option value="ditolak" {{ request('status') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
                         </select>
                     </div>
 
@@ -158,16 +159,21 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 text-sm font-medium">
-                                    <a href="{{ route('pengmas.show', $item->id) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Lihat</a>
-                                    @if ($item->status_verifikasi !== 'verified' && auth()->user()->canInputTriDharma() && $item->user_id === auth()->id())
-                                        <a href="{{ route('pengmas.edit', $item->id) }}" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
-                                        <button type="button" onclick="document.getElementById('delete-form-{{ $item->id }}').submit()" class="text-red-600 hover:text-red-900">Hapus</button>
-                                        <form id="delete-form-{{ $item->id }}" action="{{ route('pengmas.destroy', $item->id) }}" method="POST" class="hidden">
-                                            @csrf
-                                            @method('DELETE')
-                                        </form>
-                                    @endif
+                                <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                    <div class="flex justify-center items-center space-x-3">
+                                        <a href="{{ route('pengmas.show', $item->id) }}" class="text-indigo-600 hover:text-indigo-900 tooltip" title="Lihat Detail">
+                                            <i class="fas fa-eye text-lg"></i>
+                                        </a>
+                                        
+                                        @if ($item->status_verifikasi !== 'verified' && auth()->user()->canInputTriDharma() && $item->user_id === auth()->id())
+                                            <a href="{{ route('pengmas.edit', $item->id) }}" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
+                                            <button type="button" onclick="document.getElementById('delete-form-{{ $item->id }}').submit()" class="text-red-600 hover:text-red-900">Hapus</button>
+                                            <form id="delete-form-{{ $item->id }}" action="{{ route('pengmas.destroy', $item->id) }}" method="POST" class="hidden">
+                                                @csrf
+                                                @method('DELETE')
+                                            </form>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                             @empty

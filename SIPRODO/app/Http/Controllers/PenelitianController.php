@@ -24,31 +24,41 @@ class PenelitianController extends Controller
         /** @var User|null $user */
         $user = Auth::user();
 
-        if ($user && $user->isDosen()) {
+        // PERBAIKAN LOGIKA:
+        // Batasi query ke user_id hanya jika user adalah Dosen BIASA.
+        // Jika user adalah Dosen TAPI juga bisa memverifikasi (Kaprodi/Admin), jangan batasi query.
+        // Kita gunakan !canVerify() atau !canReviewTriDharma() tergantung role Anda, 
+        // di sini saya gunakan !canVerify() agar Konsisten dengan method verify.
+        if ($user && $user->isDosen() && !$user->canVerify()) {
             $query->where('user_id', $user->id);
         }
 
-        if ($request->has('search')) {
+        // PERBAIKAN: Menambahkan pencarian berdasarkan Nama Dosen (User)
+        // Menggunakan 'filled' agar tidak tereksekusi jika search kosong
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('judul', 'like', "%{$search}%")
-                  ->orWhere('abstrak', 'like', "%{$search}%");
+                  ->orWhere('abstrak', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($u) use ($search) {
+                      $u->where('name', 'like', "%{$search}%");
+                  });
             });
         }
 
-        if ($request->has('tahun_akademik')) {
+        if ($request->has('tahun_akademik') && $request->tahun_akademik != '') {
             $query->where('tahun_akademik', 'like', $request->tahun_akademik . '%');
         }
 
-        if ($request->has('semester')) {
+        if ($request->has('semester') && $request->semester != '') {
             $query->where('semester', $request->semester);
         }
 
-        if ($request->has('status')) {
+        if ($request->has('status') && $request->status != '') {
             $query->where('status', $request->status);
         }
 
-        if ($request->has('status_verifikasi')) {
+        if ($request->has('status_verifikasi') && $request->status_verifikasi != '') {
             $query->where('status_verifikasi', $request->status_verifikasi);
         }
 
@@ -228,11 +238,9 @@ class PenelitianController extends Controller
 
     /**
      * Download proposal file (Admin/Kaprodi only)
-     * 
-     * @param Penelitian $penelitian
+     * * @param Penelitian $penelitian
      * @return BinaryFileResponse
-     * 
-     * @method BinaryFileResponse download(string $path, string|null $name = null, array $headers = [])
+     * * @method BinaryFileResponse download(string $path, string|null $name = null, array $headers = [])
      */
     public function downloadProposal(Penelitian $penelitian)
     {
@@ -257,11 +265,9 @@ class PenelitianController extends Controller
 
     /**
      * Download laporan file (Admin/Kaprodi only)
-     * 
-     * @param Penelitian $penelitian
+     * * @param Penelitian $penelitian
      * @return BinaryFileResponse
-     * 
-     * @method BinaryFileResponse download(string $path, string|null $name = null, array $headers = [])
+     * * @method BinaryFileResponse download(string $path, string|null $name = null, array $headers = [])
      */
     public function downloadLaporan(Penelitian $penelitian)
     {

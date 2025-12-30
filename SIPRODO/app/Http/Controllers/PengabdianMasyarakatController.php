@@ -25,12 +25,18 @@ class PengabdianMasyarakatController extends Controller
             $query->where('user_id', $user->id);
         }
 
-        // Search
+        // Search (Judul, Lokasi, Mitra, dan Nama Dosen)
+        // BAGIAN INI DIPERBARUI AGAR BISA CARI NAMA DOSEN
         if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('judul', 'like', '%' . $request->search . '%')
-                  ->orWhere('lokasi', 'like', '%' . $request->search . '%')
-                  ->orWhere('mitra', 'like', '%' . $request->search . '%');
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('judul', 'like', '%' . $search . '%')
+                  ->orWhere('lokasi', 'like', '%' . $search . '%')
+                  ->orWhere('mitra', 'like', '%' . $search . '%')
+                  // Tambahan: Cari berdasarkan nama user (dosen)
+                  ->orWhereHas('user', function ($subQ) use ($search) {
+                      $subQ->where('name', 'like', '%' . $search . '%');
+                  });
             });
         }
 
@@ -147,7 +153,7 @@ class PengabdianMasyarakatController extends Controller
             $validated['mahasiswa_terlibat'] = json_encode(array_filter($validated['mahasiswa_terlibat']));
         }
 
-        // Handle file uploads
+        // Handle file uploads with SAFE NAME
         if ($request->hasFile('file_proposal')) {
             $originalName = $request->file('file_proposal')->getClientOriginalName();
             $safeName = time() . '_' . preg_replace('/[^a-zA-Z0-9\._-]/', '_', $originalName);
@@ -185,7 +191,6 @@ class PengabdianMasyarakatController extends Controller
 
         $pengma->load(['user', 'verifiedBy']);
 
-        // PERBAIKAN: Mengirim variabel dengan nama 'pengabdianMasyarakat'
         return view('pengmas.show', [
             'pengabdianMasyarakat' => $pengma
         ]);
@@ -205,8 +210,6 @@ class PengabdianMasyarakatController extends Controller
             abort(403, 'Anda tidak memiliki akses untuk mengedit pengabdian masyarakat ini.');
         }
 
-        // PERBAIKAN: Mengirim variabel dengan nama 'pengabdianMasyarakat' (bukan $pengma)
-        // Ini agar cocok dengan file edit.blade.php kamu.
         return view('pengmas.edit', [
             'pengabdianMasyarakat' => $pengma
         ]);
@@ -268,7 +271,7 @@ class PengabdianMasyarakatController extends Controller
             $validated['mahasiswa_terlibat'] = json_encode(array_filter($validated['mahasiswa_terlibat']));
         }
 
-        // Handle file uploads
+        // Handle file uploads with SAFE NAME
         if ($request->hasFile('file_proposal')) {
             if ($pengma->file_proposal) {
                 Storage::disk('public')->delete($pengma->file_proposal);
@@ -372,11 +375,6 @@ class PengabdianMasyarakatController extends Controller
 
     /**
      * Download proposal file (Admin/Kaprodi only)
-     * 
-     * @param PengabdianMasyarakat $pengma
-     * @return BinaryFileResponse
-     * 
-     * @method BinaryFileResponse download(string $path, string|null $name = null, array $headers = [])
      */
     public function downloadProposal(PengabdianMasyarakat $pengma)
     {
@@ -395,17 +393,12 @@ class PengabdianMasyarakatController extends Controller
         $originalName = preg_replace('/^\d+_/', '', $filename);
         
         $filePath = Storage::disk('public')->path($pengma->file_proposal);
-        /** @phpstan-ignore-next-line */
+        
         return Response::download($filePath, $originalName);
     }
 
     /**
      * Download laporan file (Admin/Kaprodi only)
-     * 
-     * @param PengabdianMasyarakat $pengma
-     * @return BinaryFileResponse
-     * 
-     * @method BinaryFileResponse download(string $path, string|null $name = null, array $headers = [])
      */
     public function downloadLaporan(PengabdianMasyarakat $pengma)
     {
@@ -424,17 +417,12 @@ class PengabdianMasyarakatController extends Controller
         $originalName = preg_replace('/^\d+_/', '', $filename);
         
         $filePath = Storage::disk('public')->path($pengma->file_laporan);
-        /** @phpstan-ignore-next-line */
+        
         return Response::download($filePath, $originalName);
     }
 
     /**
      * Download dokumentasi file (Admin/Kaprodi only)
-     * 
-     * @param PengabdianMasyarakat $pengma
-     * @return BinaryFileResponse
-     * 
-     * @method BinaryFileResponse download(string $path, string|null $name = null, array $headers = [])
      */
     public function downloadDokumentasi(PengabdianMasyarakat $pengma)
     {
@@ -453,7 +441,7 @@ class PengabdianMasyarakatController extends Controller
         $originalName = preg_replace('/^\d+_/', '', $filename);
         
         $filePath = Storage::disk('public')->path($pengma->file_dokumentasi);
-        /** @phpstan-ignore-next-line */
+        
         return Response::download($filePath, $originalName);
     }
 }

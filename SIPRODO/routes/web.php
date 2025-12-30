@@ -25,41 +25,41 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('penelitian', PenelitianController::class);
     Route::post('penelitian/{penelitian}/verify', [PenelitianController::class, 'verify'])
         ->name('penelitian.verify')
-        ->middleware('role:super_admin,kaprodi');
+        ->middleware('role:admin,kaprodi');
     Route::get('penelitian/{penelitian}/download-proposal', [PenelitianController::class, 'downloadProposal'])
         ->name('penelitian.download.proposal')
-        ->middleware('role:super_admin,kaprodi');
+        ->middleware('role:admin,kaprodi');
     Route::get('penelitian/{penelitian}/download-laporan', [PenelitianController::class, 'downloadLaporan'])
         ->name('penelitian.download.laporan')
-        ->middleware('role:super_admin,kaprodi');
+        ->middleware('role:admin,kaprodi');
     Route::post('/penelitian', [PenelitianController::class, 'store'])->name('penelitian.store');
 
     // Publikasi routes
     Route::resource('publikasi', PublikasiController::class);
     Route::post('publikasi/{publikasi}/verify', [PublikasiController::class, 'verify'])
         ->name('publikasi.verify')
-        ->middleware('role:super_admin,kaprodi');
+        ->middleware('role:admin,kaprodi');
     Route::get('publikasi/{publikasi}/download-publikasi', [PublikasiController::class, 'downloadPublikasi'])
         ->name('publikasi.download.publikasi')
-        ->middleware('role:super_admin,kaprodi');
+        ->middleware('role:admin,kaprodi');
 
     // Pengabdian Masyarakat routes
     Route::resource('pengmas', PengabdianMasyarakatController::class);
     Route::post('pengmas/{pengma}/verify', [PengabdianMasyarakatController::class, 'verify'])
         ->name('pengmas.verify')
-        ->middleware('role:super_admin,kaprodi');
+        ->middleware('role:admin,kaprodi');
     Route::get('pengmas/{pengma}/download-proposal', [PengabdianMasyarakatController::class, 'downloadProposal'])
         ->name('pengmas.download.proposal')
-        ->middleware('role:super_admin,kaprodi');
+        ->middleware('role:admin,kaprodi');
     Route::get('pengmas/{pengma}/download-laporan', [PengabdianMasyarakatController::class, 'downloadLaporan'])
         ->name('pengmas.download.laporan')
-        ->middleware('role:super_admin,kaprodi');
+        ->middleware('role:admin,kaprodi');
     Route::get('pengmas/{pengma}/download-dokumentasi', [PengabdianMasyarakatController::class, 'downloadDokumentasi'])
         ->name('pengmas.download.dokumentasi')
-        ->middleware('role:super_admin,kaprodi');
+        ->middleware('role:admin,kaprodi');
 
     // Reports routes (Admin/Kaprodi only)
-    Route::middleware('role:super_admin,kaprodi')->group(function () {
+    Route::middleware('role:admin,kaprodi')->group(function () {
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/export-excel', [ReportController::class, 'exportExcel'])->name('reports.export.excel');
         Route::get('/reports/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');

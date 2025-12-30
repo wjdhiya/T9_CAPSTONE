@@ -70,14 +70,14 @@ class User extends Authenticatable
     }
 
     // Role constants
-    public const ROLE_SUPER = 'super_admin';
+    public const ROLE_ADMIN = 'admin';
     public const ROLE_KAPRODI = 'kaprodi';
     public const ROLE_DOSEN = 'dosen';
 
     // Role checks
-    public function isSuperAdmin(): bool
+    public function isAdmin(): bool
     {
-        return $this->role === self::ROLE_SUPER;
+        return $this->role === self::ROLE_ADMIN;
     }
 
     public function isKaprodi(): bool
@@ -97,12 +97,6 @@ class User extends Authenticatable
     public function canVerify(): bool
     {
         // jika ingin kedua role punya akses verifikasi:
-        return in_array($this->role, [self::ROLE_SUPER, self::ROLE_KAPRODI], true);
-    }
-
-    // backward compatibility (opsional)
-    public function isAdmin(): bool
-    {
-        return $this->canVerify();
+        return in_array($this->role, [self::ROLE_ADMIN, self::ROLE_KAPRODI], true);
     }
 }

@@ -13,12 +13,12 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Super Admin
+        // Admin
         User::create([
-            'name' => 'Super Admin',
+            'name' => 'Admin',
             'email' => 'admin@telkomuniversity.ac.id',
             'password' => Hash::make('password'),
-            'role' => 'super_admin',
+            'role' => 'admin',
             'nidn' => '0000000000',
             'nip' => '000000000000000000',
             'phone' => '081234567890',

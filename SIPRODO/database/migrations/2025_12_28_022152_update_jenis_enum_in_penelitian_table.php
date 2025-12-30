@@ -12,11 +12,17 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
         DB::statement("ALTER TABLE penelitian MODIFY COLUMN jenis ENUM('mandiri', 'hibah_internal', 'hibah_eksternal', 'kerjasama')");
     }
 
     public function down(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
         DB::statement("ALTER TABLE penelitian MODIFY COLUMN jenis ENUM('internal', 'eksternal', 'mandiri')");
     }
 };

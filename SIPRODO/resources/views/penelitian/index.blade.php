@@ -4,9 +4,11 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('Data Penelitian') }}
             </h2>
-            <a href="{{ route('penelitian.create') }}" class="px-4 py-2 text-white rounded-lg hover:opacity-90 transition" style="background-color: #a02127;">
-                Tambah Penelitian
-            </a>
+            @if(auth()->user()->canInputTriDharma())
+                <a href="{{ route('penelitian.create') }}" class="px-4 py-2 text-white rounded-lg hover:opacity-90 transition" style="background-color: #a02127;">
+                    Tambah Penelitian
+                </a>
+            @endif
         </div>
     </x-slot>
 
@@ -108,7 +110,7 @@
                                     </td>
                                     <td class="px-6 py-4 text-sm font-medium">
                                         <a href="{{ route('penelitian.show', $item->id) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Lihat</a>
-                                        @if ($item->status_verifikasi !== 'verified' && auth()->user()->isDosen() && $item->user_id === auth()->id())
+                                        @if ($item->status_verifikasi !== 'verified' && auth()->user()->canInputTriDharma() && $item->user_id === auth()->id())
                                             <a href="{{ route('penelitian.edit', $item->id) }}" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
                                             <button type="button" onclick="document.getElementById('delete-form-{{ $item->id }}').submit()" class="text-red-600 hover:text-red-900">Hapus</button>
                                             <form id="delete-form-{{ $item->id }}" action="{{ route('penelitian.destroy', $item->id) }}" method="POST" class="hidden">

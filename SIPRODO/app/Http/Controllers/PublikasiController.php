@@ -72,6 +72,12 @@ class PublikasiController extends Controller
      */
     public function create()
     {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if (!($user && $user->canInputTriDharma())) {
+            abort(403, 'Anda tidak memiliki akses untuk menambahkan data.');
+        }
+
         $penelitianList = Penelitian::where('user_id', Auth::id())
             ->where('status_verifikasi', 'verified')
             ->get();
@@ -84,6 +90,12 @@ class PublikasiController extends Controller
      */
     public function store(Request $request)
     {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if (!($user && $user->canInputTriDharma())) {
+            abort(403, 'Anda tidak memiliki akses untuk menambahkan data.');
+        }
+
         $validated = $request->validate([
             'judul' => 'required|string|max:500',
             'penulis' => 'nullable|string',
@@ -148,7 +160,10 @@ class PublikasiController extends Controller
         // Authorization check
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
-        if ($user && $user->isDosen() && $publikasi->user_id !== $user->id) {
+        if (!($user && $user->canInputTriDharma())) {
+            abort(403, 'Anda tidak memiliki akses untuk mengedit publikasi ini.');
+        }
+        if ($user && $publikasi->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit publikasi ini.');
         }
 
@@ -167,7 +182,10 @@ class PublikasiController extends Controller
         // Authorization check
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
-        if ($user && $user->isDosen() && $publikasi->user_id !== $user->id) {
+        if (!($user && $user->canInputTriDharma())) {
+            abort(403, 'Anda tidak memiliki akses untuk mengedit publikasi ini.');
+        }
+        if ($user && $publikasi->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit publikasi ini.');
         }
 
@@ -223,7 +241,10 @@ class PublikasiController extends Controller
         // Authorization check
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
-        if ($user && $user->isDosen() && $publikasi->user_id !== $user->id) {
+        if (!($user && $user->canInputTriDharma())) {
+            abort(403, 'Anda tidak memiliki akses untuk menghapus publikasi ini.');
+        }
+        if ($user && $publikasi->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk menghapus publikasi ini.');
         }
 
@@ -280,7 +301,7 @@ class PublikasiController extends Controller
     {
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
-        if (!$user || !$user->canVerify()) {
+        if (!$user || !$user->canReviewTriDharma()) {
             abort(403, 'Unauthorized action.');
         }
 

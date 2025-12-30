@@ -5,6 +5,7 @@ use App\Http\Controllers\PenelitianController;
 use App\Http\Controllers\PublikasiController;
 use App\Http\Controllers\PengabdianMasyarakatController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\TriDharmaImportController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,7 +26,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('penelitian', PenelitianController::class);
     Route::post('penelitian/{penelitian}/verify', [PenelitianController::class, 'verify'])
         ->name('penelitian.verify')
-        ->middleware('role:admin,kaprodi');
+        ->middleware('role:admin');
     Route::get('penelitian/{penelitian}/download-proposal', [PenelitianController::class, 'downloadProposal'])
         ->name('penelitian.download.proposal')
         ->middleware('role:admin,kaprodi');
@@ -38,7 +39,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('publikasi', PublikasiController::class);
     Route::post('publikasi/{publikasi}/verify', [PublikasiController::class, 'verify'])
         ->name('publikasi.verify')
-        ->middleware('role:admin,kaprodi');
+        ->middleware('role:admin');
     Route::get('publikasi/{publikasi}/download-publikasi', [PublikasiController::class, 'downloadPublikasi'])
         ->name('publikasi.download.publikasi')
         ->middleware('role:admin,kaprodi');
@@ -47,7 +48,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('pengmas', PengabdianMasyarakatController::class);
     Route::post('pengmas/{pengma}/verify', [PengabdianMasyarakatController::class, 'verify'])
         ->name('pengmas.verify')
-        ->middleware('role:admin,kaprodi');
+        ->middleware('role:admin');
     Route::get('pengmas/{pengma}/download-proposal', [PengabdianMasyarakatController::class, 'downloadProposal'])
         ->name('pengmas.download.proposal')
         ->middleware('role:admin,kaprodi');
@@ -64,6 +65,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reports/export-excel', [ReportController::class, 'exportExcel'])->name('reports.export.excel');
         Route::get('/reports/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
         Route::get('/reports/productivity', [ReportController::class, 'productivity'])->name('reports.productivity');
+    });
+
+    // Kaprodi-only: bulk import + dashboard polling
+    Route::middleware('role:kaprodi')->group(function () {
+        Route::get('/imports', [TriDharmaImportController::class, 'index'])->name('imports.index');
+        Route::post('/imports/auto', [TriDharmaImportController::class, 'importAuto'])->name('imports.tridharma.auto');
+        Route::post('/imports/{type}', [TriDharmaImportController::class, 'import'])->name('imports.tridharma');
+        Route::get('/dashboard/kaprodi/summary', [DashboardController::class, 'kaprodiSummary'])->name('dashboard.kaprodi.summary');
     });
 
     // Profile routes (from Breeze)

@@ -20,8 +20,8 @@
                             <i class="fas fa-file-alt w-6 h-6 text-telkom-blue"></i>
                         </div>
                         <div>
-                            <h1 class="text-xl font-bold text-gray-900">Formulir Data Publikasi</h1>
-                            <p class="text-sm text-gray-600 mt-1">Lengkapi informasi publikasi Anda dengan detail</p>
+                            <h1 class="text-xl font-bold text-gray-900">Formulir Data Jurnal</h1>
+                            <p class="text-sm text-gray-600 mt-1">Lengkapi informasi jurnal Anda dengan detail</p>
                         </div>
                     </div>
                 </div>
@@ -32,10 +32,10 @@
                     <div class="space-y-6">
                         
                         <div>
-                            <label for="judul" class="block text-sm font-medium text-gray-700 mb-2">Judul Publikasi <span class="text-red-600">*</span></label>
+                            <label for="judul" class="block text-sm font-medium text-gray-700 mb-2">Judul Jurnal <span class="text-red-600">*</span></label>
                             <input type="text" id="judul" name="judul" value="{{ old('judul', $publikasi->judul ?? '') }}" required
                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
-                                   placeholder="Masukkan judul publikasi">
+                                   placeholder="Masukkan judul jurnal">
                             @error('judul')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                         </div>
 
@@ -127,7 +127,7 @@
                 </div>
 
                 <div class="bg-white rounded-xl shadow-xl p-6 mb-6">
-                    <h2 class="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Detail Publikasi</h2>
+                    <h2 class="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Detail Jurnal</h2>
                     
                     <div class="space-y-6">
                         
@@ -240,7 +240,7 @@
                     <div class="space-y-6">
                         
                         <div>
-                            <label for="file_publikasi_hidden" class="block text-sm font-medium text-gray-700 mb-2">File Publikasi (PDF, max 10MB)</label>
+                            <label for="file_publikasi_hidden" class="block text-sm font-medium text-gray-700 mb-2">File Jurnal (PDF, max 10MB)</label>
                             
                             @if(isset($publikasi) && $publikasi->file_path)
                                 {{-- Tampilan jika file sudah ada --}}
@@ -249,8 +249,19 @@
                                     <p class="text-sm text-gray-900 font-medium">Dokumen Tersimpan: <a href="{{ Storage::url($publikasi->file_path) }}" target="_blank" class="text-telkom-blue underline">Lihat File</a></p>
                                 </div>
                                 <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
-                                <input type="file" id="file_publikasi_hidden" name="file_publikasi" accept=".pdf"
-                                   class="mt-3 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-telkom-blue file:text-white hover:file:bg-blue-800">
+                                {{-- Tampilan Upload Ganti File (Gaya Dropzone) --}}
+                                <div class="file-upload-area" id="file_publikasi_replace">
+                                    <label for="file_publikasi_hidden" class="flex flex-col items-center justify-center w-full h-32 border-2 border-telkom-blue border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-blue-50 transition-colors">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <i class="fas fa-cloud-upload-alt w-8 h-8 text-telkom-blue mb-2"></i>
+                                            <p class="text-sm text-gray-600">
+                                                <span class="text-telkom-blue font-semibold">Klik untuk mengganti file</span> atau drag and drop
+                                            </p>
+                                            <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
+                                        </div>
+                                        <input type="file" id="file_publikasi_hidden" name="file_publikasi" accept=".pdf" class="hidden">
+                                    </label>
+                                </div>
                             @else
                                 {{-- Tampilan Upload Kosong (Gaya Dropzone) --}}
                                 <label for="file_publikasi_hidden" id="file_publikasi_upload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-telkom-blue border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-blue-50 transition-colors">
@@ -280,8 +291,8 @@
                     <a href="{{ route('publikasi.index') }}" class="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors shadow-sm font-medium">
                         Batal
                     </a>
-                    <button type="submit" class="px-6 py-2.5 bg-telkom-green text-white rounded-lg hover:bg-telkom-green hover:shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 font-semibold">
-                        Simpan Publikasi
+                    <button type="submit" class="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 hover:shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 font-semibold">
+                        Simpan Jurnal
                     </button>
                 </div>
             </form>

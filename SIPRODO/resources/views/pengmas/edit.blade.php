@@ -244,7 +244,7 @@
                     <a href="{{ route('pengmas.index') }}" class="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors shadow-sm font-medium">
                         Batal
                     </a>
-                    <button type="submit" class="px-6 py-2.5 bg-telkom-green text-white rounded-lg hover:bg-green-700 transition-colors shadow-md font-semibold">
+                    <button type="submit" class="px-6 py-2.5 bg-telkom-green text-white rounded-lg hover:bg-telkom-green hover:shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 font-semibold">
                         Update Data
                     </button>
                 </div>

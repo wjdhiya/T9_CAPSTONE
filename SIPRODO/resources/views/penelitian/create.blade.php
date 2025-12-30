@@ -178,11 +178,11 @@
                                     <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
                                     {{-- Tampilan Upload Ganti File (Gaya Dropzone) --}}
                                     <div class="file-upload-area" id="file_proposal_replace">
-                                        <label for="file_proposal" class="flex flex-col items-center justify-center w-full h-32 border-2 border-telkom-blue border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-blue-50 transition-colors">
+                                        <label for="file_proposal" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
                                             <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-telkom-blue mb-2"></i>
+                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-gray-500 mb-2"></i>
                                                 <p class="text-sm text-gray-600">
-                                                    <span class="text-telkom-blue font-semibold">Klik untuk mengganti file</span> atau drag and drop
+                                                    <span class="text-gray-500 font-semibold">Klik untuk mengganti file</span> atau drag and drop
                                                 </p>
                                                 <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
                                             </div>
@@ -192,11 +192,11 @@
                                 @else
                                     {{-- Tampilan Upload Kosong (Gaya Dropzone) --}}
                                     <div class="file-upload-area" id="file_proposal_upload">
-                                        <label for="file_proposal" class="flex flex-col items-center justify-center w-full h-32 border-2 border-telkom-blue border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-blue-50 transition-colors">
+                                        <label for="file_proposal" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
                                             <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-telkom-blue mb-2"></i>
+                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-gray-500 mb-2"></i>
                                                 <p class="text-sm text-gray-600">
-                                                    <span class="text-telkom-blue font-semibold">Klik untuk upload</span> atau drag and drop
+                                                    <span class="text-gray-500 font-semibold">Klik untuk upload</span> atau drag and drop
                                                 </p>
                                                 <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
                                             </div>
@@ -228,11 +228,11 @@
                                     <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
                                     {{-- Tampilan Upload Ganti File (Gaya Dropzone) --}}
                                     <div class="file-upload-area" id="file_laporan_replace">
-                                        <label for="file_laporan" class="flex flex-col items-center justify-center w-full h-32 border-2 border-telkom-blue border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-blue-50 transition-colors">
+                                        <label for="file_laporan" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
                                             <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-telkom-blue mb-2"></i>
+                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-gray-500 mb-2"></i>
                                                 <p class="text-sm text-gray-600">
-                                                    <span class="text-telkom-blue font-semibold">Klik untuk mengganti file</span> atau drag and drop
+                                                    <span class="text-gray-500 font-semibold">Klik untuk mengganti file</span> atau drag and drop
                                                 </p>
                                                 <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
                                             </div>
@@ -242,11 +242,11 @@
                                 @else
                                     {{-- Tampilan Upload Kosong (Gaya Dropzone) --}}
                                     <div class="file-upload-area" id="file_laporan_upload">
-                                        <label for="file_laporan" class="flex flex-col items-center justify-center w-full h-32 border-2 border-telkom-blue border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-blue-50 transition-colors">
+                                        <label for="file_laporan" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
                                             <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-telkom-blue mb-2"></i>
+                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-gray-500 mb-2"></i>
                                                 <p class="text-sm text-gray-600">
-                                                    <span class="text-telkom-blue font-semibold">Klik untuk upload</span> atau drag and drop
+                                                    <span class="text-gray-500 font-semibold">Klik untuk upload</span> atau drag and drop
                                                 </p>
                                                 <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
                                             </div>

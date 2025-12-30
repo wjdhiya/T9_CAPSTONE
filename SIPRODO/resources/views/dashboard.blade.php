@@ -20,8 +20,8 @@
                         Selamat Datang, {{ auth()->user()->name }}!
                     </h3>
                     <p class="text-gray-600">
-                        @if(auth()->user()->isSuperAdmin())
-                            Anda login sebagai <span class="font-semibold">Super Administrator</span>
+                        @if(auth()->user()->isAdmin())
+                            Anda login sebagai <span class="font-semibold">Admin</span>
                         @elseif(auth()->user()->isKaprodi())
                             Anda login sebagai <span class="font-semibold">Kepala Program Studi</span>
                         @else
@@ -48,25 +48,25 @@
                         </div>
 
                         <div class="mt-4 flex items-center text-sm">
-                            <span class="text-green-600 font-semibold">{{ $stats['penelitian']['verified'] ?? 0 }}</span>
+                            <span class="text-gray-600 font-semibold">{{ $stats['penelitian']['verified'] ?? 0 }}</span>
                             <span class="text-gray-600 ml-2">Terverifikasi</span>
                         </div>
 
                         <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <a href="{{ route('penelitian.index') }}"
-                               class="flex items-center p-4 rounded-lg bg-red-50 hover:bg-red-100 transition-colors border border-red-200">
-                                <svg class="w-6 h-6 mr-3 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="flex flex-col sm:flex-row items-center p-4 rounded-lg bg-red-50 hover:bg-red-100 transition-colors border border-red-200">
+                                <svg class="w-6 h-6 mb-2 sm:mb-0 sm:mr-3 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                                 </svg>
-                                <span class="font-medium text-red-700">Lihat Data Penelitian</span>
+                                <span class="font-medium text-red-700 text-center">Lihat Data Penelitian</span>
                             </a>
 
                             <a href="{{ route('penelitian.create') }}"
-                               class="flex items-center p-4 rounded-lg bg-white hover:bg-red-50 transition-colors border border-red-200">
-                                <svg class="w-6 h-6 mr-3 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="flex flex-col sm:flex-row items-center p-4 rounded-lg bg-white hover:bg-red-50 transition-colors border border-red-200">
+                                <svg class="w-6 h-6 mb-2 sm:mb-0 sm:mr-3 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                 </svg>
-                                <span class="font-medium text-red-700">Tambah Penelitian</span>
+                                <span class="font-medium text-red-700 text-center">Tambah Penelitian</span>
                             </a>
                         </div>
                     </div>
@@ -86,25 +86,25 @@
                             </div>
                         </div>
                         <div class="mt-4 flex items-center text-sm">
-                            <span class="text-green-600 font-semibold">{{ $stats['publikasi']['verified'] ?? 0 }}</span>
+                            <span class="text-gray-600 font-semibold">{{ $stats['publikasi']['verified'] ?? 0 }}</span>
                             <span class="text-gray-600 ml-2">Terverifikasi</span>
                         </div>
 
                         <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <a href="{{ route('publikasi.index') }}"
-                               class="flex items-center p-4 rounded-lg bg-green-50 hover:bg-green-100 transition-colors border border-green-200">
-                                <svg class="w-6 h-6 mr-3 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="flex flex-col sm:flex-row items-center p-4 rounded-lg bg-green-50 hover:bg-green-100 transition-colors border border-green-200">
+                                <svg class="w-6 h-6 mb-2 sm:mb-0 sm:mr-3 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"></path>
                                 </svg>
-                                <span class="font-medium text-green-700">Lihat Data Publikasi</span>
+                                <span class="font-medium text-green-700 text-center">Lihat Data Publikasi</span>
                             </a>
 
                             <a href="{{ route('publikasi.create') }}"
-                               class="flex items-center p-4 rounded-lg bg-white hover:bg-green-50 transition-colors border border-green-200">
-                                <svg class="w-6 h-6 mr-3 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="flex flex-col sm:flex-row items-center p-4 rounded-lg bg-white hover:bg-green-50 transition-colors border border-green-200">
+                                <svg class="w-6 h-6 mb-2 sm:mb-0 sm:mr-3 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                 </svg>
-                                <span class="font-medium text-green-700">Tambah Publikasi</span>
+                                <span class="font-medium text-green-700 text-center">Tambah Publikasi</span>
                             </a>
                         </div>
                     </div>
@@ -117,39 +117,39 @@
                                 <p class="text-sm font-medium text-gray-600">Total Pengabdian Masyarakat</p>
                                 <p class="text-3xl font-bold" style="color: #003366;">{{ $stats['pengmas']['total'] ?? 0 }}</p>
                             </div>
-                            <div class="p-3 rounded-full" style="background-color: #f3f4f6;">
+                            <div class="p-3 rounded-full" style="background-color: #dbeafe;">
                                 <svg class="w-8 h-8" style="color: #003366;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                                 </svg>
                             </div>
                         </div>
                         <div class="mt-4 flex items-center text-sm">
-                            <span class="text-green-600 font-semibold">{{ $stats['pengmas']['verified'] ?? 0 }}</span>
+                            <span class="text-gray-600 font-semibold">{{ $stats['pengmas']['verified'] ?? 0 }}</span>
                             <span class="text-gray-600 ml-2">Terverifikasi</span>
                         </div>
 
                         <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <a href="{{ route('pengmas.index') }}"
-                               class="flex items-center p-4 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors border border-blue-200">
-                                <svg class="w-6 h-6 mr-3 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="flex flex-col sm:flex-row items-center p-4 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors border border-blue-200">
+                                <svg class="w-6 h-6 mb-2 sm:mb-0 sm:mr-3" style="color: #003366;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                                 </svg>
-                                <span class="font-medium text-blue-700">Lihat Data Pengabdian</span>
+                                <span class="font-medium text-center" style="color: #003366;">Lihat Data Pengabdian</span>
                             </a>
 
                             <a href="{{ route('pengmas.create') }}"
-                               class="flex items-center p-4 rounded-lg bg-white hover:bg-blue-50 transition-colors border border-blue-200">
-                                <svg class="w-6 h-6 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="flex flex-col sm:flex-row items-center p-4 rounded-lg bg-white hover:bg-blue-50 transition-colors border border-blue-200">
+                                <svg class="w-6 h-6 mb-2 sm:mb-0 sm:mr-3" style="color: #003366;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                 </svg>
-                                <span class="font-medium text-blue-600">Tambah Pengabdian Masyarakat</span>
+                                <span class="font-medium text-center" style="color: #003366;">Tambah Pengabdian Masyarakat</span>
                             </a>
                         </div>
                     </div>
                 </div>
             </div>
 
-            @if($isSuperAdmin ?? false)
+            @if($isAdmin ?? false)
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
                     <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-xl">
                         <h3 class="text-lg font-semibold mb-4" style="color: #a02127;">
@@ -231,7 +231,7 @@
         </div>
     </div>
 
-    @if($isSuperAdmin ?? false)
+    @if($isAdmin ?? false)
         @push('scripts')
             <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
             <script>

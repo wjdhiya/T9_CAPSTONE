@@ -21,7 +21,7 @@ class DashboardController extends Controller
         /** @var User|null $user */
         $user = Auth::user();
         $isDosen = $user && method_exists($user, 'isDosen') && $user->isDosen();
-        $isSuperAdmin = $user && $user->isSuperAdmin();
+        $isAdmin = $user && $user->isAdmin();
 
         // Base queries
         $penelitianQuery = Penelitian::query();
@@ -36,7 +36,7 @@ class DashboardController extends Controller
         $semesterEnd = $currentSemester === 1 ? "$currentYear-06-30" : "$currentYear-12-31";
 
         // If logged-in user is dosen, limit to their own records
-        if ($isDosen && !$isSuperAdmin) {
+        if ($isDosen && !$isAdmin) {
             $penelitianQuery->where('user_id', $user->id);
             $publikasiQuery->where('user_id', $user->id);
             $pengmasQuery->where('user_id', $user->id);
@@ -58,11 +58,11 @@ class DashboardController extends Controller
             ],
         ];
 
-        // Get data for super admin dashboard
+        // Get data for admin dashboard
         $topLecturers = [];
         $verificationQueue = [];
         
-        if ($isSuperAdmin) {
+        if ($isAdmin) {
             // Get top 5 most active lecturers in current semester
             $topLecturers = User::where('role', User::ROLE_DOSEN)
                 ->where('is_active', true)
@@ -90,7 +90,7 @@ class DashboardController extends Controller
             ];
         }
 
-        return view('dashboard', compact('stats', 'topLecturers', 'verificationQueue', 'isSuperAdmin', 'currentSemester', 'currentYear'));
+        return view('dashboard', compact('stats', 'topLecturers', 'verificationQueue', 'isAdmin', 'currentSemester', 'currentYear'));
     }
 }
 

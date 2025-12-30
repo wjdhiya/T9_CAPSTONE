@@ -96,7 +96,16 @@ class User extends Authenticatable
      */
     public function canVerify(): bool
     {
-        // jika ingin kedua role punya akses verifikasi:
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function canReviewTriDharma(): bool
+    {
         return in_array($this->role, [self::ROLE_ADMIN, self::ROLE_KAPRODI], true);
+    }
+
+    public function canInputTriDharma(): bool
+    {
+        return in_array($this->role, [self::ROLE_DOSEN, self::ROLE_KAPRODI], true);
     }
 }

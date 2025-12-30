@@ -64,6 +64,12 @@ class PengabdianMasyarakatController extends Controller
      */
     public function create()
     {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!($user && $user->canInputTriDharma())) {
+            abort(403, 'Anda tidak memiliki akses untuk menambahkan data.');
+        }
+
         return view('pengmas.create');
     }
 
@@ -72,6 +78,12 @@ class PengabdianMasyarakatController extends Controller
      */
     public function store(Request $request)
     {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!($user && $user->canInputTriDharma())) {
+            abort(403, 'Anda tidak memiliki akses untuk menambahkan data.');
+        }
+
         // 1. VALIDASI
         $validated = $request->validate([
             'judul' => 'required|string|max:500',
@@ -186,7 +198,10 @@ class PengabdianMasyarakatController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
-        if ($user && $user->isDosen() && $pengma->user_id !== $user->id) {
+        if (!($user && $user->canInputTriDharma())) {
+            abort(403, 'Anda tidak memiliki akses untuk mengedit pengabdian masyarakat ini.');
+        }
+        if ($user && $pengma->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit pengabdian masyarakat ini.');
         }
 
@@ -204,7 +219,10 @@ class PengabdianMasyarakatController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
-        if ($user && $user->isDosen() && $pengma->user_id !== $user->id) {
+        if (!($user && $user->canInputTriDharma())) {
+            abort(403, 'Anda tidak memiliki akses untuk mengedit pengabdian masyarakat ini.');
+        }
+        if ($user && $pengma->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit pengabdian masyarakat ini.');
         }
 
@@ -299,7 +317,10 @@ class PengabdianMasyarakatController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
-        if ($user && $user->isDosen() && $pengma->user_id !== $user->id) {
+        if (!($user && $user->canInputTriDharma())) {
+            abort(403, 'Anda tidak memiliki akses untuk menghapus pengabdian masyarakat ini.');
+        }
+        if ($user && $pengma->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk menghapus pengabdian masyarakat ini.');
         }
 
@@ -361,7 +382,7 @@ class PengabdianMasyarakatController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
-        if (!($user && $user->canVerify())) {
+        if (!($user && $user->canReviewTriDharma())) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -390,7 +411,7 @@ class PengabdianMasyarakatController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
-        if (!($user && $user->canVerify())) {
+        if (!($user && $user->canReviewTriDharma())) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -419,7 +440,7 @@ class PengabdianMasyarakatController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
-        if (!($user && $user->canVerify())) {
+        if (!($user && $user->canReviewTriDharma())) {
             abort(403, 'Unauthorized action.');
         }
 

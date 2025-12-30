@@ -59,12 +59,23 @@ class PenelitianController extends Controller
 
     public function create()
     {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!($user && $user->canInputTriDharma())) {
+            abort(403, 'Anda tidak memiliki akses untuk menambahkan data.');
+        }
+
         return view('penelitian.create');
     }
 
     public function store(Request $request)
     {
-        
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!($user && $user->canInputTriDharma())) {
+            abort(403, 'Anda tidak memiliki akses untuk menambahkan data.');
+        }
+
 
         $validated = $request->validate([
             'judul' => 'required|string|max:500',
@@ -123,7 +134,10 @@ class PenelitianController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
-        if ($user && $user->isDosen() && $penelitian->user_id !== $user->id) {
+        if (!($user && $user->canInputTriDharma())) {
+            abort(403, 'Unauthorized action.');
+        }
+        if ($user && $penelitian->user_id !== $user->id) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -134,7 +148,10 @@ class PenelitianController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
-        if ($user && $user->isDosen() && $penelitian->user_id !== $user->id) {
+        if (!($user && $user->canInputTriDharma())) {
+            abort(403, 'Unauthorized action.');
+        }
+        if ($user && $penelitian->user_id !== $user->id) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -189,7 +206,10 @@ class PenelitianController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
-        if ($user && $user->isDosen() && $penelitian->user_id !== $user->id) {
+        if (!($user && $user->canInputTriDharma())) {
+            abort(403, 'Unauthorized action.');
+        }
+        if ($user && $penelitian->user_id !== $user->id) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -218,7 +238,7 @@ class PenelitianController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
-        if (!($user && $user->canVerify())) {
+        if (!($user && $user->canReviewTriDharma())) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -247,7 +267,7 @@ class PenelitianController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
-        if (!($user && $user->canVerify())) {
+        if (!($user && $user->canReviewTriDharma())) {
             abort(403, 'Unauthorized action.');
         }
 

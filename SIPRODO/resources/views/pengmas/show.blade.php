@@ -76,7 +76,7 @@
                         @if($pengabdianMasyarakat->file_proposal)
                             <div class="border rounded-lg p-4">
                                 <p class="text-sm text-gray-600 mb-2">File Proposal</p>
-                                @if(auth()->user()->canVerify())
+                                @if(auth()->user()->canReviewTriDharma())
                                     <a href="{{ route('pengmas.download.proposal', $pengabdianMasyarakat) }}" target="_blank" class="text-blue-600 hover:underline flex items-center">
                                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -98,7 +98,7 @@
                         @if($pengabdianMasyarakat->file_laporan)
                             <div class="border rounded-lg p-4">
                                 <p class="text-sm text-gray-600 mb-2">File Laporan</p>
-                                @if(auth()->user()->canVerify())
+                                @if(auth()->user()->canReviewTriDharma())
                                     <a href="{{ route('pengmas.download.laporan', $pengabdianMasyarakat) }}" target="_blank" class="text-blue-600 hover:underline flex items-center">
                                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -120,7 +120,7 @@
                         @if($pengabdianMasyarakat->file_dokumentasi)
                             <div class="border rounded-lg p-4">
                                 <p class="text-sm text-gray-600 mb-2">File Dokumentasi</p>
-                                @if(auth()->user()->canVerify())
+                                @if(auth()->user()->canReviewTriDharma())
                                     <a href="{{ route('pengmas.download.dokumentasi', $pengabdianMasyarakat) }}" target="_blank" class="text-blue-600 hover:underline flex items-center">
                                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>

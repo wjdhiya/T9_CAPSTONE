@@ -1,6 +1,17 @@
 @php
     use Illuminate\Support\Str;
+
+    // Persiapan data awal untuk Dosen (Anggota)
+    $oldAnggota = old('anggota', isset($pengabdianMasyarakat) && $pengabdianMasyarakat->anggota ? json_decode($pengabdianMasyarakat->anggota) : ['']);
+    if (!is_array($oldAnggota)) $oldAnggota = [''];
+    if (empty($oldAnggota)) $oldAnggota = ['']; 
+
+    // Persiapan data awal untuk Mahasiswa
+    $oldMahasiswa = old('mahasiswa', isset($pengabdianMasyarakat) && $pengabdianMasyarakat->mahasiswa ? json_decode($pengabdianMasyarakat->mahasiswa) : ['']);
+    if (!is_array($oldMahasiswa)) $oldMahasiswa = [''];
+    if (empty($oldMahasiswa)) $oldMahasiswa = ['']; 
 @endphp
+
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl leading-tight" style="color: #003366;">
@@ -21,7 +32,6 @@
                 <div class="bg-white rounded-xl shadow-xl p-6 mb-6 border-l-4 border-telkom-green">
                     <div class="flex items-center gap-3">
                         <div class="w-12 h-12 bg-telkom-blue-light rounded-lg flex items-center justify-center">
-                            {{-- Ikon diganti agar lebih sesuai (atau tetap fa-file-alt juga boleh) --}}
                             <i class="fas fa-hand-holding-heart w-6 h-6 text-telkom-blue"></i>
                         </div>
                         <div>
@@ -145,28 +155,90 @@
                             </div>
                         </div>
 
-                        {{-- Input Dinamis untuk Anggota Dosen --}}
+                        {{-- Input Dinamis untuk Anggota Dosen & Mahasiswa (INDEPENDEN) --}}
                         <div x-data="{ 
-                            items: {{ json_encode(old('anggota', isset($pengabdianMasyarakat) && $pengabdianMasyarakat->anggota ? json_decode($pengabdianMasyarakat->anggota) : [''])) }},
-                            addItem() { this.items.push(''); },
-                            removeItem(index) { if(this.items.length > 1) this.items.splice(index, 1); }
+                            dosenItems: {{ json_encode($oldAnggota) }},
+                            mahasiswaItems: {{ json_encode($oldMahasiswa) }},
+                            addDosen() { this.dosenItems.push(''); },
+                            removeDosen(index) { if(this.dosenItems.length > 1) this.dosenItems.splice(index, 1); },
+                            removeLastDosen() { if(this.dosenItems.length > 1) this.dosenItems.pop(); },
+                            addMahasiswa() { this.mahasiswaItems.push(''); },
+                            removeMahasiswa(index) { if(this.mahasiswaItems.length > 1) this.mahasiswaItems.splice(index, 1); },
+                            removeLastMahasiswa() { if(this.mahasiswaItems.length > 1) this.mahasiswaItems.pop(); }
                         }">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Anggota Dosen (Opsional)</label>
-                            <div class="space-y-2">
-                                <template x-for="(item, index) in items" :key="index">
-                                    <div class="flex items-center gap-2">
-                                        <input type="text" :name="'anggota[]'" x-model="items[index]"
-                                               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
-                                               placeholder="Nama Dosen Anggota">
-                                        <button type="button" @click="removeItem(index)" class="p-2.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors" :disabled="items.length === 1">
-                                            <i class="fas fa-trash-alt"></i>
+                            <label class="block text-sm font-medium text-gray-700 mb-3">Tim Pelaksana</label>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {{-- Kolom Dosen --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Nama Dosen</label>
+                                    <div class="space-y-3">
+                                        <template x-for="(dosen, index) in dosenItems" :key="'dosen-'+index">
+                                            <div class="flex items-center gap-2">
+                                                <input type="text" name="anggota[]" x-model="dosenItems[index]"
+                                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all bg-white"
+                                                       placeholder="Nama Dosen">
+                                                
+                                                {{-- Tombol Delete Dosen (Selalu Muncul, Disabled jika 1) --}}
+                                                <button type="button" 
+                                                        @click="removeDosen(index)" 
+                                                        :disabled="dosenItems.length === 1"
+                                                        class="p-2.5 rounded-lg transition-colors border border-gray-200" 
+                                                        :class="dosenItems.length === 1 ? 'text-gray-300 cursor-not-allowed bg-gray-50' : 'text-red-500 hover:bg-red-50 hover:border-red-200 cursor-pointer'"
+                                                        title="Hapus Dosen">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <div class="flex gap-2 mt-3">
+                                        <button type="button" @click="addDosen()" class="flex items-center gap-2 px-4 py-2 text-sm text-telkom-blue bg-white border border-telkom-blue rounded-lg hover:bg-blue-50 transition-colors flex-1 justify-center">
+                                            <i class="fas fa-plus"></i> Tambah Dosen
+                                        </button>
+                                        <button type="button" @click="removeLastDosen()" :disabled="dosenItems.length === 1" 
+                                                class="flex items-center gap-2 px-4 py-2 text-sm border rounded-lg transition-colors flex-shrink-0"
+                                                :class="dosenItems.length === 1 ? 'text-gray-300 bg-gray-50 border-gray-200 cursor-not-allowed' : 'text-red-500 bg-white border-red-200 hover:bg-red-50 cursor-pointer'">
+                                            <i class="fas fa-trash-alt"></i> Hapus Terakhir
                                         </button>
                                     </div>
-                                </template>
+                                </div>
+
+                                {{-- Kolom Mahasiswa --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Nama Mahasiswa</label>
+                                    <div class="space-y-3">
+                                        <template x-for="(mhs, index) in mahasiswaItems" :key="'mhs-'+index">
+                                            <div class="flex items-center gap-2">
+                                                <input type="text" name="mahasiswa[]" x-model="mahasiswaItems[index]"
+                                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all bg-white"
+                                                       placeholder="Nama Mahasiswa">
+                                                
+                                                {{-- Tombol Delete Mahasiswa (Selalu Muncul, Disabled jika 1) --}}
+                                                <button type="button" 
+                                                        @click="removeMahasiswa(index)" 
+                                                        :disabled="mahasiswaItems.length === 1"
+                                                        class="p-2.5 rounded-lg transition-colors border border-gray-200" 
+                                                        :class="mahasiswaItems.length === 1 ? 'text-gray-300 cursor-not-allowed bg-gray-50' : 'text-red-500 hover:bg-red-50 hover:border-red-200 cursor-pointer'"
+                                                        title="Hapus Mahasiswa">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <div class="flex gap-2 mt-3">
+                                        <button type="button" @click="addMahasiswa()" class="flex items-center gap-2 px-4 py-2 text-sm text-telkom-blue bg-white border border-telkom-blue rounded-lg hover:bg-blue-50 transition-colors flex-1 justify-center">
+                                            <i class="fas fa-plus"></i> Tambah Mahasiswa
+                                        </button>
+                                        <button type="button" @click="removeLastMahasiswa()" :disabled="mahasiswaItems.length === 1" 
+                                                class="flex items-center gap-2 px-4 py-2 text-sm border rounded-lg transition-colors flex-shrink-0"
+                                                :class="mahasiswaItems.length === 1 ? 'text-gray-300 bg-gray-50 border-gray-200 cursor-not-allowed' : 'text-red-500 bg-white border-red-200 hover:bg-red-50 cursor-pointer'">
+                                            <i class="fas fa-trash-alt"></i> Hapus Terakhir
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <button type="button" @click="addItem()" class="flex items-center gap-2 px-4 py-2 mt-2 text-sm text-telkom-blue bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors border border-transparent">
-                                <i class="fas fa-plus"></i> Tambah Anggota
-                            </button>
                         </div>
                     </div>
                 </div>

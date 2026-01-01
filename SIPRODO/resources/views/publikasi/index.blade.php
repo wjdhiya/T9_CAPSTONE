@@ -104,9 +104,9 @@
                             {{-- Filter Status --}}
                             <select name="status" class="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none bg-white text-sm">
                                 <option value="">Semua Status</option>
-                                <option value="verified" {{ request('status') == 'verified' ? 'selected' : '' }}>Verified</option>
-                                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
+                                <option value="verified" {{ request('status') == 'disetujui' ? 'selected' : '' }}>Disetujui</option>
+                                <option value="pending" {{ request('status') == 'menunggu' ? 'selected' : '' }}>Menunggu</option>
+                                <option value="rejected" {{ request('status') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
                             </select>
                             
                             {{-- Tombol Filter/Search --}}
@@ -206,13 +206,13 @@
                                             $statusBadge = '';
                                             switch ($item->status_verifikasi) {
                                                 case 'verified':
-                                                    $statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"><i class="fas fa-check-circle"></i> Verified</span>';
+                                                    $statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"><i class="fas fa-check-circle"></i> Disetujui</span>';
                                                     break;
                                                 case 'pending':
-                                                    $statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"><i class="fas fa-clock"></i> Pending</span>';
+                                                    $statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"><i class="fas fa-clock"></i> Menunggu</span>';
                                                     break;
                                                 case 'rejected':
-                                                    $statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"><i class="fas fa-times-circle"></i> Rejected</span>';
+                                                    $statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"><i class="fas fa-times-circle"></i> Ditolak</span>';
                                                     break;
                                             }
                                         @endphp

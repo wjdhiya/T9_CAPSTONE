@@ -113,9 +113,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                     <div class="flex items-center">
-                                        <div class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold mr-2 text-xs">
-                                            {{ substr($item->user->name ?? '?', 0, 1) }}
-                                        </div>
+                                        {{-- Lingkaran avatar dihapus di sini --}}
                                         {{ $item->user->name ?? '-' }}
                                     </div>
                                 </td>

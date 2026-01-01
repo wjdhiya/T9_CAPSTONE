@@ -1,9 +1,14 @@
+@php
+    use Illuminate\Support\Str;
+@endphp
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">Detail Pengabdian Masyarakat</h2>
             <div class="flex space-x-2">
-                <a href="{{ route('pengmas.index') }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg">Kembali</a>
+                <a href="{{ route('pengmas.index') }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">
+                    <i class="fas fa-arrow-left mr-1"></i> Kembali
+                </a>
             </div>
         </div>
     </x-slot>
@@ -11,179 +16,285 @@
     <div class="py-12">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             @if(session('success'))
-                <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">{{ session('success') }}</div>
+                <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-sm">{{ session('success') }}</div>
             @endif
 
-            <div class="bg-white shadow-sm sm:rounded-lg mb-6 p-6">
-                <h3 class="text-2xl font-bold mb-4" style="color: #585858;">{{ $pengabdianMasyarakat->judul }}</h3>
+            {{-- Main Content --}}
+            <div class="bg-white shadow-lg sm:rounded-xl mb-6 p-8 border border-gray-100">
+                <div class="border-b border-gray-200 pb-4 mb-6">
+                    <h3 class="text-2xl font-bold text-gray-900 leading-tight">{{ $pengabdianMasyarakat->judul }}</h3>
+                    <div class="mt-2 flex items-center text-sm text-gray-500">
+                        <span class="mr-4"><i class="far fa-calendar-alt mr-1"></i> {{ $pengabdianMasyarakat->tahun_akademik }} ({{ ucfirst($pengabdianMasyarakat->semester) }})</span>
+                        <span><i class="fas fa-map-marker-alt mr-1"></i> {{ $pengabdianMasyarakat->lokasi }}</span>
+                    </div>
+                </div>
                 
+                {{-- Deskripsi --}}
+                <div class="mb-8">
+                    <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Deskripsi Kegiatan</h4>
+                    <div class="bg-gray-50 p-4 rounded-lg text-gray-700 leading-relaxed border border-gray-100">
+                        {{ $pengabdianMasyarakat->abstrak }}
+                    </div>
+                </div>
+
+                {{-- Detail Grid --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase font-semibold">Mitra Sasaran</p>
+                            <p class="font-medium text-gray-900 text-lg">{{ $pengabdianMasyarakat->mitra }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase font-semibold">Jumlah Peserta</p>
+                            <p class="font-medium text-gray-900">{{ $pengabdianMasyarakat->jumlah_peserta ?? '-' }} Orang</p>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase font-semibold">Periode Pelaksanaan</p>
+                            <div class="flex items-center text-gray-900 font-medium">
+                                <span>{{ $pengabdianMasyarakat->tanggal_mulai ? \Carbon\Carbon::parse($pengabdianMasyarakat->tanggal_mulai)->format('d M Y') : '-' }}</span>
+                                <span class="mx-2 text-gray-400">s/d</span>
+                                <span>{{ $pengabdianMasyarakat->tanggal_selesai ? \Carbon\Carbon::parse($pengabdianMasyarakat->tanggal_selesai)->format('d M Y') : '-' }}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase font-semibold">Sumber Dana</p>
+                            <p class="font-medium text-gray-900">{{ $pengabdianMasyarakat->sumber_dana ?? 'Mandiri' }} @if($pengabdianMasyarakat->dana) (Rp {{ number_format($pengabdianMasyarakat->dana, 0, ',', '.') }}) @endif</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Logic Pemrosesan Tim --}}
+                @php
+                    $processList = function($data) {
+                        if (empty($data)) return [];
+                        if (is_string($data)) {
+                            // Coba decode JSON, jika gagal anggap CSV
+                            $decoded = json_decode($data, true);
+                            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                                return $decoded;
+                            }
+                            return array_map('trim', explode(',', $data));
+                        }
+                        if (is_array($data)) return $data;
+                        return [];
+                    };
+
+                    $anggotaDosen = $processList($pengabdianMasyarakat->anggota);
+                    $anggotaMahasiswa = $processList($pengabdianMasyarakat->mahasiswa ?? $pengabdianMasyarakat->mahasiswa_terlibat);
+                @endphp
+
+                {{-- Tim Pelaksana Section --}}
+                <div class="mb-8">
+                    <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">Tim Pelaksana</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {{-- Dosen --}}
+                        <div class="rounded-lg p-4 border border-gray-100">
+                            <div class="flex items-center mb-3">
+                                <div class="flex items-center justify-center mr-3">
+                                </div>
+                                <h5 class="font-bold text-gray-900">Dosen</h5>
+                            </div>
+                            <ul class="space-y-2">
+                                @forelse($anggotaDosen as $dosen)
+                                    @if(!empty($dosen))
+                                        <li class="flex items-center text-gray-700 bg-white p-2 rounded shadow-sm border border-gray-100">
+                                            <i class="fas fa-user-tie text-blue-400 mr-2 text-xs"></i> 
+                                            {{ $dosen }}
+                                        </li>
+                                    @endif
+                                @empty
+                                    <li class="text-gray-400 text-sm italic pl-2">Tidak ada data dosen</li>
+                                @endforelse
+                            </ul>
+                        </div>
+
+                        {{-- Mahasiswa --}}
+                        <div class="rounded-lg p-4 border border-gray-100">
+                            <div class="flex items-center mb-3">
+                                <div class="flex items-center justify-center mr-3">
+                                </div>
+                                <h5 class="font-bold text-gray-900">Mahasiswa</h5>
+                            </div>
+                            <ul class="space-y-2">
+                                @forelse($anggotaMahasiswa as $mahasiswa)
+                                    @if(!empty($mahasiswa))
+                                        <li class="flex items-center text-gray-700 bg-white p-2 rounded shadow-sm border border-gray-100">
+                                            <i class="fas fa-user text-green-400 mr-2 text-xs"></i> 
+                                            {{ $mahasiswa }}
+                                        </li>
+                                    @endif
+                                @empty
+                                    <li class="text-gray-400 text-sm italic pl-2">Tidak ada data mahasiswa</li>
+                                @endforelse
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Status Kegiatan --}}
                 <div class="mb-4">
-                    <p class="text-sm text-gray-600 mb-2">Deskripsi</p>
-                    <p class="text-gray-800">{{ $pengabdianMasyarakat->deskripsi }}</p>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <p class="text-sm text-gray-600">Lokasi</p>
-                        <p class="font-semibold">{{ $pengabdianMasyarakat->lokasi }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-600">Mitra</p>
-                        <p class="font-semibold">{{ $pengabdianMasyarakat->mitra }}</p>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-3 gap-4 mb-4">
-                    <div>
-                        <p class="text-sm text-gray-600">Tahun Akademik</p>
-                        <p class="font-semibold">{{ $pengabdianMasyarakat->tahun_akademik }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-600">Semester</p>
-                        <p class="font-semibold">{{ ucfirst($pengabdianMasyarakat->semester) }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-600">Jumlah Peserta</p>
-                        <p class="font-semibold">{{ $pengabdianMasyarakat->jumlah_peserta ?? '-' }}</p>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <p class="text-sm text-gray-600">Tanggal Mulai</p>
-                        <p class="font-semibold">{{ $pengabdianMasyarakat->tanggal_mulai?->format('d M Y') }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-600">Tanggal Selesai</p>
-                        <p class="font-semibold">{{ $pengabdianMasyarakat->tanggal_selesai?->format('d M Y') }}</p>
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <p class="text-sm text-gray-600">Status</p>
-                    <span class="px-3 py-1 text-sm font-semibold rounded-full 
-                        @if($pengabdianMasyarakat->status === 'selesai') bg-green-100 text-green-800
-                        @elseif($pengabdianMasyarakat->status === 'berjalan') bg-yellow-100 text-yellow-800
-                        @else bg-gray-100 text-gray-800 @endif">
+                    <p class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Status Kegiatan</p>
+                    <span class="px-4 py-2 inline-flex text-sm font-semibold rounded-lg
+                        @if($pengabdianMasyarakat->status === 'selesai') bg-green-100 text-green-800 border border-green-200
+                        @elseif($pengabdianMasyarakat->status === 'berjalan') bg-yellow-100 text-yellow-800 border border-yellow-200
+                        @else bg-gray-100 text-gray-800 border border-gray-200 @endif">
                         {{ ucfirst($pengabdianMasyarakat->status) }}
                     </span>
                 </div>
+            </div>
 
-                @if($pengabdianMasyarakat->file_proposal || $pengabdianMasyarakat->file_laporan || $pengabdianMasyarakat->file_dokumentasi)
-                <div class="mb-4">
-                    <p class="text-sm text-gray-600 mb-3">Dokumen</p>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {{-- Dokumen Pendukung (Updated Layout to Match Penelitian) --}}
+            @if($pengabdianMasyarakat->file_proposal || $pengabdianMasyarakat->file_laporan || $pengabdianMasyarakat->file_dokumentasi)
+            <div class="bg-white overflow-hidden shadow-lg sm:rounded-xl mb-6 border border-gray-100">
+                <div class="p-6">
+                    <h4 class="text-lg font-semibold mb-4 text-gray-900">Dokumen Pendukung</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        
+                        {{-- Proposal --}}
                         @if($pengabdianMasyarakat->file_proposal)
-                            <div class="border rounded-lg p-4">
-                                <p class="text-sm text-gray-600 mb-2">File Proposal</p>
-                                @if(auth()->user()->canReviewTriDharma())
-                                    <a href="{{ route('pengmas.download.proposal', $pengabdianMasyarakat) }}" target="_blank" class="text-blue-600 hover:underline flex items-center">
-                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                        </svg>
-                                        Download File
-                                    </a>
-                                @else
-                                    <a href="{{ Storage::url($pengabdianMasyarakat->file_proposal) }}" target="_blank" class="text-blue-600 hover:underline flex items-center">
-                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                        </svg>
-                                        View File
-                                    </a>
-                                @endif
-                            </div>
+                        <div class="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                            <p class="text-sm text-gray-600 mb-2 font-medium">File Proposal</p>
+                            @if(auth()->user()->canReviewTriDharma())
+                                <a href="{{ route('pengmas.download.proposal', $pengabdianMasyarakat) }}" class="text-blue-600 hover:underline flex items-center group">
+                                    <svg class="w-5 h-5 mr-2 group-hover:text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                    <span class="font-medium">Download {{ Str::limit(preg_replace('/^\d+_/', '', basename($pengabdianMasyarakat->file_proposal)), 30, '...') }}</span>
+                                </a>
+                            @else
+                                <a href="{{ route('pengmas.download.proposal', $pengabdianMasyarakat) }}" target="_blank" class="text-blue-600 hover:underline flex items-center group">
+                                    <svg class="w-5 h-5 mr-2 group-hover:text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                    <span class="font-medium">View File</span>
+                                </a>
+                            @endif
+                        </div>
                         @endif
+
+                        {{-- Laporan --}}
                         @if($pengabdianMasyarakat->file_laporan)
-                            <div class="border rounded-lg p-4">
-                                <p class="text-sm text-gray-600 mb-2">File Laporan</p>
-                                @if(auth()->user()->canReviewTriDharma())
-                                    <a href="{{ route('pengmas.download.laporan', $pengabdianMasyarakat) }}" target="_blank" class="text-blue-600 hover:underline flex items-center">
-                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                        </svg>
-                                        Download File
-                                    </a>
-                                @else
-                                    <a href="{{ Storage::url($pengabdianMasyarakat->file_laporan) }}" target="_blank" class="text-blue-600 hover:underline flex items-center">
-                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                        </svg>
-                                        View File
-                                    </a>
-                                @endif
-                            </div>
+                        <div class="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                            <p class="text-sm text-gray-600 mb-2 font-medium">File Laporan</p>
+                            @if(auth()->user()->canReviewTriDharma())
+                                <a href="{{ route('pengmas.download.laporan', $pengabdianMasyarakat) }}" class="text-blue-600 hover:underline flex items-center group">
+                                    <svg class="w-5 h-5 mr-2 group-hover:text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                    <span class="font-medium">Download {{ Str::limit(preg_replace('/^\d+_/', '', basename($pengabdianMasyarakat->file_laporan)), 30, '...') }}</span>
+                                </a>
+                            @else
+                                <a href="{{ route('pengmas.download.laporan', $pengabdianMasyarakat) }}" target="_blank" class="text-blue-600 hover:underline flex items-center group">
+                                    <svg class="w-5 h-5 mr-2 group-hover:text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                    <span class="font-medium">View File</span>
+                                </a>
+                            @endif
+                        </div>
                         @endif
+
+                        {{-- Dokumentasi --}}
                         @if($pengabdianMasyarakat->file_dokumentasi)
-                            <div class="border rounded-lg p-4">
-                                <p class="text-sm text-gray-600 mb-2">File Dokumentasi</p>
-                                @if(auth()->user()->canReviewTriDharma())
-                                    <a href="{{ route('pengmas.download.dokumentasi', $pengabdianMasyarakat) }}" target="_blank" class="text-blue-600 hover:underline flex items-center">
-                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                        </svg>
-                                        Download File
-                                    </a>
-                                @else
-                                    <a href="{{ Storage::url($pengabdianMasyarakat->file_dokumentasi) }}" target="_blank" class="text-blue-600 hover:underline flex items-center">
-                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                        </svg>
-                                        View File
-                                    </a>
-                                @endif
-                            </div>
+                        <div class="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                            <p class="text-sm text-gray-600 mb-2 font-medium">File Dokumentasi</p>
+                            @if(auth()->user()->canReviewTriDharma())
+                                <a href="{{ route('pengmas.download.dokumentasi', $pengabdianMasyarakat) }}" class="text-blue-600 hover:underline flex items-center group">
+                                    <svg class="w-5 h-5 mr-2 group-hover:text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                    <span class="font-medium">Download {{ Str::limit(preg_replace('/^\d+_/', '', basename($pengabdianMasyarakat->file_dokumentasi)), 30, '...') }}</span>
+                                </a>
+                            @else
+                                <a href="{{ route('pengmas.download.dokumentasi', $pengabdianMasyarakat) }}" target="_blank" class="text-blue-600 hover:underline flex items-center group">
+                                    <svg class="w-5 h-5 mr-2 group-hover:text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                    <span class="font-medium">View File</span>
+                                </a>
+                            @endif
+                        </div>
+                        @endif
+
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <!-- Verification Status Box -->
+            <div class="bg-white shadow-lg sm:rounded-xl p-6 border-l-4 
+                @if($pengabdianMasyarakat->status_verifikasi === 'verified') border-green-500 
+                @elseif($pengabdianMasyarakat->status_verifikasi === 'rejected') border-red-500 
+                @else border-yellow-500 @endif">
+                
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h4 class="text-lg font-bold text-gray-900">Status Verifikasi</h4>
+                        <p class="text-sm text-gray-500 mt-1">Status saat ini: 
+                            <span class="font-bold 
+                                @if($pengabdianMasyarakat->status_verifikasi === 'verified') text-green-600 
+                                @elseif($pengabdianMasyarakat->status_verifikasi === 'rejected') text-red-600 
+                                @else text-yellow-600 @endif">
+                                {{ ucfirst($pengabdianMasyarakat->status_verifikasi) }}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="bg-gray-100 p-2 rounded-full">
+                        @if($pengabdianMasyarakat->status_verifikasi === 'verified') 
+                            <i class="fas fa-check text-green-500 text-xl"></i>
+                        @elseif($pengabdianMasyarakat->status_verifikasi === 'rejected') 
+                            <i class="fas fa-times text-red-500 text-xl"></i>
+                        @else 
+                            <i class="fas fa-clock text-yellow-500 text-xl"></i>
                         @endif
                     </div>
                 </div>
-                @endif
-            </div>
-
-            <!-- Verification -->
-            <div class="bg-white shadow-sm sm:rounded-lg p-6">
-                <h4 class="text-lg font-semibold mb-4">Status Verifikasi</h4>
-                <span class="px-4 py-2 text-sm font-semibold rounded-full 
-                    @if($pengabdianMasyarakat->status_verifikasi === 'verified') bg-green-100 text-green-800
-                    @elseif($pengabdianMasyarakat->status_verifikasi === 'rejected') bg-red-100 text-red-800
-                    @else bg-yellow-100 text-yellow-800 @endif">
-                    {{ ucfirst($pengabdianMasyarakat->status_verifikasi) }}
-                </span>
 
                 @if($pengabdianMasyarakat->verified_by)
-                <div class="mb-2 mt-4">
-                    <p class="text-sm text-gray-600">Diverifikasi oleh</p>
-                    <p class="font-semibold">{{ $pengabdianMasyarakat->verifiedBy->name }}</p>
-                    <p class="text-sm text-gray-500">{{ $pengabdianMasyarakat->verified_at?->format('d M Y H:i') }}</p>
+                <div class="mt-4 pt-4 border-t border-gray-100 flex items-center">
+                    <i class="fas fa-user-check text-gray-400 mr-2"></i>
+                    <div class="text-sm">
+                        <span class="text-gray-500">Diverifikasi oleh:</span>
+                        <span class="font-semibold text-gray-900">{{ $pengabdianMasyarakat->verifiedBy->name }}</span>
+                        <span class="text-gray-400 mx-1">•</span>
+                        <span class="text-gray-500">{{ $pengabdianMasyarakat->verified_at?->format('d M Y H:i') }}</span>
+                    </div>
                 </div>
                 @endif
 
                 @if($pengabdianMasyarakat->catatan_verifikasi)
-                <div class="mt-4 p-4 bg-gray-50 rounded-lg">
-                    <p class="text-sm text-gray-600 mb-1">Catatan Verifikasi</p>
-                    <p class="text-gray-800">{{ $pengabdianMasyarakat->catatan_verifikasi }}</p>
+                <div class="mt-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <p class="text-xs font-bold text-gray-500 uppercase mb-1">Catatan</p>
+                    <p class="text-gray-800 text-sm">{{ $pengabdianMasyarakat->catatan_verifikasi }}</p>
                 </div>
                 @endif
 
+                {{-- Form Verifikasi (Hanya utk Reviewer) --}}
                 @if(auth()->user()->canVerify() && $pengabdianMasyarakat->status_verifikasi === 'pending')
-                <form action="{{ route('pengmas.verify', $pengabdianMasyarakat) }}" method="POST" class="mt-6">
-                    @csrf
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Verifikasi</label>
-                        <textarea name="catatan_verifikasi" rows="3" class="w-full rounded-md border-gray-300"></textarea>
-                    </div>
-                    <div class="flex space-x-3">
-                        <button type="submit" name="status_verifikasi" value="verified" class="px-4 py-2 bg-green-600 text-white rounded-lg">Setujui</button>
-                        <button type="submit" name="status_verifikasi" value="rejected" class="px-4 py-2 bg-red-600 text-white rounded-lg">Tolak</button>
-                    </div>
-                </form>
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <form action="{{ route('pengmas.verify', $pengabdianMasyarakat) }}" method="POST">
+                        @csrf
+                        <div class="mb-4">
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Berikan Catatan (Opsional)</label>
+                            <textarea name="catatan_verifikasi" rows="2" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Tulis alasan disetujui atau ditolak..."></textarea>
+                        </div>
+                        <div class="flex gap-3">
+                            <button type="submit" name="status_verifikasi" value="verified" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition shadow-sm font-semibold flex justify-center items-center">
+                                <i class="fas fa-check mr-2"></i> Setujui
+                            </button>
+                            <button type="submit" name="status_verifikasi" value="rejected" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition shadow-sm font-semibold flex justify-center items-center">
+                                <i class="fas fa-times mr-2"></i> Tolak
+                            </button>
+                        </div>
+                    </form>
+                </div>
                 @endif
             </div>
         </div>
     </div>
 </x-app-layout>
-

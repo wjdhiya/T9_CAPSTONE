@@ -141,15 +141,15 @@
                                         <div>
                                             @if($item->status_verifikasi === 'verified')
                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                    <i class="fas fa-check-circle mr-1 mt-0.5"></i> Verified
+                                                    <i class="fas fa-check-circle mr-1 mt-0.5"></i> Disetujui
                                                 </span>
                                             @elseif($item->status_verifikasi === 'rejected')
                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                                    <i class="fas fa-times-circle mr-1 mt-0.5"></i> Rejected
+                                                    <i class="fas fa-times-circle mr-1 mt-0.5"></i> Ditolak
                                                 </span>
                                             @else
                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                                    <i class="fas fa-clock mr-1 mt-0.5"></i> Pending
+                                                    <i class="fas fa-clock mr-1 mt-0.5"></i> Menunggu
                                                 </span>
                                             @endif
                                         </div>
@@ -161,8 +161,9 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                                     <div class="flex justify-center items-center space-x-3">
-                                        <a href="{{ route('pengmas.show', $item->id) }}" class="text-indigo-600 hover:text-indigo-900 tooltip" title="Lihat Detail">
-                                            <i class="fas fa-eye text-lg"></i>
+                                        {{-- Ganti ikon dengan tautan teks "Lihat" --}}
+                                        <a href="{{ route('pengmas.show', $item->id) }}" class="text-indigo-600 hover:text-indigo-900 mr-3" title="Lihat Detail">
+                                            Lihat
                                         </a>
                                         
                                         @if ($item->status_verifikasi !== 'verified' && auth()->user()->canInputTriDharma() && $item->user_id === auth()->id())

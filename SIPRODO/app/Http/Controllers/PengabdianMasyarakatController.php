@@ -26,14 +26,13 @@ class PengabdianMasyarakatController extends Controller
         }
 
         // Search (Judul, Lokasi, Mitra, dan Nama Dosen)
-        // BAGIAN INI DIPERBARUI AGAR BISA CARI NAMA DOSEN
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('judul', 'like', '%' . $search . '%')
                   ->orWhere('lokasi', 'like', '%' . $search . '%')
                   ->orWhere('mitra', 'like', '%' . $search . '%')
-                  // Tambahan: Cari berdasarkan nama user (dosen)
+                  // Cari berdasarkan nama user (dosen pengusul)
                   ->orWhereHas('user', function ($subQ) use ($search) {
                       $subQ->where('name', 'like', '%' . $search . '%');
                   });
@@ -94,7 +93,7 @@ class PengabdianMasyarakatController extends Controller
         $validated = $request->validate([
             'judul' => 'required|string|max:500',
             
-            // Terima input 'deskripsi' (sesuai form) atau 'abstrak'
+            // Terima input 'deskripsi' atau 'abstrak'
             'deskripsi' => 'nullable|string', 
             'abstrak'   => 'nullable|string',
 
@@ -102,20 +101,21 @@ class PengabdianMasyarakatController extends Controller
             'mitra' => 'required|string|max:255',
             'jumlah_peserta' => 'required|integer|min:1',
             'tahun_akademik' => 'required|string|max:20',
-            
-            // Terima string biasa agar menerima "Ganjil" (Huruf Besar)
             'semester' => 'required|string', 
             
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'dana' => 'nullable|numeric|min:0',
             'sumber_dana' => 'nullable|string|max:255',
-            'anggota' => 'nullable|array',
-            'anggota.*' => 'string|max:255',
-            'mahasiswa_terlibat' => 'nullable|array',
-            'mahasiswa_terlibat.*' => 'string|max:255',
             
-            // Terima string biasa agar menerima "Proposal" (Huruf Besar)
+            // Validasi Anggota (Dosen)
+            'anggota' => 'nullable|array',
+            'anggota.*' => 'nullable|string|max:255',
+            
+            // Validasi Mahasiswa (Input form bernama 'mahasiswa')
+            'mahasiswa' => 'nullable|array',
+            'mahasiswa.*' => 'nullable|string|max:255',
+            
             'status' => 'required|string', 
             
             'file_proposal' => 'nullable|file|mimes:pdf|max:10240',
@@ -126,34 +126,42 @@ class PengabdianMasyarakatController extends Controller
 
         // 2. MAPPING DATA
         
-        // Jika form mengirim 'deskripsi', kita pindahkan isinya ke 'abstrak'
+        // Mapping deskripsi ke abstrak jika diperlukan
         if (isset($validated['deskripsi']) && !isset($validated['abstrak'])) {
             $validated['abstrak'] = $validated['deskripsi'];
         }
-        // Hapus key 'deskripsi' karena di database tidak ada kolom itu
         unset($validated['deskripsi']);
 
-        // Pastikan abstrak terisi (jika wajib)
+        // Default abstrak
         if (empty($validated['abstrak'])) {
             $validated['abstrak'] = '-'; 
         }
 
-        // Format Semester & Status jadi huruf kecil semua
+        // Format data
         $validated['semester'] = strtolower($validated['semester']); 
         $validated['status'] = strtolower($validated['status']);    
 
         $validated['user_id'] = Auth::id();
         $validated['status_verifikasi'] = 'pending';
 
-        // Convert arrays to JSON
-        if (isset($validated['anggota'])) {
-            $validated['anggota'] = json_encode(array_filter($validated['anggota']));
-        }
-        if (isset($validated['mahasiswa_terlibat'])) {
-            $validated['mahasiswa_terlibat'] = json_encode(array_filter($validated['mahasiswa_terlibat']));
-        }
+        // --- PERBAIKAN PENTING DI SINI ---
+        
+        // 1. Proses Anggota (Dosen)
+        $anggotaInput = $validated['anggota'] ?? [];
+        $anggotaClean = array_values(array_filter($anggotaInput, fn($v) => !empty($v)));
+        $validated['anggota'] = json_encode($anggotaClean);
 
-        // Handle file uploads with SAFE NAME
+        // 2. Proses Mahasiswa
+        // Kita simpan ke DUA key: 'mahasiswa' DAN 'mahasiswa_terlibat'.
+        // Ini memastikan data tersimpan terlepas dari nama kolom mana yang dipakai di database/model Anda.
+        $mahasiswaInput = $validated['mahasiswa'] ?? [];
+        $mahasiswaClean = array_values(array_filter($mahasiswaInput, fn($v) => !empty($v)));
+        $mahasiswaJson  = json_encode($mahasiswaClean);
+        
+        $validated['mahasiswa'] = $mahasiswaJson;           // Untuk kolom 'mahasiswa'
+        $validated['mahasiswa_terlibat'] = $mahasiswaJson;  // Untuk kolom 'mahasiswa_terlibat' (legacy support)
+
+        // Handle file uploads
         if ($request->hasFile('file_proposal')) {
             $originalName = $request->file('file_proposal')->getClientOriginalName();
             $safeName = time() . '_' . preg_replace('/[^a-zA-Z0-9\._-]/', '_', $originalName);
@@ -242,10 +250,15 @@ class PengabdianMasyarakatController extends Controller
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'dana' => 'nullable|numeric|min:0',
             'sumber_dana' => 'nullable|string|max:255',
+            
+            // Validasi Anggota
             'anggota' => 'nullable|array',
-            'anggota.*' => 'string|max:255',
-            'mahasiswa_terlibat' => 'nullable|array',
-            'mahasiswa_terlibat.*' => 'string|max:255',
+            'anggota.*' => 'nullable|string|max:255',
+            
+            // Validasi Mahasiswa
+            'mahasiswa' => 'nullable|array',
+            'mahasiswa.*' => 'nullable|string|max:255',
+            
             'status' => 'required|string',
             'file_proposal' => 'nullable|file|mimes:pdf|max:10240',
             'file_laporan' => 'nullable|file|mimes:pdf|max:10240',
@@ -259,19 +272,26 @@ class PengabdianMasyarakatController extends Controller
         }
         unset($validated['deskripsi']);
         
-        // Format string ke lowercase
         $validated['semester'] = strtolower($validated['semester']);
         $validated['status'] = strtolower($validated['status']);
 
-        // Convert arrays to JSON
-        if (isset($validated['anggota'])) {
-            $validated['anggota'] = json_encode(array_filter($validated['anggota']));
-        }
-        if (isset($validated['mahasiswa_terlibat'])) {
-            $validated['mahasiswa_terlibat'] = json_encode(array_filter($validated['mahasiswa_terlibat']));
-        }
+        // --- PERBAIKAN PENTING DI SINI ---
 
-        // Handle file uploads with SAFE NAME
+        // 1. Proses Anggota (Dosen)
+        $anggotaInput = $validated['anggota'] ?? [];
+        $anggotaClean = array_values(array_filter($anggotaInput, fn($v) => !empty($v)));
+        $validated['anggota'] = json_encode($anggotaClean);
+
+        // 2. Proses Mahasiswa
+        // Simpan ke dua key untuk keamanan kompatibilitas
+        $mahasiswaInput = $validated['mahasiswa'] ?? [];
+        $mahasiswaClean = array_values(array_filter($mahasiswaInput, fn($v) => !empty($v)));
+        $mahasiswaJson  = json_encode($mahasiswaClean);
+        
+        $validated['mahasiswa'] = $mahasiswaJson;
+        $validated['mahasiswa_terlibat'] = $mahasiswaJson;
+
+        // Handle file uploads
         if ($request->hasFile('file_proposal')) {
             if ($pengma->file_proposal) {
                 Storage::disk('public')->delete($pengma->file_proposal);
@@ -389,7 +409,7 @@ class PengabdianMasyarakatController extends Controller
         }
 
         $filename = basename($pengma->file_proposal);
-        // Remove timestamp prefix (format: timestamp_filename)
+        // Remove timestamp prefix
         $originalName = preg_replace('/^\d+_/', '', $filename);
         
         $filePath = Storage::disk('public')->path($pengma->file_proposal);
@@ -413,7 +433,6 @@ class PengabdianMasyarakatController extends Controller
         }
 
         $filename = basename($pengma->file_laporan);
-        // Remove timestamp prefix (format: timestamp_filename)
         $originalName = preg_replace('/^\d+_/', '', $filename);
         
         $filePath = Storage::disk('public')->path($pengma->file_laporan);
@@ -437,7 +456,6 @@ class PengabdianMasyarakatController extends Controller
         }
 
         $filename = basename($pengma->file_dokumentasi);
-        // Remove timestamp prefix (format: timestamp_filename)
         $originalName = preg_replace('/^\d+_/', '', $filename);
         
         $filePath = Storage::disk('public')->path($pengma->file_dokumentasi);

@@ -100,19 +100,28 @@
                                             {{ ucfirst($item->status) }}
                                         </span>
                                     </td>
+                                    {{-- Kolom Status Verifikasi dengan Bahasa Indonesia --}}
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="px-2 text-xs font-semibold rounded-full 
-                                            @if($item->status_verifikasi === 'disetujui') bg-green-100 text-green-800
-                                            @elseif($item->status_verifikasi === 'ditolak') bg-red-100 text-red-800
+                                            @if(in_array($item->status_verifikasi, ['verified', 'disetujui'])) bg-green-100 text-green-800
+                                            @elseif(in_array($item->status_verifikasi, ['rejected', 'ditolak'])) bg-red-100 text-red-800
                                             @else bg-yellow-100 text-yellow-800
                                             @endif">
-                                            {{-- PERBAIKAN: Mengubah "Pending" menjadi "Menunggu" --}}
-                                            {{ $item->status_verifikasi === 'pending' ? 'Menunggu' : ucfirst($item->status_verifikasi) }}
+                                            @if(in_array($item->status_verifikasi, ['verified', 'disetujui']))
+                                                Disetujui
+                                            @elseif(in_array($item->status_verifikasi, ['rejected', 'ditolak']))
+                                                Ditolak
+                                            @else
+                                                Menunggu
+                                            @endif
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-sm font-medium">
                                         <a href="{{ route('penelitian.show', $item->id) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Lihat</a>
-                                        @if ($item->status_verifikasi !== 'disetujui' && auth()->user()->canInputTriDharma() && $item->user_id === auth()->id())
+                                        
+                                        {{-- LOGIKA DIUBAH: Tombol Edit & Hapus HANYA muncul jika status BELUM diverifikasi (pending/menunggu) --}}
+                                        {{-- Status 'verified', 'rejected', 'disetujui', 'ditolak' akan menyembunyikan tombol --}}
+                                        @if (!in_array($item->status_verifikasi, ['verified', 'rejected', 'disetujui', 'ditolak']) && auth()->user()->canInputTriDharma() && $item->user_id === auth()->id())
                                             <a href="{{ route('penelitian.edit', $item->id) }}" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
                                             <button type="button" onclick="document.getElementById('delete-form-{{ $item->id }}').submit()" class="text-red-600 hover:text-red-900">Hapus</button>
                                             <form id="delete-form-{{ $item->id }}" action="{{ route('penelitian.destroy', $item->id) }}" method="POST" class="hidden">

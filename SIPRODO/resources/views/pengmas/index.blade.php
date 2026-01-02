@@ -164,7 +164,8 @@
                                             Lihat
                                         </a>
                                         
-                                        @if ($item->status_verifikasi !== 'verified' && auth()->user()->canInputTriDharma() && $item->user_id === auth()->id())
+                                        {{-- LOGIKA DIUBAH: Tombol Edit & Hapus disembunyikan jika status VERIFIED atau REJECTED --}}
+                                        @if (!in_array($item->status_verifikasi, ['verified', 'rejected']) && auth()->user()->canInputTriDharma() && $item->user_id === auth()->id())
                                             <a href="{{ route('pengmas.edit', $item->id) }}" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
                                             <button type="button" onclick="document.getElementById('delete-form-{{ $item->id }}').submit()" class="text-red-600 hover:text-red-900">Hapus</button>
                                             <form id="delete-form-{{ $item->id }}" action="{{ route('pengmas.destroy', $item->id) }}" method="POST" class="hidden">

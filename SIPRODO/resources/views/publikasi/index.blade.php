@@ -140,7 +140,6 @@
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">INDEXING</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">TAHUN</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">STATUS</th>
-                                {{-- PERBAIKAN: Header AKSI rata kiri agar sesuai konten tombol --}}
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">AKSI</th>
                             </tr>
                         </thead>
@@ -219,11 +218,12 @@
                                         {!! $statusBadge !!}
                                     </td>
                                     
-                                    {{-- Kolom Aksi (Tombol Teks seperti Penelitian) --}}
+                                    {{-- Kolom Aksi --}}
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <a href="{{ route('publikasi.show', $item->id) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Lihat</a>
                                         
-                                        @if ($item->status_verifikasi !== 'verified' && auth()->user()->canInputTriDharma() && $item->user_id === auth()->id())
+                                        {{-- LOGIKA DIUBAH: Tombol Edit & Hapus HANYA muncul jika status BUKAN verified DAN BUKAN rejected --}}
+                                        @if (!in_array($item->status_verifikasi, ['verified', 'rejected']) && auth()->user()->canInputTriDharma() && $item->user_id === auth()->id())
                                             <a href="{{ route('publikasi.edit', $item->id) }}" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
                                             
                                             <button type="button" onclick="if(confirm('Apakah Anda yakin ingin menghapus data ini?')) document.getElementById('delete-form-{{ $item->id }}').submit()" class="text-red-600 hover:text-red-900">

@@ -181,28 +181,28 @@
                                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all bg-white"
                                                        placeholder="Nama Dosen">
                                                 
-                                                {{-- Tombol Delete Dosen --}}
-                                                <button type="button" 
-                                                        @click="removeDosen(index)" 
+                                                <!-- Kotak kecil dengan ikon tong sampah -->
+                                                <button type="button"
+                                                        @click="removeDosen(index)"
                                                         :disabled="dosenItems.length === 1"
-                                                        class="p-2.5 rounded-lg transition-colors border border-gray-200" 
-                                                        :class="dosenItems.length === 1 ? 'text-gray-300 cursor-not-allowed bg-gray-50' : 'text-red-500 hover:bg-red-50 hover:border-red-200 cursor-pointer'"
-                                                        title="Hapus Dosen">
-                                                    <i class="fas fa-trash-alt"></i>
+                                                        :class="dosenItems.length === 1 
+                                                            ? 'w-9 h-9 flex items-center justify-center border rounded-md text-gray-300 bg-gray-50 cursor-not-allowed' 
+                                                            : 'w-9 h-9 flex items-center justify-center border rounded-md text-red-500 hover:bg-red-50 hover:border-red-200 cursor-pointer'"
+                                                        title="Hapus Dosen" aria-label="Hapus Dosen">
+                                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                                                        <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+                                                    </svg>
                                                 </button>
                                             </div>
                                         </template>
                                     </div>
-                                    <div class="flex gap-2 mt-3">
-                                        <button type="button" @click="addDosen()" class="flex items-center gap-2 px-4 py-2 text-sm text-telkom-blue bg-white border border-telkom-blue rounded-lg hover:bg-blue-50 transition-colors flex-1 justify-center">
-                                            <i class="fas fa-plus"></i> Tambah Dosen
-                                        </button>
-                                        <button type="button" @click="removeLastDosen()" :disabled="dosenItems.length === 1" 
-                                                class="flex items-center gap-2 px-4 py-2 text-sm border rounded-lg transition-colors flex-shrink-0"
-                                                :class="dosenItems.length === 1 ? 'text-gray-300 bg-gray-50 border-gray-200 cursor-not-allowed' : 'text-red-500 bg-white border-red-200 hover:bg-red-50 cursor-pointer'">
-                                            <i class="fas fa-trash-alt"></i> Hapus Terakhir
-                                        </button>
-                                    </div>
+                                    <button type="button" @click="addDosen()" class="w-full mt-3 py-2 text-sm font-medium text-black-600 bg-white border border-white-300 rounded-lg hover:bg-black-50 transition-colors flex justify-center items-center">
+                                        <i class="fas fa-plus mr-2"></i> Tambah Dosen
+                                    </button>
                                 </div>
 
                                 {{-- Kolom Mahasiswa --}}
@@ -215,28 +215,28 @@
                                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all bg-white"
                                                        placeholder="Nama Mahasiswa">
                                                 
-                                                {{-- Tombol Delete Mahasiswa --}}
-                                                <button type="button" 
-                                                        @click="removeMahasiswa(index)" 
+                                                <!-- Kotak kecil dengan ikon tong sampah -->
+                                                <button type="button"
+                                                        @click="removeMahasiswa(index)"
                                                         :disabled="mahasiswaItems.length === 1"
-                                                        class="p-2.5 rounded-lg transition-colors border border-gray-200" 
-                                                        :class="mahasiswaItems.length === 1 ? 'text-gray-300 cursor-not-allowed bg-gray-50' : 'text-red-500 hover:bg-red-50 hover:border-red-200 cursor-pointer'"
-                                                        title="Hapus Mahasiswa">
-                                                    <i class="fas fa-trash-alt"></i>
+                                                        :class="mahasiswaItems.length === 1 
+                                                            ? 'w-9 h-9 flex items-center justify-center border rounded-md text-gray-300 bg-gray-50 cursor-not-allowed' 
+                                                            : 'w-9 h-9 flex items-center justify-center border rounded-md text-red-500 hover:bg-red-50 hover:border-red-200 cursor-pointer'"
+                                                        title="Hapus Mahasiswa" aria-label="Hapus Mahasiswa">
+                                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                                                        <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+                                                    </svg>
                                                 </button>
                                             </div>
                                         </template>
                                     </div>
-                                    <div class="flex gap-2 mt-3">
-                                        <button type="button" @click="addMahasiswa()" class="flex items-center gap-2 px-4 py-2 text-sm text-telkom-blue bg-white border border-telkom-blue rounded-lg hover:bg-blue-50 transition-colors flex-1 justify-center">
-                                            <i class="fas fa-plus"></i> Tambah Mahasiswa
-                                        </button>
-                                        <button type="button" @click="removeLastMahasiswa()" :disabled="mahasiswaItems.length === 1" 
-                                                class="flex items-center gap-2 px-4 py-2 text-sm border rounded-lg transition-colors flex-shrink-0"
-                                                :class="mahasiswaItems.length === 1 ? 'text-gray-300 bg-gray-50 border-gray-200 cursor-not-allowed' : 'text-red-500 bg-white border-red-200 hover:bg-red-50 cursor-pointer'">
-                                            <i class="fas fa-trash-alt"></i> Hapus Terakhir
-                                        </button>
-                                    </div>
+                                    <button type="button" @click="addMahasiswa()" class="w-full mt-3 py-2 text-sm font-medium text-black-600 bg-white border border-white-300 rounded-lg hover:bg-black-50 transition-colors flex justify-center items-center">
+                                        <i class="fas fa-plus mr-2"></i> Tambah Mahasiswa
+                                    </button>
                                 </div>
                             </div>
                         </div>

@@ -36,7 +36,6 @@
     if (empty($oldAnggota)) $oldAnggota = [''];
 
     // Persiapan data Mahasiswa
-    // Cek kedua kemungkinan nama kolom: 'mahasiswa' atau 'mahasiswa_terlibat'
     $dataMahasiswaDB = $pengabdianMasyarakat->mahasiswa ?? $pengabdianMasyarakat->mahasiswa_terlibat;
     $oldMahasiswa = $getArrayData('mahasiswa', $dataMahasiswaDB);
     if (empty($oldMahasiswa)) $oldMahasiswa = [''];
@@ -191,7 +190,7 @@
                             
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {{-- Kolom Dosen --}}
-                                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                                <div class="">
                                     <label class="block text-sm font-bold text-gray-700 mb-2"><i class="fas fa-chalkboard-teacher mr-1"></i> Nama Dosen</label>
                                     <div class="space-y-3">
                                         <template x-for="(dosen, index) in dosenItems" :key="'dosen-'+index">
@@ -205,19 +204,26 @@
                                                         :disabled="dosenItems.length === 1"
                                                         class="p-2.5 rounded-lg transition-colors border border-gray-200" 
                                                         :class="dosenItems.length === 1 ? 'text-gray-300 cursor-not-allowed bg-gray-50' : 'text-red-500 hover:bg-red-50 hover:border-red-200 cursor-pointer'"
-                                                        title="Hapus Dosen">
-                                                    <i class="fas fa-trash-alt"></i>
+                                                        title="Hapus Dosen" aria-label="Hapus Dosen">
+                                                    <!-- Inline SVG ikon tong sampah (tidak bergantung pada FontAwesome) -->
+                                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                                                        <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+                                                    </svg>
                                                 </button>
                                             </div>
                                         </template>
                                     </div>
-                                    <button type="button" @click="addDosen()" class="w-full mt-3 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors flex justify-center items-center">
+                                    <button type="button" @click="addDosen()" class="w-full mt-3 py-2 text-sm font-medium text-black-600 bg-white border border-white-300 rounded-lg hover:bg-black-50 transition-colors flex justify-center items-center">
                                         <i class="fas fa-plus mr-2"></i> Tambah Dosen
                                     </button>
                                 </div>
 
                                 {{-- Kolom Mahasiswa --}}
-                                <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                                <div class="">
                                     <label class="block text-sm font-bold text-gray-700 mb-2"><i class="fas fa-user-graduate mr-1"></i> Nama Mahasiswa</label>
                                     <div class="space-y-3">
                                         <template x-for="(mhs, index) in mahasiswaItems" :key="'mhs-'+index">
@@ -226,18 +232,26 @@
                                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 bg-white"
                                                        placeholder="Nama Mahasiswa">
                                                 
-                                                <button type="button" 
-                                                        @click="removeMahasiswa(index)" 
+                                                <!-- Kotak kecil dengan ikon tong sampah (sama seperti Dosen) -->
+                                                <button type="button"
+                                                        @click="removeMahasiswa(index)"
                                                         :disabled="mahasiswaItems.length === 1"
-                                                        class="p-2.5 rounded-lg transition-colors border border-gray-200" 
+                                                        class="p-2.5 rounded-lg transition-colors border border-gray-200"
                                                         :class="mahasiswaItems.length === 1 ? 'text-gray-300 cursor-not-allowed bg-gray-50' : 'text-red-500 hover:bg-red-50 hover:border-red-200 cursor-pointer'"
-                                                        title="Hapus Mahasiswa">
-                                                    <i class="fas fa-trash-alt"></i>
+                                                        title="Hapus Mahasiswa" aria-label="Hapus Mahasiswa">
+                                                    <!-- Inline SVG ikon tong sampah -->
+                                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                                                        <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+                                                    </svg>
                                                 </button>
                                             </div>
                                         </template>
                                     </div>
-                                    <button type="button" @click="addMahasiswa()" class="w-full mt-3 py-2 text-sm font-medium text-green-600 bg-white border border-green-300 rounded-lg hover:bg-green-50 transition-colors flex justify-center items-center">
+                                    <button type="button" @click="addMahasiswa()" class="w-full mt-3 py-2 text-sm font-medium text-black-600 bg-white border border-white-300 rounded-lg hover:bg-black-50 transition-colors flex justify-center items-center">
                                         <i class="fas fa-plus mr-2"></i> Tambah Mahasiswa
                                     </button>
                                 </div>
@@ -265,47 +279,157 @@
 
                         {{-- Upload Files --}}
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            
                             {{-- File Proposal --}}
-                            <div>
+                            <div class="file-upload-container">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">File Proposal (PDF, max 10MB)</label>
+                                
                                 @if($pengabdianMasyarakat->file_proposal)
-                                    <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg mb-2">
-                                        <p class="text-xs text-blue-800 break-all mb-1">
-                                            <i class="fas fa-file-pdf mr-1"></i> {{ basename($pengabdianMasyarakat->file_proposal) }}
-                                        </p>
+                                    <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card" id="file_proposal_card">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center overflow-hidden">
+                                                <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3 flex-shrink-0"></i>
+                                                <div class="min-w-0">
+                                                    <p class="text-sm font-medium text-gray-900 truncate" title="{{ basename($pengabdianMasyarakat->file_proposal) }}">
+                                                        {{ Str::limit(basename($pengabdianMasyarakat->file_proposal), 20, '...') }}
+                                                    </p>
+                                                    <p class="text-xs text-gray-500">Dokumen tersimpan</p>
+                                                </div>
+                                            </div>
+                                            <a href="{{ Storage::url($pengabdianMasyarakat->file_proposal) }}" target="_blank" class="text-telkom-blue hover:underline text-sm ml-2 flex-shrink-0">Lihat</a>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
+
+                                    <div class="file-upload-area" id="file_proposal_replace">
+                                        <label for="file_proposal" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-gray-500 mb-2"></i>
+                                                <p class="text-sm text-gray-600">
+                                                    <span class="text-gray-500 font-semibold">Klik untuk mengganti file</span> atau drag and drop
+                                                </p>
+                                                <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
+                                            </div>
+                                            <input type="file" id="file_proposal" name="file_proposal" accept=".pdf" class="hidden">
+                                        </label>
+                                    </div>
+                                @else
+                                    <div class="file-upload-area" id="file_proposal_upload">
+                                        <label for="file_proposal" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-gray-500 mb-2"></i>
+                                                <p class="text-sm text-gray-600">
+                                                    <span class="text-gray-500 font-semibold">Klik untuk upload</span> atau drag and drop
+                                                </p>
+                                                <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
+                                            </div>
+                                            <input type="file" id="file_proposal" name="file_proposal" accept=".pdf" class="hidden">
+                                        </label>
                                     </div>
                                 @endif
-                                <input type="file" name="file_proposal" accept=".pdf" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors cursor-pointer"/>
                                 @error('file_proposal')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
 
                             {{-- File Laporan --}}
-                            <div>
+                            <div class="file-upload-container">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">File Laporan (PDF, max 10MB)</label>
+                                
                                 @if($pengabdianMasyarakat->file_laporan)
-                                    <div class="p-3 bg-red-50 border border-red-200 rounded-lg mb-2">
-                                        <p class="text-xs text-red-800 break-all mb-1">
-                                            <i class="fas fa-file-pdf mr-1"></i> {{ basename($pengabdianMasyarakat->file_laporan) }}
-                                        </p>
+                                    <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card" id="file_laporan_card">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center overflow-hidden">
+                                                <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3 flex-shrink-0"></i>
+                                                <div class="min-w-0">
+                                                    <p class="text-sm font-medium text-gray-900 truncate" title="{{ basename($pengabdianMasyarakat->file_laporan) }}">
+                                                        {{ Str::limit(basename($pengabdianMasyarakat->file_laporan), 20, '...') }}
+                                                    </p>
+                                                    <p class="text-xs text-gray-500">Dokumen tersimpan</p>
+                                                </div>
+                                            </div>
+                                            <a href="{{ Storage::url($pengabdianMasyarakat->file_laporan) }}" target="_blank" class="text-telkom-blue hover:underline text-sm ml-2 flex-shrink-0">Lihat</a>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
+
+                                    <div class="file-upload-area" id="file_laporan_replace">
+                                        <label for="file_laporan" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-gray-500 mb-2"></i>
+                                                <p class="text-sm text-gray-600">
+                                                    <span class="text-gray-500 font-semibold">Klik untuk mengganti file</span> atau drag and drop
+                                                </p>
+                                                <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
+                                            </div>
+                                            <input type="file" id="file_laporan" name="file_laporan" accept=".pdf" class="hidden">
+                                        </label>
+                                    </div>
+                                @else
+                                    <div class="file-upload-area" id="file_laporan_upload">
+                                        <label for="file_laporan" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-gray-500 mb-2"></i>
+                                                <p class="text-sm text-gray-600">
+                                                    <span class="text-gray-500 font-semibold">Klik untuk upload</span> atau drag and drop
+                                                </p>
+                                                <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
+                                            </div>
+                                            <input type="file" id="file_laporan" name="file_laporan" accept=".pdf" class="hidden">
+                                        </label>
                                     </div>
                                 @endif
-                                <input type="file" name="file_laporan" accept=".pdf" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors cursor-pointer"/>
                                 @error('file_laporan')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
 
-                            {{-- Dokumentasi --}}
-                            <div>
+                            {{-- File Dokumentasi --}}
+                            <div class="file-upload-container">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Dokumentasi (Foto/ZIP, max 10MB)</label>
+                                
                                 @if($pengabdianMasyarakat->file_dokumentasi)
-                                    <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-2">
-                                        <p class="text-xs text-yellow-800 break-all mb-1">
-                                            <i class="fas fa-file-archive mr-1"></i> {{ basename($pengabdianMasyarakat->file_dokumentasi) }}
-                                        </p>
+                                    <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card" id="file_dokumentasi_card">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center overflow-hidden">
+                                                <i class="fas fa-file-archive w-6 h-6 text-yellow-600 mr-3 flex-shrink-0"></i>
+                                                <div class="min-w-0">
+                                                    <p class="text-sm font-medium text-gray-900 truncate" title="{{ basename($pengabdianMasyarakat->file_dokumentasi) }}">
+                                                        {{ Str::limit(basename($pengabdianMasyarakat->file_dokumentasi), 20, '...') }}
+                                                    </p>
+                                                    <p class="text-xs text-gray-500">Dokumen tersimpan</p>
+                                                </div>
+                                            </div>
+                                            <a href="{{ Storage::url($pengabdianMasyarakat->file_dokumentasi) }}" target="_blank" class="text-telkom-blue hover:underline text-sm ml-2 flex-shrink-0">Lihat</a>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
+
+                                    <div class="file-upload-area" id="file_dokumentasi_replace">
+                                        <label for="file_dokumentasi" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-gray-500 mb-2"></i>
+                                                <p class="text-sm text-gray-600">
+                                                    <span class="text-gray-500 font-semibold">Klik untuk mengganti file</span> atau drag and drop
+                                                </p>
+                                                <p class="text-xs text-gray-400 mt-1">JPG/PNG/ZIP (MAX. 10MB)</p>
+                                            </div>
+                                            <input type="file" id="file_dokumentasi" name="file_dokumentasi" class="hidden">
+                                        </label>
+                                    </div>
+                                @else
+                                    <div class="file-upload-area" id="file_dokumentasi_upload">
+                                        <label for="file_dokumentasi" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-gray-500 mb-2"></i>
+                                                <p class="text-sm text-gray-600">
+                                                    <span class="text-gray-500 font-semibold">Klik untuk upload</span> atau drag and drop
+                                                </p>
+                                                <p class="text-xs text-gray-400 mt-1">JPG/PNG/ZIP (MAX. 10MB)</p>
+                                            </div>
+                                            <input type="file" id="file_dokumentasi" name="file_dokumentasi" class="hidden">
+                                        </label>
                                     </div>
                                 @endif
-                                <input type="file" name="file_dokumentasi" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors cursor-pointer"/>
                                 @error('file_dokumentasi')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -322,4 +446,157 @@
             </form>
         </div>
     </div>
+
+    <script>
+        // Handle selected file and render a file-card similar to 'create' page logic
+        function handleFileChange(inputId, uploadAreaId, cardId) {
+            const input = document.getElementById(inputId);
+            const uploadArea = document.getElementById(uploadAreaId);
+            // Element card ini mungkin sudah ada (jika file existing) atau belum
+            // Logic ini akan menghandle pembuatan/update card preview
+            
+            if (!input) return;
+
+            input.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                const existingCard = document.getElementById(cardId);
+                
+                if (file) {
+                    if (uploadArea) uploadArea.style.display = 'none';
+
+                    let card = existingCard;
+                    
+                    // Jika card belum ada (kasus upload baru tanpa file existing), buat baru
+                    if (!card) {
+                        card = document.createElement('div');
+                        card.id = cardId;
+                        // tandai sebagai preview agar deteksi lebih aman
+                        card.dataset.preview = 'true';
+                        card.className = 'p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card mb-2';
+                        // Insert card sebelum upload area
+                        if(uploadArea && uploadArea.parentNode) {
+                            uploadArea.parentNode.insertBefore(card, uploadArea);
+                        }
+                    } else {
+                        // Jika card sudah ada (misal replace file existing), pastikan terlihat
+                        card.style.display = 'block';
+                        // jika card sudah ada karena preview sebelumnya, pastikan ditandai
+                        if (!card.dataset.preview) card.dataset.preview = 'true';
+                    }
+
+                    const maxLength = 30;
+                    const displayName = file.name.length > maxLength ? file.name.substring(0, maxLength) + '...' : file.name;
+                    
+                    // Tentukan icon berdasarkan input ID (proposal/laporan=pdf, dokumentasi=archive)
+                    let iconClass = 'fas fa-file-pdf text-red-500'; // Default PDF
+                    if (inputId === 'file_dokumentasi') {
+                        iconClass = 'fas fa-file-archive text-yellow-600';
+                    }
+
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center flex-1 min-w-0 mr-3">
+                                <i class="${iconClass} w-6 h-6 mr-3 flex-shrink-0"></i>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-sm font-medium text-gray-900 truncate">${displayName}</p>
+                                    <p class="text-xs text-gray-500">File dipilih (Belum disimpan)</p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="removeFile('${inputId}', '${uploadAreaId}', '${cardId}')" class="text-red-500 hover:text-red-700 text-sm flex-shrink-0">
+                                <i class="fas fa-times"></i> Batal
+                            </button>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        // Remove selected file and show upload area again
+        function removeFile(inputId, uploadAreaId, cardId) {
+            const input = document.getElementById(inputId);
+            const uploadArea = document.getElementById(uploadAreaId);
+            const card = document.getElementById(cardId);
+
+            if (input) input.value = ''; // Reset input file
+
+            // Usahakan menampilkan kembali semua area upload (card putus-putus) di container terkait
+            // sehingga "Batal" tidak membuat card putus-putus ikut hilang.
+            const container = (card && card.parentNode) || (uploadArea && uploadArea.parentNode);
+            if (container) {
+                const uploadAreas = container.querySelectorAll('.file-upload-area');
+                uploadAreas.forEach(a => a.style.display = 'block');
+            }
+            if (uploadArea) uploadArea.style.display = 'block';
+
+            if (!card) return;
+
+            // Hanya hapus card preview sementara (yang berisi "File dipilih" atau yang ditandai data-preview)
+            const isPreview = card.dataset.preview === 'true' || card.innerHTML.includes('File dipilih');
+            if (isPreview) {
+                card.remove();
+                return;
+            }
+
+            // Jika card ini adalah card existing dari server (dokumen tersimpan), sembunyikan card tersebut
+            // tapi JANGAN hapus area upload (agar card putus-putus tetap ada untuk replace).
+            card.style.display = 'none';
+        }
+
+        // Enable drag & drop for label-based upload areas
+        function setupDragAndDrop(inputId, uploadAreaId) {
+            const input = document.getElementById(inputId);
+            const uploadArea = document.getElementById(uploadAreaId);
+            if (!input || !uploadArea) return;
+
+            // Target label inside the div usually
+            const zone = uploadArea.querySelector('label') || uploadArea;
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                zone.addEventListener(eventName, function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                zone.addEventListener(eventName, () => zone.classList.add('border-blue-500', 'bg-blue-50'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                zone.addEventListener(eventName, () => zone.classList.remove('border-blue-500', 'bg-blue-50'), false);
+            });
+
+            zone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files && files.length) {
+                    input.files = files;
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }, false);
+        }
+
+        // Initialize for all file inputs/areas
+        document.addEventListener('DOMContentLoaded', function() {
+            // Kita gunakan ID unik untuk card preview agar tidak menimpa card file existing
+            // File Proposal
+            handleFileChange('file_proposal', 'file_proposal_upload', 'preview_proposal_card'); 
+            handleFileChange('file_proposal', 'file_proposal_replace', 'preview_proposal_card');
+            
+            // File Laporan
+            handleFileChange('file_laporan', 'file_laporan_upload', 'preview_laporan_card');
+            handleFileChange('file_laporan', 'file_laporan_replace', 'preview_laporan_card');
+            
+            // File Dokumentasi
+            handleFileChange('file_dokumentasi', 'file_dokumentasi_upload', 'preview_dokumentasi_card');
+            handleFileChange('file_dokumentasi', 'file_dokumentasi_replace', 'preview_dokumentasi_card');
+
+            setupDragAndDrop('file_proposal', 'file_proposal_upload');
+            setupDragAndDrop('file_proposal', 'file_proposal_replace');
+            setupDragAndDrop('file_laporan', 'file_laporan_upload');
+            setupDragAndDrop('file_laporan', 'file_laporan_replace');
+            setupDragAndDrop('file_dokumentasi', 'file_dokumentasi_upload');
+            setupDragAndDrop('file_dokumentasi', 'file_dokumentasi_replace');
+        });
+    </script>
 </x-app-layout>

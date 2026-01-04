@@ -163,17 +163,26 @@
                                     {{-- Tampilan jika file sudah ada --}}
                                     <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card" id="file_proposal_card">
                                         <div class="flex items-center justify-between">
-                                            <div class="flex items-center">
-                                                <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3"></i>
-                                                <div>
-                                                    <p class="text-sm font-medium text-gray-900">{{ Str::limit(preg_replace('/^\d+_/', '', basename($penelitian->file_proposal)), 30, '...') }}</p>
+                                            <div class="flex items-center overflow-hidden">
+                                                <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3 flex-shrink-0"></i>
+                                                <div class="min-w-0">
+                                                    <p class="text-sm font-medium text-gray-900 truncate" title="{{ basename($penelitian->file_proposal) }}">
+                                                        {{ Str::limit(preg_replace('/^\d+_/', '', basename($penelitian->file_proposal)), 30, '...') }}
+                                                    </p>
                                                     <p class="text-xs text-gray-500">Dokumen tersimpan</p>
                                                 </div>
                                             </div>
-                                            <a href="{{ Storage::url($penelitian->file_proposal) }}" target="_blank" class="text-telkom-blue hover:underline text-sm">Lihat</a>
+                                            {{-- Tombol Lihat dan Hapus --}}
+                                            <div class="flex items-center gap-2 ml-2 flex-shrink-0">
+                                                <a href="{{ Storage::url($penelitian->file_proposal) }}" target="_blank" class="text-telkom-blue hover:underline text-sm">Lihat</a>
+                                                <button type="button" onclick="removeFile('file_proposal', 'file_proposal_replace', 'file_proposal_card')" class="text-red-500 hover:text-red-700 text-sm flex items-center gap-1" title="Hapus File">
+                                                    <i class="fas fa-trash-alt"></i> Hapus
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                     <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
+                                    
                                     {{-- Tampilan Upload Ganti File (Gaya Dropzone) --}}
                                     <div class="file-upload-area" id="file_proposal_replace">
                                         <label for="file_proposal" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
@@ -213,17 +222,26 @@
                                     {{-- Tampilan jika file sudah ada --}}
                                     <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card" id="file_laporan_card">
                                         <div class="flex items-center justify-between">
-                                            <div class="flex items-center">
-                                                <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3"></i>
-                                                <div>
-                                                    <p class="text-sm font-medium text-gray-900">{{ Str::limit(preg_replace('/^\d+_/', '', basename($penelitian->file_laporan)), 30, '...') }}</p>
+                                            <div class="flex items-center overflow-hidden">
+                                                <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3 flex-shrink-0"></i>
+                                                <div class="min-w-0">
+                                                    <p class="text-sm font-medium text-gray-900 truncate" title="{{ basename($penelitian->file_laporan) }}">
+                                                        {{ Str::limit(preg_replace('/^\d+_/', '', basename($penelitian->file_laporan)), 30, '...') }}
+                                                    </p>
                                                     <p class="text-xs text-gray-500">Dokumen tersimpan</p>
                                                 </div>
                                             </div>
-                                            <a href="{{ Storage::url($penelitian->file_laporan) }}" target="_blank" class="text-telkom-blue hover:underline text-sm">Lihat</a>
+                                            {{-- Tombol Lihat dan Hapus --}}
+                                            <div class="flex items-center gap-2 ml-2 flex-shrink-0">
+                                                <a href="{{ Storage::url($penelitian->file_laporan) }}" target="_blank" class="text-telkom-blue hover:underline text-sm">Lihat</a>
+                                                <button type="button" onclick="removeFile('file_laporan', 'file_laporan_replace', 'file_laporan_card')" class="text-red-500 hover:text-red-700 text-sm flex items-center gap-1" title="Hapus File">
+                                                    <i class="fas fa-trash-alt"></i> Hapus
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                     <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
+                                    
                                     {{-- Tampilan Upload Ganti File (Gaya Dropzone) --}}
                                     <div class="file-upload-area" id="file_laporan_replace">
                                         <label for="file_laporan" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
@@ -286,6 +304,8 @@
             const uploadArea = document.getElementById(uploadAreaId);
             const existingCard = document.getElementById(cardId);
 
+            if (!input) return;
+
             input.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
@@ -299,9 +319,12 @@
                     if (!card) {
                         card = document.createElement('div');
                         card.id = cardId;
-                        card.className = 'p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card';
-                        const container = input.closest('div');
-                        container.insertBefore(card, input);
+                        card.className = 'p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card mb-2';
+                        const container = input.closest('div').querySelector('.file-upload-area').parentNode; // More robust selection
+                         // Insert before the upload area container
+                        input.closest('.file-upload-area').parentNode.insertBefore(card, input.closest('.file-upload-area'));
+                    } else {
+                        card.style.display = 'block';
                     }
 
                     // Limit filename length
@@ -314,11 +337,11 @@
                                 <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3 flex-shrink-0"></i>
                                 <div class="min-w-0 flex-1">
                                     <p class="text-sm font-medium text-gray-900 truncate">${displayName}</p>
-                                    <p class="text-xs text-gray-500">File dipilih</p>
+                                    <p class="text-xs text-gray-500">File dipilih (Belum disimpan)</p>
                                 </div>
                             </div>
                             <button type="button" onclick="removeFile('${inputId}', '${uploadAreaId}', '${cardId}')" class="text-red-500 hover:text-red-700 text-sm flex-shrink-0">
-                                <i class="fas fa-times"></i> Hapus
+                                <i class="fas fa-times"></i> Batal
                             </button>
                         </div>
                     `;
@@ -333,7 +356,7 @@
             const card = document.getElementById(cardId);
 
             // Clear input
-            input.value = '';
+            if(input) input.value = '';
 
             // Hide card and show upload area
             if (card) {
@@ -344,12 +367,50 @@
             }
         }
 
+        // Enable drag & drop for label-based upload areas
+        function setupDragAndDrop(inputId, uploadAreaId) {
+            const input = document.getElementById(inputId);
+            const uploadArea = document.getElementById(uploadAreaId);
+            if (!input || !uploadArea) return;
+
+            const zone = uploadArea.querySelector('label') || uploadArea;
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                zone.addEventListener(eventName, function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                zone.addEventListener(eventName, () => zone.classList.add('border-blue-500', 'bg-blue-50'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                zone.addEventListener(eventName, () => zone.classList.remove('border-blue-500', 'bg-blue-50'), false);
+            });
+
+            zone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files && files.length) {
+                    input.files = files;
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }, false);
+        }
+
         // Initialize file handlers
         document.addEventListener('DOMContentLoaded', function() {
-            handleFileChange('file_proposal', 'file_proposal_upload', 'file_proposal_card');
-            handleFileChange('file_proposal', 'file_proposal_replace', 'file_proposal_card');
-            handleFileChange('file_laporan', 'file_laporan_upload', 'file_laporan_card');
-            handleFileChange('file_laporan', 'file_laporan_replace', 'file_laporan_card');
+            handleFileChange('file_proposal', 'file_proposal_upload', 'preview_proposal_card');
+            handleFileChange('file_proposal', 'file_proposal_replace', 'preview_proposal_card');
+            handleFileChange('file_laporan', 'file_laporan_upload', 'preview_laporan_card');
+            handleFileChange('file_laporan', 'file_laporan_replace', 'preview_laporan_card');
+
+            setupDragAndDrop('file_proposal', 'file_proposal_upload');
+            setupDragAndDrop('file_proposal', 'file_proposal_replace');
+            setupDragAndDrop('file_laporan', 'file_laporan_upload');
+            setupDragAndDrop('file_laporan', 'file_laporan_replace');
         });
     </script>
 </x-app-layout>

@@ -341,12 +341,56 @@
             uploadArea.style.display = 'block';
         }
 
-        // Initialize file handlers
+        // NEW: Setup drag & drop on upload areas so dropped files set the input and trigger change
+        function setupDragAndDrop(inputId, uploadAreaId) {
+            const input = document.getElementById(inputId);
+            const uploadArea = document.getElementById(uploadAreaId);
+            if (!input || !uploadArea) return;
+
+            // target zone to apply highlight classes (prefer the label inside if exists)
+            const zone = uploadArea.querySelector('label') || uploadArea;
+
+            // prevent default for drag events
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                zone.addEventListener(eventName, function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+
+            // add highlight on enter/over
+            ['dragenter', 'dragover'].forEach(eventName => {
+                zone.addEventListener(eventName, () => zone.classList.add('border-blue-500', 'bg-blue-50'), false);
+            });
+
+            // remove highlight on leave/drop
+            ['dragleave', 'drop'].forEach(eventName => {
+                zone.addEventListener(eventName, () => zone.classList.remove('border-blue-500', 'bg-blue-50'), false);
+            });
+
+            // handle drop -> set files and dispatch change so existing handler runs
+            zone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files && files.length) {
+                    input.files = files;
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }, false);
+        }
+
+        // Initialize file handlers and drag & drop
         document.addEventListener('DOMContentLoaded', function() {
             handleFileChange('file_proposal', 'file_proposal_upload', 'file_proposal_card');
             handleFileChange('file_proposal', 'file_proposal_replace', 'file_proposal_card');
             handleFileChange('file_laporan', 'file_laporan_upload', 'file_laporan_card');
             handleFileChange('file_laporan', 'file_laporan_replace', 'file_laporan_card');
+
+            // Setup drag & drop on available upload areas (no-op if area not present)
+            setupDragAndDrop('file_proposal', 'file_proposal_upload');
+            setupDragAndDrop('file_proposal', 'file_proposal_replace');
+            setupDragAndDrop('file_laporan', 'file_laporan_upload');
+            setupDragAndDrop('file_laporan', 'file_laporan_replace');
         });
     </script>
 </x-app-layout>

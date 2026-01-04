@@ -145,6 +145,7 @@
                                 <input type="number" id="dana" name="dana" value="{{ old('dana', $pengabdianMasyarakat->dana ?? '') }}"
                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
                                        placeholder="0">
+                                @error('dana')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
 
                             <div>
@@ -152,10 +153,11 @@
                                 <input type="text" id="sumber_dana" name="sumber_dana" value="{{ old('sumber_dana', $pengabdianMasyarakat->sumber_dana ?? '') }}"
                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
                                        placeholder="Mandiri / Hibah / Kampus">
+                                @error('sumber_dana')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
                         </div>
 
-                        {{-- Input Dinamis untuk Anggota Dosen & Mahasiswa (INDEPENDEN) --}}
+                        {{-- Input Dinamis untuk Anggota Dosen & Mahasiswa --}}
                         <div x-data="{ 
                             dosenItems: {{ json_encode($oldAnggota) }},
                             mahasiswaItems: {{ json_encode($oldMahasiswa) }},
@@ -179,7 +181,7 @@
                                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all bg-white"
                                                        placeholder="Nama Dosen">
                                                 
-                                                {{-- Tombol Delete Dosen (Selalu Muncul, Disabled jika 1) --}}
+                                                {{-- Tombol Delete Dosen --}}
                                                 <button type="button" 
                                                         @click="removeDosen(index)" 
                                                         :disabled="dosenItems.length === 1"
@@ -191,7 +193,6 @@
                                             </div>
                                         </template>
                                     </div>
-
                                     <div class="flex gap-2 mt-3">
                                         <button type="button" @click="addDosen()" class="flex items-center gap-2 px-4 py-2 text-sm text-telkom-blue bg-white border border-telkom-blue rounded-lg hover:bg-blue-50 transition-colors flex-1 justify-center">
                                             <i class="fas fa-plus"></i> Tambah Dosen
@@ -214,7 +215,7 @@
                                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all bg-white"
                                                        placeholder="Nama Mahasiswa">
                                                 
-                                                {{-- Tombol Delete Mahasiswa (Selalu Muncul, Disabled jika 1) --}}
+                                                {{-- Tombol Delete Mahasiswa --}}
                                                 <button type="button" 
                                                         @click="removeMahasiswa(index)" 
                                                         :disabled="mahasiswaItems.length === 1"
@@ -226,7 +227,6 @@
                                             </div>
                                         </template>
                                     </div>
-
                                     <div class="flex gap-2 mt-3">
                                         <button type="button" @click="addMahasiswa()" class="flex items-center gap-2 px-4 py-2 text-sm text-telkom-blue bg-white border border-telkom-blue rounded-lg hover:bg-blue-50 transition-colors flex-1 justify-center">
                                             <i class="fas fa-plus"></i> Tambah Mahasiswa
@@ -257,11 +257,13 @@
                                 <option value="selesai" {{ old('status', $pengabdianMasyarakat->status ?? '') == 'selesai' ? 'selected' : '' }}>✅ Selesai</option>
                                 <option value="ditolak" {{ old('status', $pengabdianMasyarakat->status ?? '') == 'ditolak' ? 'selected' : '' }}>❌ Ditolak</option>
                             </select>
+                            @error('status')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            
                             {{-- File Proposal --}}
-                            <div>
+                            <div class="file-upload-container">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">File Proposal (PDF, max 10MB)</label>
                                 
                                 @if(isset($pengabdianMasyarakat) && $pengabdianMasyarakat->file_proposal)
@@ -271,7 +273,7 @@
                                             <div class="flex items-center">
                                                 <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3"></i>
                                                 <div>
-                                                    <p class="text-sm font-medium text-gray-900">{{ Str::limit(preg_replace('/^\d+_/', '', basename($pengabdianMasyarakat->file_proposal)), 30, '...') }}</p>
+                                                    <p class="text-sm font-medium text-gray-900">{{ Str::limit(basename($pengabdianMasyarakat->file_proposal), 30, '...') }}</p>
                                                     <p class="text-xs text-gray-500">Dokumen tersimpan</p>
                                                 </div>
                                             </div>
@@ -279,7 +281,8 @@
                                         </div>
                                     </div>
                                     <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
-                                    {{-- Tampilan Upload Ganti File (Gaya Dropzone) --}}
+
+                                    {{-- Upload area untuk mengganti file --}}
                                     <div class="file-upload-area" id="file_proposal_replace">
                                         <label for="file_proposal" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
                                             <div class="flex flex-col items-center justify-center pt-5 pb-6">
@@ -293,11 +296,11 @@
                                         </label>
                                     </div>
                                 @else
-                                    {{-- Tampilan Upload Kosong (Gaya Dropzone) --}}
+                                    {{-- Upload area kosong --}}
                                     <div class="file-upload-area" id="file_proposal_upload">
                                         <label for="file_proposal" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
                                             <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-telkom-blue mb-2"></i>
+                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-gray-500 mb-2"></i>
                                                 <p class="text-sm text-gray-600">
                                                     <span class="text-gray-500 font-semibold">Klik untuk upload</span> atau drag and drop
                                                 </p>
@@ -311,17 +314,16 @@
                             </div>
 
                             {{-- File Laporan --}}
-                            <div>
+                            <div class="file-upload-container">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">File Laporan (PDF, max 10MB)</label>
                                 
                                 @if(isset($pengabdianMasyarakat) && $pengabdianMasyarakat->file_laporan)
-                                    {{-- Tampilan jika file sudah ada --}}
                                     <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card" id="file_laporan_card">
                                         <div class="flex items-center justify-between">
                                             <div class="flex items-center">
                                                 <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3"></i>
                                                 <div>
-                                                    <p class="text-sm font-medium text-gray-900">{{ Str::limit(preg_replace('/^\d+_/', '', basename($pengabdianMasyarakat->file_laporan)), 30, '...') }}</p>
+                                                    <p class="text-sm font-medium text-gray-900">{{ Str::limit(basename($pengabdianMasyarakat->file_laporan), 30, '...') }}</p>
                                                     <p class="text-xs text-gray-500">Dokumen tersimpan</p>
                                                 </div>
                                             </div>
@@ -329,7 +331,7 @@
                                         </div>
                                     </div>
                                     <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
-                                    {{-- Tampilan Upload Ganti File (Gaya Dropzone) --}}
+
                                     <div class="file-upload-area" id="file_laporan_replace">
                                         <label for="file_laporan" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
                                             <div class="flex flex-col items-center justify-center pt-5 pb-6">
@@ -343,7 +345,6 @@
                                         </label>
                                     </div>
                                 @else
-                                    {{-- Tampilan Upload Kosong (Gaya Dropzone) --}}
                                     <div class="file-upload-area" id="file_laporan_upload">
                                         <label for="file_laporan" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
                                             <div class="flex flex-col items-center justify-center pt-5 pb-6">
@@ -357,20 +358,20 @@
                                         </label>
                                     </div>
                                 @endif
+                                @error('file_laporan')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
 
                             {{-- Dokumentasi --}}
-                            <div>
+                            <div class="file-upload-container">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Dokumentasi (Foto/ZIP, max 10MB)</label>
                                 
                                 @if(isset($pengabdianMasyarakat) && $pengabdianMasyarakat->file_dokumentasi)
-                                    {{-- Tampilan jika file sudah ada --}}
                                     <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card" id="file_dokumentasi_card">
                                         <div class="flex items-center justify-between">
                                             <div class="flex items-center">
                                                 <i class="fas fa-file-archive w-6 h-6 text-yellow-500 mr-3"></i>
                                                 <div>
-                                                    <p class="text-sm font-medium text-gray-900">{{ Str::limit(preg_replace('/^\d+_/', '', basename($pengabdianMasyarakat->file_dokumentasi)), 30, '...') }}</p>
+                                                    <p class="text-sm font-medium text-gray-900">{{ Str::limit(basename($pengabdianMasyarakat->file_dokumentasi), 30, '...') }}</p>
                                                     <p class="text-xs text-gray-500">Dokumen tersimpan</p>
                                                 </div>
                                             </div>
@@ -378,13 +379,13 @@
                                         </div>
                                     </div>
                                     <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
-                                    {{-- Tampilan Upload Ganti File (Gaya Dropzone) --}}
+
                                     <div class="file-upload-area" id="file_dokumentasi_replace">
                                         <label for="file_dokumentasi" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
                                             <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-telkom-blue mb-2"></i>
+                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-gray-500 mb-2"></i>
                                                 <p class="text-sm text-gray-600">
-                                                    <span class="text-telkom-blue font-semibold">Klik untuk mengganti file</span> atau drag and drop
+                                                    <span class="text-gray-500 font-semibold">Klik untuk mengganti file</span> atau drag and drop
                                                 </p>
                                                 <p class="text-xs text-gray-400 mt-1">JPG/PNG/ZIP (MAX. 10MB)</p>
                                             </div>
@@ -392,7 +393,6 @@
                                         </label>
                                     </div>
                                 @else
-                                    {{-- Tampilan Upload Kosong (Gaya Dropzone) --}}
                                     <div class="file-upload-area" id="file_dokumentasi_upload">
                                         <label for="file_dokumentasi" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
                                             <div class="flex flex-col items-center justify-center pt-5 pb-6">
@@ -406,7 +406,9 @@
                                         </label>
                                     </div>
                                 @endif
+                                @error('file_dokumentasi')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -425,43 +427,39 @@
     </div>
 
     <script>
-        // Function to limit string length
-        function limitString(str, maxLength = 30) {
-            if (str.length <= maxLength) return str;
-            return str.substring(0, maxLength - 3) + '...';
-        }
-
-        // Function to handle file input change
-        function handleFileChange(inputId, cardId) {
+        // Handle selected file and render a file-card similar to 'penelitian' create
+        function handleFileChange(inputId, uploadAreaId, cardId) {
             const input = document.getElementById(inputId);
+            const uploadArea = document.getElementById(uploadAreaId);
             const existingCard = document.getElementById(cardId);
 
+            if (!input) return;
             input.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
-                    // Create or update file card
+                    if (uploadArea) uploadArea.style.display = 'none';
+
                     let card = existingCard;
                     if (!card) {
                         card = document.createElement('div');
                         card.id = cardId;
-                        card.className = 'p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card mt-2';
-                        input.parentNode.insertBefore(card, input.nextSibling);
+                        card.className = 'p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card';
+                        uploadArea.parentNode.insertBefore(card, uploadArea);
                     }
 
-                    const iconClass = file.type.startsWith('image/') ? 'fas fa-file-image w-6 h-6 text-blue-500' : 
-                                    file.name.endsWith('.zip') ? 'fas fa-file-archive w-6 h-6 text-yellow-500' : 
-                                    'fas fa-file-pdf w-6 h-6 text-red-500';
+                    const maxLength = 30;
+                    const displayName = file.name.length > maxLength ? file.name.substring(0, maxLength) + '...' : file.name;
 
                     card.innerHTML = `
                         <div class="flex items-center justify-between">
                             <div class="flex items-center flex-1 min-w-0 mr-3">
-                                <i class="${iconClass} mr-3 flex-shrink-0"></i>
+                                <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3 flex-shrink-0"></i>
                                 <div class="min-w-0 flex-1">
-                                    <p class="text-sm font-medium text-gray-900 truncate">${limitString(file.name)}</p>
+                                    <p class="text-sm font-medium text-gray-900 truncate">${displayName}</p>
                                     <p class="text-xs text-gray-500">File dipilih</p>
                                 </div>
                             </div>
-                            <button type="button" onclick="removeFile('${inputId}', '${cardId}')" class="text-red-500 hover:text-red-700 text-sm flex-shrink-0">
+                            <button type="button" onclick="removeFile('${inputId}', '${uploadAreaId}', '${cardId}')" class="text-red-500 hover:text-red-700 text-sm flex-shrink-0">
                                 <i class="fas fa-times"></i> Hapus
                             </button>
                         </div>
@@ -470,25 +468,65 @@
             });
         }
 
-        // Function to remove selected file
-        function removeFile(inputId, cardId) {
+        // Remove selected file and show upload area again
+        function removeFile(inputId, uploadAreaId, cardId) {
             const input = document.getElementById(inputId);
+            const uploadArea = document.getElementById(uploadAreaId);
             const card = document.getElementById(cardId);
 
-            // Clear input
-            input.value = '';
-
-            // Hide card
-            if (card) {
-                card.style.display = 'none';
-            }
+            if (input) input.value = '';
+            if (card) card.style.display = 'none';
+            if (uploadArea) uploadArea.style.display = 'block';
         }
 
-        // Initialize file handlers
+        // Enable drag & drop for label-based upload areas
+        function setupDragAndDrop(inputId, uploadAreaId) {
+            const input = document.getElementById(inputId);
+            const uploadArea = document.getElementById(uploadAreaId);
+            if (!input || !uploadArea) return;
+
+            const zone = uploadArea.querySelector('label') || uploadArea;
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                zone.addEventListener(eventName, function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                zone.addEventListener(eventName, () => zone.classList.add('border-blue-500', 'bg-blue-50'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                zone.addEventListener(eventName, () => zone.classList.remove('border-blue-500', 'bg-blue-50'), false);
+            });
+
+            zone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files && files.length) {
+                    input.files = files;
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }, false);
+        }
+
+        // Initialize for all file inputs/areas
         document.addEventListener('DOMContentLoaded', function() {
-            handleFileChange('file_proposal', 'file_proposal_card');
-            handleFileChange('file_laporan', 'file_laporan_card');
-            handleFileChange('file_dokumentasi', 'file_dokumentasi_card');
+            handleFileChange('file_proposal', 'file_proposal_upload', 'file_proposal_card');
+            handleFileChange('file_proposal', 'file_proposal_replace', 'file_proposal_card');
+            handleFileChange('file_laporan', 'file_laporan_upload', 'file_laporan_card');
+            handleFileChange('file_laporan', 'file_laporan_replace', 'file_laporan_card');
+            handleFileChange('file_dokumentasi', 'file_dokumentasi_upload', 'file_dokumentasi_card');
+            handleFileChange('file_dokumentasi', 'file_dokumentasi_replace', 'file_dokumentasi_card');
+
+            setupDragAndDrop('file_proposal', 'file_proposal_upload');
+            setupDragAndDrop('file_proposal', 'file_proposal_replace');
+            setupDragAndDrop('file_laporan', 'file_laporan_upload');
+            setupDragAndDrop('file_laporan', 'file_laporan_replace');
+            setupDragAndDrop('file_dokumentasi', 'file_dokumentasi_upload');
+            setupDragAndDrop('file_dokumentasi', 'file_dokumentasi_replace');
         });
     </script>
 </x-app-layout>

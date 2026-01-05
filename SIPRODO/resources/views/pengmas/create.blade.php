@@ -1,15 +1,65 @@
 @php
     use Illuminate\Support\Str;
 
-    // Persiapan data awal untuk Dosen (Anggota)
-    $oldAnggota = old('anggota', isset($pengabdianMasyarakat) && $pengabdianMasyarakat->anggota ? json_decode($pengabdianMasyarakat->anggota) : ['']);
-    if (!is_array($oldAnggota)) $oldAnggota = [''];
-    if (empty($oldAnggota)) $oldAnggota = ['']; 
+    // --- LOGIKA PERSIAPAN DATA DOSEN (NAMA & NIP) ---
+    $dosenList = [];
+    // 1. Cek Old Input (validasi error)
+    if (old('anggota')) {
+        $oldNames = old('anggota', []);
+        $oldNips = old('dosen_nip', []);
+        foreach($oldNames as $index => $name) {
+            $dosenList[] = [
+                'nama' => $name,
+                'nip' => $oldNips[$index] ?? ''
+            ];
+        }
+    } 
+    // 2. Cek Data Database (Edit Mode)
+    elseif (isset($pengabdianMasyarakat) && $pengabdianMasyarakat->anggota) {
+        $decoded = json_decode($pengabdianMasyarakat->anggota, true);
+        if (is_array($decoded)) {
+            foreach($decoded as $item) {
+                // Handle jika format lama (string) atau baru (object)
+                if (is_string($item)) {
+                    $dosenList[] = ['nama' => $item, 'nip' => ''];
+                } else {
+                    $dosenList[] = ['nama' => $item['nama'] ?? '', 'nip' => $item['nip'] ?? ''];
+                }
+            }
+        }
+    }
+    // 3. Default Kosong
+    if (empty($dosenList)) $dosenList[] = ['nama' => '', 'nip' => ''];
 
-    // Persiapan data awal untuk Mahasiswa
-    $oldMahasiswa = old('mahasiswa', isset($pengabdianMasyarakat) && $pengabdianMasyarakat->mahasiswa ? json_decode($pengabdianMasyarakat->mahasiswa) : ['']);
-    if (!is_array($oldMahasiswa)) $oldMahasiswa = [''];
-    if (empty($oldMahasiswa)) $oldMahasiswa = ['']; 
+
+    // --- LOGIKA PERSIAPAN DATA MAHASISWA (NAMA & NIM) ---
+    $mahasiswaList = [];
+    // 1. Cek Old Input
+    if (old('mahasiswa')) {
+        $oldMhsNames = old('mahasiswa', []);
+        $oldMhsNims = old('mahasiswa_nim', []);
+        foreach($oldMhsNames as $index => $name) {
+            $mahasiswaList[] = [
+                'nama' => $name,
+                'nim' => $oldMhsNims[$index] ?? ''
+            ];
+        }
+    }
+    // 2. Cek Data Database
+    elseif (isset($pengabdianMasyarakat) && $pengabdianMasyarakat->mahasiswa) {
+        $decodedMhs = json_decode($pengabdianMasyarakat->mahasiswa, true);
+        if (is_array($decodedMhs)) {
+            foreach($decodedMhs as $item) {
+                if (is_string($item)) {
+                    $mahasiswaList[] = ['nama' => $item, 'nim' => ''];
+                } else {
+                    $mahasiswaList[] = ['nama' => $item['nama'] ?? '', 'nim' => $item['nim'] ?? ''];
+                }
+            }
+        }
+    }
+    // 3. Default Kosong
+    if (empty($mahasiswaList)) $mahasiswaList[] = ['nama' => '', 'nim' => ''];
 @endphp
 
 <x-app-layout>
@@ -65,11 +115,11 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
-                                <label for="lokasi" class="block text-sm font-medium text-gray-700 mb-2">Lokasi Kegiatan <span class="text-red-600">*</span></label>
-                                <input type="text" id="lokasi" name="lokasi" value="{{ old('lokasi', $pengabdianMasyarakat->lokasi ?? '') }}" required
+                                <label for="skema" class="block text-sm font-medium text-gray-700 mb-2">Skema <span class="text-red-600">*</span></label>
+                                <input type="text" id="skema" name="skema" value="{{ old('skema', $pengabdianMasyarakat->skema ?? '') }}" required
                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
-                                       placeholder="Nama Desa/Kecamatan/Kota">
-                                @error('lokasi')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                                       placeholder="Contoh: Program Kemitraan Masyarakat">
+                                @error('skema')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
 
                             <div>
@@ -134,9 +184,9 @@
                     </div>
                 </div>
 
-                {{-- Section 3: Pendanaan & Tim --}}
+                {{-- Section 3: Pendanaan --}}
                 <div class="bg-white rounded-xl shadow-xl p-6 mb-6">
-                    <h2 class="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Pendanaan & Tim</h2>
+                    <h2 class="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Pendanaan</h2>
                     
                     <div class="space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -156,94 +206,121 @@
                                 @error('sumber_dana')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
                         </div>
-
-                        {{-- Input Dinamis untuk Anggota Dosen & Mahasiswa --}}
-                        <div x-data="{ 
-                            dosenItems: {{ json_encode($oldAnggota) }},
-                            mahasiswaItems: {{ json_encode($oldMahasiswa) }},
-                            addDosen() { this.dosenItems.push(''); },
-                            removeDosen(index) { if(this.dosenItems.length > 1) this.dosenItems.splice(index, 1); },
-                            removeLastDosen() { if(this.dosenItems.length > 1) this.dosenItems.pop(); },
-                            addMahasiswa() { this.mahasiswaItems.push(''); },
-                            removeMahasiswa(index) { if(this.mahasiswaItems.length > 1) this.mahasiswaItems.splice(index, 1); },
-                            removeLastMahasiswa() { if(this.mahasiswaItems.length > 1) this.mahasiswaItems.pop(); }
-                        }">
-                            <label class="block text-sm font-medium text-gray-700 mb-3">Tim Pelaksana</label>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {{-- Kolom Dosen --}}
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Nama Dosen</label>
-                                    <div class="space-y-3">
-                                        <template x-for="(dosen, index) in dosenItems" :key="'dosen-'+index">
-                                            <div class="flex items-center gap-2">
-                                                <input type="text" name="anggota[]" x-model="dosenItems[index]"
-                                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all bg-white"
-                                                       placeholder="Nama Dosen">
-                                                
-                                                <!-- Kotak kecil dengan ikon tong sampah -->
-                                                <button type="button"
-                                                        @click="removeDosen(index)"
-                                                        :disabled="dosenItems.length === 1"
-                                                        :class="dosenItems.length === 1 
-                                                            ? 'w-9 h-9 flex items-center justify-center border rounded-md text-gray-300 bg-gray-50 cursor-not-allowed' 
-                                                            : 'w-9 h-9 flex items-center justify-center border rounded-md text-red-500 hover:bg-red-50 hover:border-red-200 cursor-pointer'"
-                                                        title="Hapus Dosen" aria-label="Hapus Dosen">
-                                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                                                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                                                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                                                        <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </template>
-                                    </div>
-                                    <button type="button" @click="addDosen()" class="w-full mt-3 py-2 text-sm font-medium text-black-600 bg-white border border-white-300 rounded-lg hover:bg-black-50 transition-colors flex justify-center items-center">
-                                        <i class="fas fa-plus mr-2"></i> Tambah Dosen
-                                    </button>
-                                </div>
-
-                                {{-- Kolom Mahasiswa --}}
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Nama Mahasiswa</label>
-                                    <div class="space-y-3">
-                                        <template x-for="(mhs, index) in mahasiswaItems" :key="'mhs-'+index">
-                                            <div class="flex items-center gap-2">
-                                                <input type="text" name="mahasiswa[]" x-model="mahasiswaItems[index]"
-                                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all bg-white"
-                                                       placeholder="Nama Mahasiswa">
-                                                
-                                                <!-- Kotak kecil dengan ikon tong sampah -->
-                                                <button type="button"
-                                                        @click="removeMahasiswa(index)"
-                                                        :disabled="mahasiswaItems.length === 1"
-                                                        :class="mahasiswaItems.length === 1 
-                                                            ? 'w-9 h-9 flex items-center justify-center border rounded-md text-gray-300 bg-gray-50 cursor-not-allowed' 
-                                                            : 'w-9 h-9 flex items-center justify-center border rounded-md text-red-500 hover:bg-red-50 hover:border-red-200 cursor-pointer'"
-                                                        title="Hapus Mahasiswa" aria-label="Hapus Mahasiswa">
-                                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                                                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                                                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                                                        <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </template>
-                                    </div>
-                                    <button type="button" @click="addMahasiswa()" class="w-full mt-3 py-2 text-sm font-medium text-black-600 bg-white border border-white-300 rounded-lg hover:bg-black-50 transition-colors flex justify-center items-center">
-                                        <i class="fas fa-plus mr-2"></i> Tambah Mahasiswa
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
-                {{-- Section 4: Dokumen & Status --}}
+                {{-- Section 4: Tim Pelaksana --}}
+                <div class="bg-white rounded-xl shadow-xl p-6 mb-6"
+                     x-data="{ 
+                        dosenItems: {{ json_encode($dosenList) }},
+                        mahasiswaItems: {{ json_encode($mahasiswaList) }},
+                        addDosen() { this.dosenItems.push({nama: '', nip: ''}); },
+                        removeDosen(index) { if(this.dosenItems.length > 1) this.dosenItems.splice(index, 1); },
+                        addMahasiswa() { this.mahasiswaItems.push({nama: '', nim: ''}); },
+                        removeMahasiswa(index) { if(this.mahasiswaItems.length > 1) this.mahasiswaItems.splice(index, 1); }
+                     }">
+                    <h2 class="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Tim Pelaksana</h2>
+                    
+                    <div class="space-y-8">
+                        
+                        {{-- Bagian Dosen --}}
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <label class="block text-sm font-bold text-gray-800">Dosen</label>
+                                <button type="button" @click="addDosen()" class="text-sm text-telkom-blue hover:text-blue-700 font-medium flex items-center">
+                                    <i class="fas fa-plus-circle mr-1"></i> Tambah Dosen
+                                </button>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <template x-for="(dosen, index) in dosenItems" :key="'dosen-'+index">
+                                    <div class="flex flex-col md:flex-row gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200 items-end hover:border-blue-200 transition-colors">
+                                        <div class="flex-1 w-full">
+                                            <label class="block text-xs font-medium text-gray-500 mb-1">Nama Dosen</label>
+                                            <input type="text" name="anggota[]" x-model="dosen.nama"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-telkom-blue focus:border-telkom-blue text-sm"
+                                                   placeholder="Nama Lengkap Dosen">
+                                        </div>
+                                        <div class="w-full md:w-1/3">
+                                            <label class="block text-xs font-medium text-gray-500 mb-1">NIP</label>
+                                            <input type="text" name="dosen_nip[]" x-model="dosen.nip"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-telkom-blue focus:border-telkom-blue text-sm"
+                                                   placeholder="NIP Dosen">
+                                        </div>
+                                        <div class="w-auto">
+                                            <button type="button"
+                                                    @click="removeDosen(index)"
+                                                    :disabled="dosenItems.length === 1"
+                                                    :class="dosenItems.length === 1 
+                                                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' 
+                                                        : 'bg-white text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 hover:border-red-300 cursor-pointer shadow-sm'"
+                                                    class="w-[38px] h-[38px] flex items-center justify-center border rounded-md transition-all"
+                                                    title="Hapus Baris">
+                                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                                    <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        {{-- Bagian Mahasiswa --}}
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <label class="block text-sm font-bold text-gray-800">Mahasiswa</label>
+                                <button type="button" @click="addMahasiswa()" class="text-sm text-telkom-blue hover:text-blue-700 font-medium flex items-center">
+                                    <i class="fas fa-plus-circle mr-1"></i> Tambah Mahasiswa
+                                </button>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <template x-for="(mhs, index) in mahasiswaItems" :key="'mhs-'+index">
+                                    <div class="flex flex-col md:flex-row gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200 items-end hover:border-blue-200 transition-colors">
+                                        <div class="flex-1 w-full">
+                                            <label class="block text-xs font-medium text-gray-500 mb-1">Nama Mahasiswa</label>
+                                            <input type="text" name="mahasiswa[]" x-model="mhs.nama"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-telkom-blue focus:border-telkom-blue text-sm"
+                                                   placeholder="Nama Lengkap Mahasiswa">
+                                        </div>
+                                        <div class="w-full md:w-1/3">
+                                            <label class="block text-xs font-medium text-gray-500 mb-1">NIM</label>
+                                            <input type="text" name="mahasiswa_nim[]" x-model="mhs.nim"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-telkom-blue focus:border-telkom-blue text-sm"
+                                                   placeholder="NIM Mahasiswa">
+                                        </div>
+                                        <div class="w-auto">
+                                            <button type="button"
+                                                    @click="removeMahasiswa(index)"
+                                                    :disabled="mahasiswaItems.length === 1"
+                                                    :class="mahasiswaItems.length === 1 
+                                                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' 
+                                                        : 'bg-white text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 hover:border-red-300 cursor-pointer shadow-sm'"
+                                                    class="w-[38px] h-[38px] flex items-center justify-center border rounded-md transition-all"
+                                                    title="Hapus Baris">
+                                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                                    <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                {{-- Section 5: Dokumen & Status --}}
                 <div class="bg-white rounded-xl shadow-xl p-6 mb-6">
                     <h2 class="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Dokumen & Status</h2>
                     

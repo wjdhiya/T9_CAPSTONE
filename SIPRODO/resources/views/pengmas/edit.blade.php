@@ -1,44 +1,65 @@
 @php
     use Illuminate\Support\Str;
 
-    // Helper yang lebih kuat untuk decode data (JSON, Array, atau String)
-    $getArrayData = function($field, $data) {
-        // 1. Cek data dari old input (validasi gagal)
-        $old = old($field);
-        if ($old && is_array($old)) return $old;
-
-        // 2. Cek data dari database
-        if (!empty($data)) {
-            // Jika sudah array (karena $casts di model), kembalikan langsung
-            if (is_array($data)) return $data;
-
-            // Jika string JSON
-            $decoded = json_decode($data, true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                return $decoded;
-            }
-
-            // Jika string biasa dipisahkan koma
-            if (is_string($data) && str_contains($data, ',')) {
-                return array_map('trim', explode(',', $data));
-            }
-
-            // Jika string tunggal
-            return [$data];
+    // --- LOGIKA PERSIAPAN DATA DOSEN (NAMA & NIP) ---
+    $dosenList = [];
+    // 1. Cek Old Input (validasi error)
+    if (old('anggota')) {
+        $oldNames = old('anggota', []);
+        $oldNips = old('dosen_nip', []);
+        foreach($oldNames as $index => $name) {
+            $dosenList[] = [
+                'nama' => $name,
+                'nip' => $oldNips[$index] ?? ''
+            ];
         }
+    } 
+    // 2. Cek Data Database
+    elseif ($pengabdianMasyarakat->anggota) {
+        $decoded = json_decode($pengabdianMasyarakat->anggota, true);
+        if (is_array($decoded)) {
+            foreach($decoded as $item) {
+                // Handle backward compatibility (format lama string vs baru object)
+                if (is_string($item)) {
+                    $dosenList[] = ['nama' => $item, 'nip' => ''];
+                } else {
+                    $dosenList[] = ['nama' => $item['nama'] ?? '', 'nip' => $item['nip'] ?? ''];
+                }
+            }
+        }
+    }
+    // 3. Default (Minimal 1 baris kosong jika data corrupt/kosong)
+    if (empty($dosenList)) $dosenList[] = ['nama' => '', 'nip' => ''];
 
-        // 3. Default kosong
-        return [''];
-    };
 
-    // Persiapan data Dosen
-    $oldAnggota = $getArrayData('anggota', $pengabdianMasyarakat->anggota);
-    if (empty($oldAnggota)) $oldAnggota = [''];
-
-    // Persiapan data Mahasiswa
-    $dataMahasiswaDB = $pengabdianMasyarakat->mahasiswa ?? $pengabdianMasyarakat->mahasiswa_terlibat;
-    $oldMahasiswa = $getArrayData('mahasiswa', $dataMahasiswaDB);
-    if (empty($oldMahasiswa)) $oldMahasiswa = [''];
+    // --- LOGIKA PERSIAPAN DATA MAHASISWA (NAMA & NIM) ---
+    $mahasiswaList = [];
+    // 1. Cek Old Input
+    if (old('mahasiswa')) {
+        $oldMhsNames = old('mahasiswa', []);
+        $oldMhsNims = old('mahasiswa_nim', []);
+        foreach($oldMhsNames as $index => $name) {
+            $mahasiswaList[] = [
+                'nama' => $name,
+                'nim' => $oldMhsNims[$index] ?? ''
+            ];
+        }
+    }
+    // 2. Cek Data Database
+    elseif ($pengabdianMasyarakat->mahasiswa) {
+        $decodedMhs = json_decode($pengabdianMasyarakat->mahasiswa, true);
+        if (is_array($decodedMhs)) {
+            foreach($decodedMhs as $item) {
+                if (is_string($item)) {
+                    $mahasiswaList[] = ['nama' => $item, 'nim' => ''];
+                } else {
+                    $mahasiswaList[] = ['nama' => $item['nama'] ?? '', 'nim' => $item['nim'] ?? ''];
+                }
+            }
+        }
+    }
+    // 3. Default
+    if (empty($mahasiswaList)) $mahasiswaList[] = ['nama' => '', 'nim' => ''];
 @endphp
 
 <x-app-layout>
@@ -63,7 +84,7 @@
                         </div>
                         <div>
                             <h1 class="text-xl font-bold text-gray-900">Formulir Edit Data</h1>
-                            <p class="text-sm text-gray-600 mt-1">Ubah informasi pengabdian masyarakat</p>
+                            <p class="text-sm text-gray-600 mt-1">Perbarui informasi pengabdian masyarakat dengan detail</p>
                         </div>
                     </div>
                 </div>
@@ -73,32 +94,37 @@
                     <h2 class="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Informasi Utama</h2>
                     
                     <div class="space-y-6">
+                        
                         <div>
                             <label for="judul" class="block text-sm font-medium text-gray-700 mb-2">Judul Kegiatan <span class="text-red-600">*</span></label>
                             <input type="text" id="judul" name="judul" value="{{ old('judul', $pengabdianMasyarakat->judul) }}" required
-                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all">
+                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
+                                   placeholder="Masukkan judul kegiatan pengabdian">
                             @error('judul')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
                             <label for="abstrak" class="block text-sm font-medium text-gray-700 mb-2">Abstrak / Deskripsi <span class="text-red-600">*</span></label>
                             <textarea id="abstrak" name="abstrak" rows="4" required
-                                      class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all resize-none">{{ old('abstrak', $pengabdianMasyarakat->abstrak) }}</textarea>
+                                      class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all resize-none"
+                                      placeholder="Jelaskan secara singkat mengenai kegiatan ini...">{{ old('abstrak', $pengabdianMasyarakat->abstrak) }}</textarea>
                             @error('abstrak')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
-                                <label for="lokasi" class="block text-sm font-medium text-gray-700 mb-2">Lokasi Kegiatan <span class="text-red-600">*</span></label>
-                                <input type="text" id="lokasi" name="lokasi" value="{{ old('lokasi', $pengabdianMasyarakat->lokasi) }}" required
-                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all">
-                                @error('lokasi')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                                <label for="skema" class="block text-sm font-medium text-gray-700 mb-2">Skema <span class="text-red-600">*</span></label>
+                                <input type="text" id="skema" name="skema" value="{{ old('skema', $pengabdianMasyarakat->skema) }}" required
+                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
+                                       placeholder="Contoh: Program Kemitraan Masyarakat">
+                                @error('skema')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
 
                             <div>
                                 <label for="mitra" class="block text-sm font-medium text-gray-700 mb-2">Mitra Sasaran <span class="text-red-600">*</span></label>
                                 <input type="text" id="mitra" name="mitra" value="{{ old('mitra', $pengabdianMasyarakat->mitra) }}" required
-                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all">
+                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
+                                       placeholder="Contoh: UMKM Keripik, Kelompok Tani">
                                 @error('mitra')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
                         </div>
@@ -114,7 +140,8 @@
                             <div>
                                 <label for="tahun_akademik" class="block text-sm font-medium text-gray-700 mb-2">Tahun Akademik <span class="text-red-600">*</span></label>
                                 <input type="text" id="tahun_akademik" name="tahun_akademik" value="{{ old('tahun_akademik', $pengabdianMasyarakat->tahun_akademik) }}" required
-                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all">
+                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
+                                       placeholder="Cth: 2024/2025">
                                 @error('tahun_akademik')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
 
@@ -122,6 +149,7 @@
                                 <label for="semester" class="block text-sm font-medium text-gray-700 mb-2">Semester <span class="text-red-600">*</span></label>
                                 <select id="semester" name="semester" required
                                         class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all bg-white">
+                                    <option value="">Pilih Semester</option>
                                     <option value="ganjil" {{ old('semester', $pengabdianMasyarakat->semester) == 'ganjil' ? 'selected' : '' }}>Ganjil</option>
                                     <option value="genap" {{ old('semester', $pengabdianMasyarakat->semester) == 'genap' ? 'selected' : '' }}>Genap</option>
                                 </select>
@@ -154,9 +182,9 @@
                     </div>
                 </div>
 
-                {{-- Section 3: Pendanaan & Tim --}}
+                {{-- Section 3: Pendanaan (DIPISAH) --}}
                 <div class="bg-white rounded-xl shadow-xl p-6 mb-6">
-                    <h2 class="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Pendanaan & Tim</h2>
+                    <h2 class="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Pendanaan</h2>
                     
                     <div class="space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -176,91 +204,121 @@
                                 @error('sumber_dana')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
                         </div>
-
-                        {{-- Input Dinamis untuk Anggota Dosen & Mahasiswa --}}
-                        <div x-data="{ 
-                            dosenItems: {{ json_encode($oldAnggota) }},
-                            mahasiswaItems: {{ json_encode($oldMahasiswa) }},
-                            addDosen() { this.dosenItems.push(''); },
-                            removeDosen(index) { if(this.dosenItems.length > 1) this.dosenItems.splice(index, 1); },
-                            addMahasiswa() { this.mahasiswaItems.push(''); },
-                            removeMahasiswa(index) { if(this.mahasiswaItems.length > 1) this.mahasiswaItems.splice(index, 1); }
-                        }">
-                            <label class="block text-sm font-medium text-gray-700 mb-3">Tim Pelaksana</label>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {{-- Kolom Dosen --}}
-                                <div class="">
-                                    <label class="block text-sm font-bold text-gray-700 mb-2"><i class="fas fa-chalkboard-teacher mr-1"></i> Nama Dosen</label>
-                                    <div class="space-y-3">
-                                        <template x-for="(dosen, index) in dosenItems" :key="'dosen-'+index">
-                                            <div class="flex items-center gap-2">
-                                                <input type="text" name="anggota[]" x-model="dosenItems[index]"
-                                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white"
-                                                       placeholder="Nama Dosen">
-                                                
-                                                <button type="button" 
-                                                        @click="removeDosen(index)" 
-                                                        :disabled="dosenItems.length === 1"
-                                                        class="p-2.5 rounded-lg transition-colors border border-gray-200" 
-                                                        :class="dosenItems.length === 1 ? 'text-gray-300 cursor-not-allowed bg-gray-50' : 'text-red-500 hover:bg-red-50 hover:border-red-200 cursor-pointer'"
-                                                        title="Hapus Dosen" aria-label="Hapus Dosen">
-                                                    <!-- Inline SVG ikon tong sampah (tidak bergantung pada FontAwesome) -->
-                                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                                                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                                                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                                                        <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </template>
-                                    </div>
-                                    <button type="button" @click="addDosen()" class="w-full mt-3 py-2 text-sm font-medium text-black-600 bg-white border border-white-300 rounded-lg hover:bg-black-50 transition-colors flex justify-center items-center">
-                                        <i class="fas fa-plus mr-2"></i> Tambah Dosen
-                                    </button>
-                                </div>
-
-                                {{-- Kolom Mahasiswa --}}
-                                <div class="">
-                                    <label class="block text-sm font-bold text-gray-700 mb-2"><i class="fas fa-user-graduate mr-1"></i> Nama Mahasiswa</label>
-                                    <div class="space-y-3">
-                                        <template x-for="(mhs, index) in mahasiswaItems" :key="'mhs-'+index">
-                                            <div class="flex items-center gap-2">
-                                                <input type="text" name="mahasiswa[]" x-model="mahasiswaItems[index]"
-                                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 bg-white"
-                                                       placeholder="Nama Mahasiswa">
-                                                
-                                                <!-- Kotak kecil dengan ikon tong sampah (sama seperti Dosen) -->
-                                                <button type="button"
-                                                        @click="removeMahasiswa(index)"
-                                                        :disabled="mahasiswaItems.length === 1"
-                                                        class="p-2.5 rounded-lg transition-colors border border-gray-200"
-                                                        :class="mahasiswaItems.length === 1 ? 'text-gray-300 cursor-not-allowed bg-gray-50' : 'text-red-500 hover:bg-red-50 hover:border-red-200 cursor-pointer'"
-                                                        title="Hapus Mahasiswa" aria-label="Hapus Mahasiswa">
-                                                    <!-- Inline SVG ikon tong sampah -->
-                                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                                                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                                                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                                                        <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </template>
-                                    </div>
-                                    <button type="button" @click="addMahasiswa()" class="w-full mt-3 py-2 text-sm font-medium text-black-600 bg-white border border-white-300 rounded-lg hover:bg-black-50 transition-colors flex justify-center items-center">
-                                        <i class="fas fa-plus mr-2"></i> Tambah Mahasiswa
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
-                {{-- Section 4: Dokumen & Status --}}
+                {{-- Section 4: Tim Pelaksana (DIPISAH & DIPERBARUI) --}}
+                <div class="bg-white rounded-xl shadow-xl p-6 mb-6"
+                     x-data="{ 
+                        dosenItems: {{ json_encode($dosenList) }},
+                        mahasiswaItems: {{ json_encode($mahasiswaList) }},
+                        addDosen() { this.dosenItems.push({nama: '', nip: ''}); },
+                        removeDosen(index) { if(this.dosenItems.length > 1) this.dosenItems.splice(index, 1); },
+                        addMahasiswa() { this.mahasiswaItems.push({nama: '', nim: ''}); },
+                        removeMahasiswa(index) { if(this.mahasiswaItems.length > 1) this.mahasiswaItems.splice(index, 1); }
+                     }">
+                    <h2 class="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Tim Pelaksana</h2>
+                    
+                    <div class="space-y-8">
+                        
+                        {{-- Bagian Dosen --}}
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <label class="block text-sm font-bold text-gray-800">Dosen</label>
+                                <button type="button" @click="addDosen()" class="text-sm text-telkom-blue hover:text-blue-700 font-medium flex items-center">
+                                    <i class="fas fa-plus-circle mr-1"></i> Tambah Dosen
+                                </button>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <template x-for="(dosen, index) in dosenItems" :key="'dosen-'+index">
+                                    <div class="flex flex-col md:flex-row gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200 items-end hover:border-blue-200 transition-colors">
+                                        <div class="flex-1 w-full">
+                                            <label class="block text-xs font-medium text-gray-500 mb-1">Nama Dosen</label>
+                                            <input type="text" name="anggota[]" x-model="dosen.nama"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-telkom-blue focus:border-telkom-blue text-sm"
+                                                   placeholder="Nama Lengkap Dosen">
+                                        </div>
+                                        <div class="w-full md:w-1/3">
+                                            <label class="block text-xs font-medium text-gray-500 mb-1">NIP</label>
+                                            <input type="text" name="dosen_nip[]" x-model="dosen.nip"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-telkom-blue focus:border-telkom-blue text-sm"
+                                                   placeholder="NIP Dosen">
+                                        </div>
+                                        <div class="w-auto">
+                                            <button type="button"
+                                                    @click="removeDosen(index)"
+                                                    :disabled="dosenItems.length === 1"
+                                                    :class="dosenItems.length === 1 
+                                                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' 
+                                                        : 'bg-white text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 hover:border-red-300 cursor-pointer shadow-sm'"
+                                                    class="w-[38px] h-[38px] flex items-center justify-center border rounded-md transition-all"
+                                                    title="Hapus Baris">
+                                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                                    <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        {{-- Bagian Mahasiswa --}}
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <label class="block text-sm font-bold text-gray-800">Mahasiswa</label>
+                                <button type="button" @click="addMahasiswa()" class="text-sm text-telkom-blue hover:text-blue-700 font-medium flex items-center">
+                                    <i class="fas fa-plus-circle mr-1"></i> Tambah Mahasiswa
+                                </button>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <template x-for="(mhs, index) in mahasiswaItems" :key="'mhs-'+index">
+                                    <div class="flex flex-col md:flex-row gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200 items-end hover:border-blue-200 transition-colors">
+                                        <div class="flex-1 w-full">
+                                            <label class="block text-xs font-medium text-gray-500 mb-1">Nama Mahasiswa</label>
+                                            <input type="text" name="mahasiswa[]" x-model="mhs.nama"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-telkom-blue focus:border-telkom-blue text-sm"
+                                                   placeholder="Nama Lengkap Mahasiswa">
+                                        </div>
+                                        <div class="w-full md:w-1/3">
+                                            <label class="block text-xs font-medium text-gray-500 mb-1">NIM</label>
+                                            <input type="text" name="mahasiswa_nim[]" x-model="mhs.nim"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-telkom-blue focus:border-telkom-blue text-sm"
+                                                   placeholder="NIM Mahasiswa">
+                                        </div>
+                                        <div class="w-auto">
+                                            <button type="button"
+                                                    @click="removeMahasiswa(index)"
+                                                    :disabled="mahasiswaItems.length === 1"
+                                                    :class="mahasiswaItems.length === 1 
+                                                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' 
+                                                        : 'bg-white text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 hover:border-red-300 cursor-pointer shadow-sm'"
+                                                    class="w-[38px] h-[38px] flex items-center justify-center border rounded-md transition-all"
+                                                    title="Hapus Baris">
+                                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                                    <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                {{-- Section 5: Dokumen & Status --}}
                 <div class="bg-white rounded-xl shadow-xl p-6 mb-6">
                     <h2 class="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Dokumen & Status</h2>
                     
@@ -277,7 +335,6 @@
                             @error('status')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                         </div>
 
-                        {{-- Upload Files --}}
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                             
                             {{-- File Proposal --}}
@@ -287,8 +344,8 @@
                                 @if($pengabdianMasyarakat->file_proposal)
                                     <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card" id="file_proposal_card">
                                         <div class="flex items-center justify-between">
-                                            <div class="flex items-center overflow-hidden">
-                                                <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3 flex-shrink-0"></i>
+                                            <div class="flex items-center">
+                                                <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3"></i>
                                                 <div class="min-w-0">
                                                     <p class="text-sm font-medium text-gray-900 truncate" title="{{ basename($pengabdianMasyarakat->file_proposal) }}">
                                                         {{ Str::limit(basename($pengabdianMasyarakat->file_proposal), 20, '...') }}
@@ -296,7 +353,7 @@
                                                     <p class="text-xs text-gray-500">Dokumen tersimpan</p>
                                                 </div>
                                             </div>
-                                            <a href="{{ Storage::url($pengabdianMasyarakat->file_proposal) }}" target="_blank" class="text-telkom-blue hover:underline text-sm ml-2 flex-shrink-0">Lihat</a>
+                                            <a href="{{ Storage::url($pengabdianMasyarakat->file_proposal) }}" target="_blank" class="text-telkom-blue hover:underline text-sm flex-shrink-0 ml-2">Lihat</a>
                                         </div>
                                     </div>
                                     <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
@@ -337,8 +394,8 @@
                                 @if($pengabdianMasyarakat->file_laporan)
                                     <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card" id="file_laporan_card">
                                         <div class="flex items-center justify-between">
-                                            <div class="flex items-center overflow-hidden">
-                                                <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3 flex-shrink-0"></i>
+                                            <div class="flex items-center">
+                                                <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3"></i>
                                                 <div class="min-w-0">
                                                     <p class="text-sm font-medium text-gray-900 truncate" title="{{ basename($pengabdianMasyarakat->file_laporan) }}">
                                                         {{ Str::limit(basename($pengabdianMasyarakat->file_laporan), 20, '...') }}
@@ -346,7 +403,7 @@
                                                     <p class="text-xs text-gray-500">Dokumen tersimpan</p>
                                                 </div>
                                             </div>
-                                            <a href="{{ Storage::url($pengabdianMasyarakat->file_laporan) }}" target="_blank" class="text-telkom-blue hover:underline text-sm ml-2 flex-shrink-0">Lihat</a>
+                                            <a href="{{ Storage::url($pengabdianMasyarakat->file_laporan) }}" target="_blank" class="text-telkom-blue hover:underline text-sm flex-shrink-0 ml-2">Lihat</a>
                                         </div>
                                     </div>
                                     <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
@@ -380,15 +437,15 @@
                                 @error('file_laporan')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
 
-                            {{-- File Dokumentasi --}}
+                            {{-- Dokumentasi --}}
                             <div class="file-upload-container">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Dokumentasi (Foto/ZIP, max 10MB)</label>
                                 
                                 @if($pengabdianMasyarakat->file_dokumentasi)
                                     <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card" id="file_dokumentasi_card">
                                         <div class="flex items-center justify-between">
-                                            <div class="flex items-center overflow-hidden">
-                                                <i class="fas fa-file-archive w-6 h-6 text-yellow-600 mr-3 flex-shrink-0"></i>
+                                            <div class="flex items-center">
+                                                <i class="fas fa-file-archive w-6 h-6 text-yellow-500 mr-3"></i>
                                                 <div class="min-w-0">
                                                     <p class="text-sm font-medium text-gray-900 truncate" title="{{ basename($pengabdianMasyarakat->file_dokumentasi) }}">
                                                         {{ Str::limit(basename($pengabdianMasyarakat->file_dokumentasi), 20, '...') }}
@@ -396,7 +453,7 @@
                                                     <p class="text-xs text-gray-500">Dokumen tersimpan</p>
                                                 </div>
                                             </div>
-                                            <a href="{{ Storage::url($pengabdianMasyarakat->file_dokumentasi) }}" target="_blank" class="text-telkom-blue hover:underline text-sm ml-2 flex-shrink-0">Lihat</a>
+                                            <a href="{{ Storage::url($pengabdianMasyarakat->file_dokumentasi) }}" target="_blank" class="text-telkom-blue hover:underline text-sm flex-shrink-0 ml-2">Lihat</a>
                                         </div>
                                     </div>
                                     <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
@@ -440,7 +497,7 @@
                         Batal
                     </a>
                     <button type="submit" class="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 hover:shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 font-semibold">
-                        Update Pengmas
+                        Simpan Perubahan
                     </button>
                 </div>
             </form>
@@ -448,62 +505,40 @@
     </div>
 
     <script>
-        // Handle selected file and render a file-card similar to 'create' page logic
+        // Handle selected file and render a file-card similar to 'penelitian' create
         function handleFileChange(inputId, uploadAreaId, cardId) {
             const input = document.getElementById(inputId);
             const uploadArea = document.getElementById(uploadAreaId);
-            // Element card ini mungkin sudah ada (jika file existing) atau belum
-            // Logic ini akan menghandle pembuatan/update card preview
-            
-            if (!input) return;
+            const existingCard = document.getElementById(cardId);
 
+            if (!input) return;
             input.addEventListener('change', function(e) {
                 const file = e.target.files[0];
-                const existingCard = document.getElementById(cardId);
-                
                 if (file) {
                     if (uploadArea) uploadArea.style.display = 'none';
 
                     let card = existingCard;
-                    
-                    // Jika card belum ada (kasus upload baru tanpa file existing), buat baru
                     if (!card) {
                         card = document.createElement('div');
                         card.id = cardId;
-                        // tandai sebagai preview agar deteksi lebih aman
-                        card.dataset.preview = 'true';
-                        card.className = 'p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card mb-2';
-                        // Insert card sebelum upload area
-                        if(uploadArea && uploadArea.parentNode) {
-                            uploadArea.parentNode.insertBefore(card, uploadArea);
-                        }
-                    } else {
-                        // Jika card sudah ada (misal replace file existing), pastikan terlihat
-                        card.style.display = 'block';
-                        // jika card sudah ada karena preview sebelumnya, pastikan ditandai
-                        if (!card.dataset.preview) card.dataset.preview = 'true';
+                        card.className = 'p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card';
+                        uploadArea.parentNode.insertBefore(card, uploadArea);
                     }
 
                     const maxLength = 30;
                     const displayName = file.name.length > maxLength ? file.name.substring(0, maxLength) + '...' : file.name;
-                    
-                    // Tentukan icon berdasarkan input ID (proposal/laporan=pdf, dokumentasi=archive)
-                    let iconClass = 'fas fa-file-pdf text-red-500'; // Default PDF
-                    if (inputId === 'file_dokumentasi') {
-                        iconClass = 'fas fa-file-archive text-yellow-600';
-                    }
 
                     card.innerHTML = `
                         <div class="flex items-center justify-between">
                             <div class="flex items-center flex-1 min-w-0 mr-3">
-                                <i class="${iconClass} w-6 h-6 mr-3 flex-shrink-0"></i>
+                                <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3 flex-shrink-0"></i>
                                 <div class="min-w-0 flex-1">
                                     <p class="text-sm font-medium text-gray-900 truncate">${displayName}</p>
-                                    <p class="text-xs text-gray-500">File dipilih (Belum disimpan)</p>
+                                    <p class="text-xs text-gray-500">File dipilih</p>
                                 </div>
                             </div>
                             <button type="button" onclick="removeFile('${inputId}', '${uploadAreaId}', '${cardId}')" class="text-red-500 hover:text-red-700 text-sm flex-shrink-0">
-                                <i class="fas fa-times"></i> Batal
+                                <i class="fas fa-times"></i> Hapus
                             </button>
                         </div>
                     `;
@@ -517,29 +552,9 @@
             const uploadArea = document.getElementById(uploadAreaId);
             const card = document.getElementById(cardId);
 
-            if (input) input.value = ''; // Reset input file
-
-            // Usahakan menampilkan kembali semua area upload (card putus-putus) di container terkait
-            // sehingga "Batal" tidak membuat card putus-putus ikut hilang.
-            const container = (card && card.parentNode) || (uploadArea && uploadArea.parentNode);
-            if (container) {
-                const uploadAreas = container.querySelectorAll('.file-upload-area');
-                uploadAreas.forEach(a => a.style.display = 'block');
-            }
+            if (input) input.value = '';
+            if (card) card.style.display = 'none';
             if (uploadArea) uploadArea.style.display = 'block';
-
-            if (!card) return;
-
-            // Hanya hapus card preview sementara (yang berisi "File dipilih" atau yang ditandai data-preview)
-            const isPreview = card.dataset.preview === 'true' || card.innerHTML.includes('File dipilih');
-            if (isPreview) {
-                card.remove();
-                return;
-            }
-
-            // Jika card ini adalah card existing dari server (dokumen tersimpan), sembunyikan card tersebut
-            // tapi JANGAN hapus area upload (agar card putus-putus tetap ada untuk replace).
-            card.style.display = 'none';
         }
 
         // Enable drag & drop for label-based upload areas
@@ -548,7 +563,6 @@
             const uploadArea = document.getElementById(uploadAreaId);
             if (!input || !uploadArea) return;
 
-            // Target label inside the div usually
             const zone = uploadArea.querySelector('label') || uploadArea;
 
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -578,18 +592,12 @@
 
         // Initialize for all file inputs/areas
         document.addEventListener('DOMContentLoaded', function() {
-            // Kita gunakan ID unik untuk card preview agar tidak menimpa card file existing
-            // File Proposal
-            handleFileChange('file_proposal', 'file_proposal_upload', 'preview_proposal_card'); 
-            handleFileChange('file_proposal', 'file_proposal_replace', 'preview_proposal_card');
-            
-            // File Laporan
-            handleFileChange('file_laporan', 'file_laporan_upload', 'preview_laporan_card');
-            handleFileChange('file_laporan', 'file_laporan_replace', 'preview_laporan_card');
-            
-            // File Dokumentasi
-            handleFileChange('file_dokumentasi', 'file_dokumentasi_upload', 'preview_dokumentasi_card');
-            handleFileChange('file_dokumentasi', 'file_dokumentasi_replace', 'preview_dokumentasi_card');
+            handleFileChange('file_proposal', 'file_proposal_upload', 'file_proposal_card');
+            handleFileChange('file_proposal', 'file_proposal_replace', 'file_proposal_card');
+            handleFileChange('file_laporan', 'file_laporan_upload', 'file_laporan_card');
+            handleFileChange('file_laporan', 'file_laporan_replace', 'file_laporan_card');
+            handleFileChange('file_dokumentasi', 'file_dokumentasi_upload', 'file_dokumentasi_card');
+            handleFileChange('file_dokumentasi', 'file_dokumentasi_replace', 'file_dokumentasi_card');
 
             setupDragAndDrop('file_proposal', 'file_proposal_upload');
             setupDragAndDrop('file_proposal', 'file_proposal_replace');

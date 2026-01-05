@@ -314,15 +314,27 @@
                         uploadArea.style.display = 'none';
                     }
 
-                    // Create or update file card
+                    // Hide stored file card (if exists) to avoid duplicate UI
+                    const storedCard = document.getElementById(inputId + '_card');
+                    if (storedCard) storedCard.style.display = 'none';
+
+                    // Remove any "remove" flag because we now have a new file (replacement)
+                    const removeFlag = document.querySelector(`input[name="remove_${inputId}"]`);
+                    if (removeFlag) removeFlag.remove();
+
+                    // Create or update preview card
                     let card = existingCard;
                     if (!card) {
                         card = document.createElement('div');
                         card.id = cardId;
                         card.className = 'p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card mb-2';
-                        const container = input.closest('div').querySelector('.file-upload-area').parentNode; // More robust selection
-                         // Insert before the upload area container
-                        input.closest('.file-upload-area').parentNode.insertBefore(card, input.closest('.file-upload-area'));
+                        // Insert before the upload area element (more robust)
+                        if (uploadArea && uploadArea.parentNode) {
+                            uploadArea.parentNode.insertBefore(card, uploadArea);
+                        } else {
+                            // fallback
+                            input.closest('div')?.insertBefore(card, input);
+                        }
                     } else {
                         card.style.display = 'block';
                     }
@@ -349,21 +361,59 @@
             });
         }
 
-        // Function to remove selected file
+        // Function to remove selected file or stored file
         function removeFile(inputId, uploadAreaId, cardId) {
             const input = document.getElementById(inputId);
             const uploadArea = document.getElementById(uploadAreaId);
             const card = document.getElementById(cardId);
+            const storedCard = document.getElementById(inputId + '_card');
 
-            // Clear input
-            if(input) input.value = '';
+            // Clear input (remove selected files)
+            if (input) {
+                // For cross-browser safety, use a DataTransfer reset trick if needed
+                try {
+                    input.value = '';
+                } catch (err) {
+                    // fallback: replace input element to clear files
+                    const newInput = input.cloneNode();
+                    input.parentNode.replaceChild(newInput, input);
+                }
+            }
 
-            // Hide card and show upload area
+            // Hide (or remove) the target card
             if (card) {
                 card.style.display = 'none';
             }
-            if (uploadArea) {
-                uploadArea.style.display = 'block';
+
+            // If removing a stored card (user clicked "Hapus" on the saved file), set a hidden flag so backend can delete it
+            if (cardId === inputId + '_card') {
+                // ensure replace/upload area is visible
+                if (uploadArea) uploadArea.style.display = 'block';
+                // create hidden flag input
+                let flag = document.querySelector(`input[name="remove_${inputId}"]`);
+                if (!flag) {
+                    flag = document.createElement('input');
+                    flag.type = 'hidden';
+                    flag.name = `remove_${inputId}`;
+                    flag.value = '1';
+                    // append to the form
+                    const form = document.querySelector('form');
+                    if (form) form.appendChild(flag);
+                } else {
+                    flag.value = '1';
+                }
+            } else {
+                // if removing preview (cancel), restore stored card if exists
+                if (storedCard) {
+                    storedCard.style.display = 'block';
+                    // ensure stored-card removal flag doesn't exist
+                    const flag = document.querySelector(`input[name="remove_${inputId}"]`);
+                    if (flag) flag.remove();
+                }
+                // show upload area so user can select a file again
+                if (uploadArea) {
+                    uploadArea.style.display = 'block';
+                }
             }
         }
 
@@ -394,7 +444,13 @@
                 const dt = e.dataTransfer;
                 const files = dt.files;
                 if (files && files.length) {
-                    input.files = files;
+                    // Use DataTransfer to create a proper FileList (more compatible)
+                    const dataTransfer = new DataTransfer();
+                    for (let i = 0; i < files.length; i++) {
+                        dataTransfer.items.add(files[i]);
+                    }
+                    input.files = dataTransfer.files;
+                    // Dispatch change so handlers pick it up
                     input.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             }, false);

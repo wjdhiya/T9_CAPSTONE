@@ -205,7 +205,10 @@
                                     <option value="scopus" {{ old('indexing', $publikasi->indexing) == 'scopus' ? 'selected' : '' }}>Scopus</option>
                                     <option value="wos" {{ old('indexing', $publikasi->indexing) == 'wos' ? 'selected' : '' }}>Web of Science</option>
                                 </select>
-                                @error('indexing')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                                {{-- Jika ada error upload file, sembunyikan error indexing/quatitle supaya hanya error file yang tampil --}}
+                                @unless($errors->has('file_publikasi'))
+                                    @error('indexing')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                                @endunless
                             </div>
 
                             <div>
@@ -218,7 +221,10 @@
                                     <option value="Q3" {{ old('quartile', $publikasi->quartile) == 'Q3' ? 'selected' : '' }}>Q3</option>
                                     <option value="Q4" {{ old('quartile', $publikasi->quartile) == 'Q4' ? 'selected' : '' }}>Q4</option>
                                 </select>
-                                @error('quartile')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                                {{-- Sama: sembunyikan error quartile jika error file ada --}}
+                                @unless($errors->has('file_publikasi'))
+                                    @error('quartile')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                                @endunless
                             </div>
                         </div>
                     </div>

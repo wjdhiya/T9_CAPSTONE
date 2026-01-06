@@ -14,7 +14,7 @@ class PengabdianMasyarakat extends Model
 
     protected $fillable = [
         'user_id',
-        'judul',
+        'judul_pkm',
         'deskripsi',
         'jenis',
         'sumber_dana',

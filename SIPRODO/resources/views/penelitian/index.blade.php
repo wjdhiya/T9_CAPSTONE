@@ -64,7 +64,7 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Judul</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Judul Penelitian</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dosen</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jenis</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tahun</th>
@@ -77,7 +77,7 @@
                                 @forelse($penelitian as $item)
                                 <tr>
                                     <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-gray-900">{{ Str::limit($item->judul, 50) }}</div>
+                                        <div class="text-sm font-medium text-gray-900">{{ Str::limit($item->judul_penelitian, 50) }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm text-gray-900">{{ $item->user->name }}</div>

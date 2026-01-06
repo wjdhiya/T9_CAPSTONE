@@ -22,7 +22,7 @@
             {{-- Main Content --}}
             <div class="bg-white shadow-lg sm:rounded-xl mb-6 p-8 border border-gray-100">
                 <div class="border-b border-gray-200 pb-4 mb-6">
-                    <h3 class="text-2xl font-bold text-gray-900 leading-tight">{{ $publikasi->judul }}</h3>
+                    <h3 class="text-2xl font-bold text-gray-900 leading-tight">{{ $publikasi->judul_publikasi }}</h3>
                     <div class="mt-2 flex items-center text-sm text-gray-500">
                         <span class="mr-4"><i class="far fa-calendar-alt mr-1"></i> {{ $publikasi->tahun }} ({{ ucfirst($publikasi->semester) }})</span>
                         <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">{{ ucfirst($publikasi->jenis) }}</span>

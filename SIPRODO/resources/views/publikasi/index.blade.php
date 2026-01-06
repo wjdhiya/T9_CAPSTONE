@@ -134,7 +134,7 @@
                     <table class="min-w-full">
                         <thead class="bg-gray-50 border-b border-gray-200">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">JUDUL</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Judul Publikasi</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">PENULIS</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">JENIS</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">INDEXING</th>
@@ -149,7 +149,7 @@
                                     {{-- Kolom Judul --}}
                                     <td class="px-6 py-4">
                                         <div class="max-w-xs">
-                                            <p class="text-sm font-bold text-gray-900 line-clamp-2" title="{{ $item->judul }}">{{ $item->judul }}</p>
+                                            <p class="text-sm font-bold text-gray-900 line-clamp-2" title="{{ $item->judul_publikasi }}">{{ $item->judul_publikasi }}</p>
                                             <p class="text-xs text-gray-500 truncate mt-1 flex items-center gap-1">
                                                 <i class="fas fa-building w-3 h-3"></i> {{ $item->penerbit }}
                                             </p>

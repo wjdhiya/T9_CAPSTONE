@@ -38,7 +38,7 @@ class PenelitianController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('judul', 'like', "%{$search}%")
+                $q->where('judul_penelitian', 'like', "%{$search}%")
                   ->orWhere('abstrak', 'like', "%{$search}%")
                   ->orWhereHas('user', function ($u) use ($search) {
                       $u->where('name', 'like', "%{$search}%");
@@ -88,7 +88,7 @@ class PenelitianController extends Controller
 
 
         $validated = $request->validate([
-            'judul' => 'required|string|max:500',
+            'judul_penelitian' => 'required|string|max:500',
             'abstrak' => 'nullable|string',
             'jenis' => 'required|in:internal,eksternal,mandiri,hibah_internal,hibah_eksternal,kerjasama',
             'sumber_dana' => 'nullable|string|max:255',
@@ -166,7 +166,7 @@ class PenelitianController extends Controller
         }
 
         $validated = $request->validate([
-            'judul' => 'required|string|max:500',
+            'judul_penelitian' => 'required|string|max:500',
             'abstrak' => 'nullable|string',
             'jenis' => 'required|in:internal,eksternal,mandiri,hibah_internal,hibah_eksternal,kerjasama',
             'sumber_dana' => 'nullable|string|max:255',

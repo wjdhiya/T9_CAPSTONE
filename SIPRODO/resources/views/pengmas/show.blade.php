@@ -22,7 +22,7 @@
             {{-- Main Content --}}
             <div class="bg-white shadow-lg sm:rounded-xl mb-6 p-8 border border-gray-100">
                 <div class="border-b border-gray-200 pb-4 mb-6">
-                    <h3 class="text-2xl font-bold text-gray-900 leading-tight">{{ $pengabdianMasyarakat->judul }}</h3>
+                    <h3 class="text-2xl font-bold text-gray-900 leading-tight">{{ $pengabdianMasyarakat->judul_pkm }}</h3>
                     <div class="mt-2 flex items-center text-sm text-gray-500">
                         <span class="mr-4"><i class="far fa-calendar-alt mr-1"></i> {{ $pengabdianMasyarakat->tahun }} ({{ ucfirst($pengabdianMasyarakat->semester) }})</span>
                         <span><i class="fas fa-lightbulb mr-1"></i> {{ $pengabdianMasyarakat->skema }}</span>
@@ -47,6 +47,10 @@
                         <div>
                             <p class="text-xs text-gray-500 uppercase font-semibold">Jumlah Peserta</p>
                             <p class="font-medium text-gray-900">{{ $pengabdianMasyarakat->jumlah_peserta ?? '-' }} Orang</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase font-semibold">Jenis Hibah</p>
+                            <p class="font-medium text-gray-900">{{ ucfirst($pengabdianMasyarakat->jenis) }}</p>
                         </div>
                     </div>
                     <div class="space-y-4">

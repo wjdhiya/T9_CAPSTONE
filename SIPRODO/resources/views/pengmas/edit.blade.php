@@ -96,11 +96,11 @@
                     <div class="space-y-6">
                         
                         <div>
-                            <label for="judul" class="block text-sm font-medium text-gray-700 mb-2">Judul Kegiatan <span class="text-red-600">*</span></label>
-                            <input type="text" id="judul" name="judul" value="{{ old('judul', $pengabdianMasyarakat->judul) }}" required
+                            <label for="judul_pkm" class="block text-sm font-medium text-gray-700 mb-2">Judul PKM <span class="text-red-600">*</span></label>
+                            <input type="text" id="judul_pkm" name="judul_pkm" value="{{ old('judul_pkm', $pengabdianMasyarakat->judul_pkm) }}" required
                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
                                    placeholder="Masukkan judul kegiatan pengabdian">
-                            @error('judul')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                            @error('judul_pkm')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
@@ -120,15 +120,27 @@
                                 @error('skema')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
 
-                            <div>
-                                <label for="mitra" class="block text-sm font-medium text-gray-700 mb-2">Mitra Sasaran <span class="text-red-600">*</span></label>
-                                <input type="text" id="mitra" name="mitra" value="{{ old('mitra', $pengabdianMasyarakat->mitra) }}" required
-                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
-                                       placeholder="Contoh: UMKM Keripik, Kelompok Tani">
-                                @error('mitra')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
-                            </div>
+                        <div>
+                            <label for="mitra" class="block text-sm font-medium text-gray-700 mb-2">Mitra Sasaran <span class="text-red-600">*</span></label>
+                            <input type="text" id="mitra" name="mitra" value="{{ old('mitra', $pengabdianMasyarakat->mitra) }}" required
+                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
+                                   placeholder="Contoh: UMKM Keripik, Kelompok Tani">
+                            @error('mitra')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                        </div>
+
+                        <div>
+                            <label for="jenis" class="block text-sm font-medium text-gray-700 mb-2">Jenis Hibah <span class="text-red-600">*</span></label>
+                            <select id="jenis" name="jenis" required
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all bg-white">
+                                <option value="">Pilih Jenis</option>
+                                <option value="internal" {{ old('jenis', $pengabdianMasyarakat->jenis) == 'internal' ? 'selected' : '' }}>Internal</option>
+                                <option value="eksternal" {{ old('jenis', $pengabdianMasyarakat->jenis) == 'eksternal' ? 'selected' : '' }}>Eksternal</option>
+                                <option value="mandiri" {{ old('jenis', $pengabdianMasyarakat->jenis) == 'mandiri' ? 'selected' : '' }}>Mandiri</option>
+                            </select>
+                            @error('jenis')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                         </div>
                     </div>
+                </div>
                 </div>
 
                 {{-- Section 2: Waktu & Pelaksanaan --}}
@@ -224,7 +236,7 @@
                         {{-- Bagian Dosen --}}
                         <div>
                             <div class="flex items-center justify-between mb-3">
-                                <label class="block text-sm font-bold text-gray-800">Dosen</label>
+                                <label class="block text-sm font-bold text-gray-800">Tim Abdimas</label>
                                 <button type="button" @click="addDosen()" class="text-sm text-telkom-blue hover:text-blue-700 font-medium flex items-center">
                                     <i class="fas fa-plus-circle mr-1"></i> Tambah Dosen
                                 </button>
@@ -271,7 +283,7 @@
                         {{-- Bagian Mahasiswa --}}
                         <div>
                             <div class="flex items-center justify-between mb-3">
-                                <label class="block text-sm font-bold text-gray-800">Mahasiswa</label>
+                                <label class="block text-sm font-bold text-gray-800">Mahasiswa Terlibat</label>
                                 <button type="button" @click="addMahasiswa()" class="text-sm text-telkom-blue hover:text-blue-700 font-medium flex items-center">
                                     <i class="fas fa-plus-circle mr-1"></i> Tambah Mahasiswa
                                 </button>

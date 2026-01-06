@@ -14,7 +14,7 @@ class Penelitian extends Model
 
     protected $fillable = [
         'user_id',
-        'judul',
+        'judul_penelitian',
         'abstrak',
         'jenis',
         'sumber_dana',

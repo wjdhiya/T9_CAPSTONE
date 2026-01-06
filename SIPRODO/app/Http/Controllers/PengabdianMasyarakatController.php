@@ -29,7 +29,7 @@ class PengabdianMasyarakatController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('judul', 'like', '%' . $search . '%')
+                $q->where('judul_pkm', 'like', '%' . $search . '%')
                   ->orWhere('skema', 'like', '%' . $search . '%')
                   ->orWhere('mitra', 'like', '%' . $search . '%')
                   // Cari berdasarkan nama user (dosen pengusul)
@@ -91,12 +91,13 @@ class PengabdianMasyarakatController extends Controller
 
         // 1. VALIDASI
         $validated = $request->validate([
-            'judul' => 'required|string|max:500',
-            
+            'judul_pkm' => 'required|string|max:500',
+
             // Terima input 'deskripsi' atau 'abstrak'
-            'deskripsi' => 'nullable|string', 
+            'deskripsi' => 'nullable|string',
             'abstrak'   => 'nullable|string',
 
+            'jenis' => 'required|string|in:internal,eksternal,mandiri',
             'skema' => 'required|string|max:255',
             'mitra' => 'required|string|max:255',
             'jumlah_peserta' => 'required|integer|min:1',
@@ -252,9 +253,10 @@ class PengabdianMasyarakatController extends Controller
         }
 
         $validated = $request->validate([
-            'judul' => 'required|string|max:500',
-            'deskripsi' => 'nullable|string', 
+            'judul_pkm' => 'required|string|max:500',
+            'deskripsi' => 'nullable|string',
             'abstrak'   => 'nullable|string',
+            'jenis' => 'required|string|in:internal,eksternal,mandiri',
             'skema' => 'required|string|max:255',
             'mitra' => 'required|string|max:255',
             'jumlah_peserta' => 'required|integer|min:1',

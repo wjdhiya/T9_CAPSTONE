@@ -37,11 +37,11 @@
                     <div class="space-y-6">
                         
                         <div>
-                            <label for="judul" class="block text-sm font-medium text-gray-700 mb-2">Judul Penelitian <span class="text-red-600">*</span></label>
-                            <input type="text" id="judul" name="judul" value="{{ old('judul', $penelitian->judul ?? '') }}" required
+                            <label for="judul_penelitian" class="block text-sm font-medium text-gray-700 mb-2">Judul Penelitian <span class="text-red-600">*</span></label>
+                            <input type="text" id="judul_penelitian" name="judul_penelitian" value="{{ old('judul_penelitian', $penelitian->judul_penelitian ?? '') }}" required
                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
                                    placeholder="Masukkan judul penelitian">
-                            @error('judul')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                            @error('judul_penelitian')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div>

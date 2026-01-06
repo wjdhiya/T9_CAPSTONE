@@ -29,7 +29,7 @@ class PublikasiController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('judul', 'like', '%' . $search . '%')
+                $q->where('judul_publikasi', 'like', '%' . $search . '%')
                   ->orWhere('penulis', 'like', '%' . $search . '%') // Pencarian Penulis (Manual input)
                   ->orWhere('penerbit', 'like', '%' . $search . '%')
                   // Tambahan: Cari berdasarkan nama user (Dosen pemilik data)
@@ -102,7 +102,7 @@ class PublikasiController extends Controller
         }
 
         $validated = $request->validate([
-            'judul' => 'required|string|max:500',
+            'judul_publikasi' => 'required|string|max:500',
             'penulis' => 'nullable|string',
             'jenis' => 'required|in:jurnal,prosiding,buku,book_chapter,paten,hki',
             'penerbit' => 'nullable|string|max:255',
@@ -122,7 +122,7 @@ class PublikasiController extends Controller
             'catatan' => 'nullable|string',
         ]);
 
-        $validated['nama_publikasi'] = $validated['judul'];
+        $validated['nama_publikasi'] = $validated['judul_publikasi'];
 
         $validated['user_id'] = Auth::id();
         $validated['status_verifikasi'] = 'pending';
@@ -195,7 +195,7 @@ class PublikasiController extends Controller
         }
 
         $validated = $request->validate([
-            'judul' => 'required|string|max:500',
+            'judul_publikasi' => 'required|string|max:500',
             'penulis' => 'required|string|max:500',
             'jenis' => 'required|in:jurnal,prosiding,buku,paten,hki',
             'penerbit' => 'required|string|max:255',

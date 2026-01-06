@@ -27,7 +27,7 @@
             <!-- Main Info -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6">
-                    <h3 class="text-2xl font-bold mb-4" style="color: #a02127;">{{ $penelitian->judul }}</h3>
+                    <h3 class="text-2xl font-bold mb-4" style="color: #a02127;">{{ $penelitian->judul_penelitian }}</h3>
                     
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>

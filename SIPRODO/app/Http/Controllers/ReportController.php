@@ -168,7 +168,7 @@ class ReportController extends Controller
 
                 foreach ($query->get() as $item) {
                     fputcsv($file, [
-                        $item->judul,
+                        $item->judul_penelitian,
                         $item->user->name,
                         $item->jenis,
                         $item->tahun,
@@ -198,7 +198,7 @@ class ReportController extends Controller
 
                 foreach ($query->get() as $item) {
                     fputcsv($file, [
-                        $item->judul,
+                        $item->judul_publikasi,
                         $item->penulis,
                         $item->jenis,
                         $item->penerbit,
@@ -229,7 +229,7 @@ class ReportController extends Controller
 
                 foreach ($query->get() as $item) {
                     fputcsv($file, [
-                        $item->judul,
+                        $item->judul_pkm,
                         $item->user->name,
                         $item->skema,
                         $item->mitra,

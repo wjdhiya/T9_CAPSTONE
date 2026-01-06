@@ -63,7 +63,7 @@
                         <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status Pelaksanaan</label>
                         <select id="status" name="status" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                             <option value="">Semua Status</option>
-                            <option value="proposal" {{ request('s tatus') == 'proposal' ? 'selected' : '' }}>Proposal</option>
+                            <option value="proposal" {{ request('status') == 'proposal' ? 'selected' : '' }}>Proposal</option>
                             <option value="berjalan" {{ request('status') == 'berjalan' ? 'selected' : '' }}>Berjalan</option>
                             <option value="selesai" {{ request('status') == 'selesai' ? 'selected' : '' }}>Selesai</option>
                             <option value="ditolak" {{ request('status') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
@@ -91,10 +91,11 @@
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judul & Tanggal</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judul PKM & Tanggal</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dosen</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Skema & Mitra</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tahun</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis Hibah</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">Aksi</th>
                             </tr>
@@ -103,8 +104,8 @@
                             @forelse($pengmas as $item)
                             <tr class="hover:bg-gray-50 transition-colors">
                                 <td class="px-6 py-4">
-                                    <div class="text-sm font-bold text-gray-900 line-clamp-2" title="{{ $item->judul }}">
-                                        {{ $item->judul }}
+                                    <div class="text-sm font-bold text-gray-900 line-clamp-2" title="{{ $item->judul_pkm }}">
+                                        {{ $item->judul_pkm }}
                                     </div>
                                     <div class="text-xs text-gray-500 mt-1 flex items-center">
                                         <i class="far fa-calendar-alt mr-1"></i>
@@ -132,6 +133,11 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                     <div class="font-medium">{{ $item->tahun }}</div>
                                     <span class="text-xs text-gray-400">{{ ucfirst($item->semester) }}</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                        {{ ucfirst($item->jenis) }}
+                                    </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex flex-col space-y-1">
@@ -178,7 +184,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                <td colspan="7" class="px-6 py-12 text-center text-gray-500">
                                     <div class="flex flex-col items-center justify-center">
                                         <div class="bg-gray-100 rounded-full p-4 mb-3">
                                             <i class="fas fa-folder-open text-gray-400 text-3xl"></i>

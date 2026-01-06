@@ -28,16 +28,16 @@
                         Format file didukung: CSV / XLSX.
                     </p>
                     <p class="text-gray-700 mt-2">
-                        Kolom minimal: nidn, judul, tahun_akademik, semester.
+                        Kolom minimal: nidn, judul, tahun, semester.
                     </p>
                     <p class="text-gray-700 mt-2">
                         Untuk single-file (campuran), gunakan kolom kategori/jenis_data (penelitian|publikasi|pengmas) atau sistem akan auto-detect dari field.
                     </p>
                     <p class="text-gray-700 mt-2">
                         Upsert key:
-                        Penelitian (user_id+judul+tahun_akademik+semester),
-                        Publikasi (user_id+judul+jenis+tahun_akademik+semester),
-                        Pengmas (user_id+judul+tahun_akademik+semester).
+                        Penelitian (user_id+judul+tahun+semester),
+                        Publikasi (user_id+judul+jenis+tahun+semester),
+                        Pengmas (user_id+judul+tahun+semester).
                     </p>
                     <p class="text-gray-700 mt-2">
                         Catatan: jika data existing sudah terverifikasi, baris tersebut akan dilewati.

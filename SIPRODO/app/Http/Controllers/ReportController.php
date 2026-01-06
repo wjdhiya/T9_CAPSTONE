@@ -17,13 +17,13 @@ class ReportController extends Controller
     public function index(Request $request)
     {
         // Get filter parameters - tahun akademik kosong jika semua periode
-        $tahun_akademik = $request->get('tahun_akademik');
+        $tahun = $request->get('tahun');
         $semester = $request->get('semester');
         $jenis = $request->get('jenis', 'all'); // all, penelitian, publikasi, pengmas
         $user_id = $request->get('user_id');
 
         // Get statistics
-        $stats = $this->getStatistics($tahun_akademik, $semester, $user_id);
+        $stats = $this->getStatistics($tahun, $semester, $user_id);
 
         // Get users for filter
         $users = User::where('role', 'dosen')
@@ -34,19 +34,19 @@ class ReportController extends Controller
         // Get available years
         $years = range(date('Y'), date('Y') - 5);
 
-        return view('reports.index', compact('stats', 'users', 'years', 'tahun_akademik', 'semester', 'jenis', 'user_id'));
+        return view('reports.index', compact('stats', 'users', 'years', 'tahun', 'semester', 'jenis', 'user_id'));
     }
 
     /**
      * Get statistics for reports
      */
-    private function getStatistics($tahun_akademik, $semester = null, $user_id = null)
+    private function getStatistics($tahun, $semester = null, $user_id = null)
     {
         $stats = [];
 
         // Penelitian statistics - handle tahun akademik kosong
-        $penelitianQuery = $tahun_akademik ? 
-            Penelitian::where('tahun_akademik', 'like', $tahun_akademik . '%') :
+        $penelitianQuery = $tahun ? 
+            Penelitian::where('tahun', 'like', $tahun . '%') :
             Penelitian::rentangTahunAkademik(2022);
         
         if ($semester) {
@@ -68,7 +68,7 @@ class ReportController extends Controller
         ];
 
         // Publikasi statistics - menggunakan like pattern untuk handle format "2024/2025"
-        $publikasiQuery = Publikasi::where('tahun_akademik', 'like', $tahun_akademik . '%');
+        $publikasiQuery = Publikasi::where('tahun', 'like', $tahun . '%');
         if ($user_id) {
             $publikasiQuery->where('user_id', $user_id);
         }
@@ -90,7 +90,7 @@ class ReportController extends Controller
         ];
 
         // Pengabdian Masyarakat statistics - menggunakan like pattern untuk handle format "2024/2025"
-        $pengmasQuery = PengabdianMasyarakat::where('tahun_akademik', 'like', $tahun_akademik . '%');
+        $pengmasQuery = PengabdianMasyarakat::where('tahun', 'like', $tahun . '%');
         if ($semester) {
             $pengmasQuery->where('semester', $semester);
         }
@@ -125,7 +125,7 @@ class ReportController extends Controller
     public function exportExcel(Request $request)
     {
         // Handle tahun akademik - kosongkan jika "Semua Periode"
-        $tahun_akademik = $request->get('tahun_akademik');
+        $tahun = $request->get('tahun');
         $semester = $request->get('semester');
         $jenis = $request->get('jenis', 'all');
         $user_id = $request->get('user_id');
@@ -140,14 +140,14 @@ class ReportController extends Controller
         // For now, return a simple CSV
         // TODO: Implement proper Excel export using Laravel Excel package
 
-        $filename = "laporan_{$jenis}_" . ($tahun_akademik ?? 'semua_tahun') . ".csv";
+        $filename = "laporan_{$jenis}_" . ($tahun ?? 'semua_tahun') . ".csv";
         
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ];
 
-        $callback = function() use ($tahun_akademik, $semester, $jenis, $user_id) {
+        $callback = function() use ($tahun, $semester, $jenis, $user_id) {
             $file = fopen('php://output', 'w');
 
             if ($jenis === 'all' || $jenis === 'penelitian') {
@@ -157,10 +157,10 @@ class ReportController extends Controller
 
                 // Handle tahun akademik kosong (semua periode)
                 $query = Penelitian::with('user');
-                if ($tahun_akademik) {
-                    $query->where('tahun_akademik', 'like', $tahun_akademik . '%');
+                if ($tahun) {
+                    $query->where('tahun', 'like', $tahun . '%');
                 } else {
-                    $query->rentangTahunAkademik(2022); // Semua tahun dari 2022
+                    $query->rentangTahun(2022); // Semua tahun dari 2022
                 }
                 
                 if ($semester) $query->where('semester', $semester);
@@ -171,7 +171,7 @@ class ReportController extends Controller
                         $item->judul,
                         $item->user->name,
                         $item->jenis,
-                        $item->tahun_akademik,
+                        $item->tahun,
                         $item->semester,
                         $item->dana,
                         $item->status,
@@ -188,10 +188,10 @@ class ReportController extends Controller
 
                 // Handle tahun akademik kosong (semua periode)
                 $query = Publikasi::with('user');
-                if ($tahun_akademik) {
-                    $query->where('tahun_akademik', 'like', $tahun_akademik . '%');
+                if ($tahun) {
+                    $query->where('tahun', 'like', $tahun . '%');
                 } else {
-                    $query->rentangTahunAkademik(2022); // Semua tahun dari 2022
+                    $query->rentangTahun(2022); // Semua tahun dari 2022
                 }
                 
                 if ($user_id) $query->where('user_id', $user_id);
@@ -214,14 +214,14 @@ class ReportController extends Controller
             if ($jenis === 'all' || $jenis === 'pengmas') {
                 // Pengmas header
                 fputcsv($file, ['LAPORAN PENGABDIAN MASYARAKAT']);
-                fputcsv($file, ['Judul', 'Dosen', 'Lokasi', 'Mitra', 'Peserta', 'Tahun Akademik', 'Semester', 'Status', 'Verifikasi']);
+                fputcsv($file, ['Judul', 'Dosen', 'Skema', 'Mitra', 'Peserta', 'Tahun', 'Semester', 'Status', 'Verifikasi']);
 
                 // Handle tahun akademik kosong (semua periode)
                 $query = PengabdianMasyarakat::with('user');
-                if ($tahun_akademik) {
-                    $query->where('tahun_akademik', 'like', $tahun_akademik . '%');
+                if ($tahun) {
+                    $query->where('tahun', 'like', $tahun . '%');
                 } else {
-                    $query->rentangTahunAkademik(2022); // Semua tahun dari 2022
+                    $query->rentangTahun(2022); // Semua tahun dari 2022
                 }
                 
                 if ($semester) $query->where('semester', $semester);
@@ -231,10 +231,10 @@ class ReportController extends Controller
                     fputcsv($file, [
                         $item->judul,
                         $item->user->name,
-                        $item->lokasi,
+                        $item->skema,
                         $item->mitra,
                         $item->jumlah_peserta,
-                        $item->tahun_akademik,
+                        $item->tahun,
                         $item->semester,
                         $item->status,
                         $item->status_verifikasi,
@@ -254,12 +254,12 @@ class ReportController extends Controller
     public function exportPdf(Request $request)
     {
         // Handle tahun akademik - kosongkan jika "Semua Periode"
-        $tahun_akademik = $request->get('tahun_akademik');
+        $tahun = $request->get('tahun');
         $semester = $request->get('semester');
         $jenis = $request->get('jenis', 'all');
         $user_id = $request->get('user_id');
 
-        $stats = $this->getStatistics($tahun_akademik, $semester, $user_id);
+        $stats = $this->getStatistics($tahun, $semester, $user_id);
 
         // Get data
         $data = [];
@@ -267,10 +267,10 @@ class ReportController extends Controller
         if ($jenis === 'all' || $jenis === 'penelitian') {
             // Handle tahun akademik kosong (semua periode)
             $query = Penelitian::with('user');
-            if ($tahun_akademik) {
-                $query->where('tahun_akademik', 'like', $tahun_akademik . '%');
+            if ($tahun) {
+                $query->where('tahun', 'like', $tahun . '%');
             } else {
-                $query->rentangTahunAkademik(2022); // Semua tahun dari 2022
+                $query->rentangTahun(2022); // Semua tahun dari 2022
             }
             
             if ($semester) $query->where('semester', $semester);
@@ -281,10 +281,10 @@ class ReportController extends Controller
         if ($jenis === 'all' || $jenis === 'publikasi') {
             // Handle tahun akademik kosong (semua periode)
             $query = Publikasi::with('user');
-            if ($tahun_akademik) {
-                $query->where('tahun_akademik', 'like', $tahun_akademik . '%');
+            if ($tahun) {
+                $query->where('tahun', 'like', $tahun . '%');
             } else {
-                $query->rentangTahunAkademik(2022); // Semua tahun dari 2022
+                $query->rentangTahun(2022); // Semua tahun dari 2022
             }
             
             if ($user_id) $query->where('user_id', $user_id);
@@ -294,10 +294,10 @@ class ReportController extends Controller
         if ($jenis === 'all' || $jenis === 'pengmas') {
             // Handle tahun akademik kosong (semua periode)
             $query = PengabdianMasyarakat::with('user');
-            if ($tahun_akademik) {
-                $query->where('tahun_akademik', 'like', $tahun_akademik . '%');
+            if ($tahun) {
+                $query->where('tahun', 'like', $tahun . '%');
             } else {
-                $query->rentangTahunAkademik(2022); // Semua tahun dari 2022
+                $query->rentangTahun(2022); // Semua tahun dari 2022
             }
             
             if ($semester) $query->where('semester', $semester);
@@ -307,7 +307,7 @@ class ReportController extends Controller
 
         // For now, return HTML view
         // TODO: Implement proper PDF export using DomPDF or similar
-        return view('reports.pdf', compact('stats', 'data', 'tahun_akademik', 'semester', 'jenis'));
+        return view('reports.pdf', compact('stats', 'data', 'tahun', 'semester', 'jenis'));
     }
 
     /**
@@ -315,7 +315,7 @@ class ReportController extends Controller
      */
     public function productivity(Request $request)
     {
-        $tahun_akademik = $request->get('tahun_akademik', date('Y'));
+        $tahun = $request->get('tahun', date('Y'));
 
         // Get all active dosen
         $dosens = User::where('role', 'dosen')
@@ -328,15 +328,15 @@ class ReportController extends Controller
             $productivity[] = [
                 'dosen' => $dosen,
                 'penelitian' => Penelitian::where('user_id', $dosen->id)
-                    ->where('tahun_akademik', 'like', $tahun_akademik . '%')
+                    ->where('tahun', 'like', $tahun . '%')
                     ->where('status_verifikasi', 'verified')
                     ->count(),
                 'publikasi' => Publikasi::where('user_id', $dosen->id)
-                    ->where('tahun_akademik', 'like', $tahun_akademik . '%')
+                    ->where('tahun', 'like', $tahun . '%')
                     ->where('status_verifikasi', 'verified')
                     ->count(),
                 'pengmas' => PengabdianMasyarakat::where('user_id', $dosen->id)
-                    ->where('tahun_akademik', 'like', $tahun_akademik . '%')
+                    ->where('tahun', 'like', $tahun . '%')
                     ->where('status_verifikasi', 'verified')
                     ->count(),
             ];
@@ -351,7 +351,7 @@ class ReportController extends Controller
 
         $years = range(date('Y'), date('Y') - 5);
 
-        return view('reports.productivity', compact('productivity', 'years', 'tahun_akademik'));
+        return view('reports.productivity', compact('productivity', 'years', 'tahun'));
     }
 }
 

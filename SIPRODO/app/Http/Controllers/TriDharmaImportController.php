@@ -279,7 +279,7 @@ class TriDharmaImportController extends Controller
     private function buildPayload(string $type, array $assoc, int $userId): array
     {
         $judul = trim((string)($assoc['judul'] ?? ''));
-        $tahun = trim((string)($assoc['tahun_akademik'] ?? ''));
+        $tahun = trim((string)($assoc['tahun'] ?? ''));
         $semester = strtolower(trim((string)($assoc['semester'] ?? '')));
 
         if ($judul === '') {
@@ -295,7 +295,7 @@ class TriDharmaImportController extends Controller
         $base = [
             'user_id' => $userId,
             'judul' => $judul,
-            'tahun_akademik' => (int) $tahun,
+            'tahun' => (int) $tahun,
             'semester' => $semester,
             'status_verifikasi' => 'pending',
             'verified_by' => null,
@@ -480,10 +480,10 @@ class TriDharmaImportController extends Controller
     private function uniqueBy(string $type): array
     {
         return match ($type) {
-            'penelitian' => ['user_id', 'judul', 'tahun_akademik', 'semester'],
-            'publikasi' => ['user_id', 'judul', 'jenis', 'tahun_akademik', 'semester'],
-            'pengmas' => ['user_id', 'judul', 'tahun_akademik', 'semester'],
-            default => ['user_id', 'judul', 'tahun_akademik', 'semester'],
+            'penelitian' => ['user_id', 'judul', 'tahun', 'semester'],
+            'publikasi' => ['user_id', 'judul', 'jenis', 'tahun', 'semester'],
+            'pengmas' => ['user_id', 'judul', 'tahun', 'semester'],
+            default => ['user_id', 'judul', 'tahun', 'semester'],
         };
     }
 

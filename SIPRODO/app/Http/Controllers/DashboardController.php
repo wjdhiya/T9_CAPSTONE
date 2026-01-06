@@ -106,23 +106,23 @@ class DashboardController extends Controller
         }
 
         $validated = $request->validate([
-            'tahun_akademik' => ['required', 'integer', 'min:1900', 'max:' . (date('Y') + 1)],
+            'tahun' => ['required', 'integer', 'min:1900', 'max:' . (date('Y') + 1)],
             'semester' => ['required', Rule::in(['ganjil', 'genap'])],
         ]);
 
-        $tahun = (string) $validated['tahun_akademik'];
+        $tahun = (string) $validated['tahun'];
         $semester = $validated['semester'];
 
         $penelitianQuery = Penelitian::query()
-            ->where('tahun_akademik', 'like', $tahun . '%')
+            ->where('tahun', 'like', $tahun . '%')
             ->where('semester', $semester);
 
         $publikasiQuery = Publikasi::query()
-            ->where('tahun_akademik', 'like', $tahun . '%')
+            ->where('tahun', 'like', $tahun . '%')
             ->where('semester', $semester);
 
         $pengmasQuery = PengabdianMasyarakat::query()
-            ->where('tahun_akademik', 'like', $tahun . '%')
+            ->where('tahun', 'like', $tahun . '%')
             ->where('semester', $semester);
 
         $stats = [
@@ -151,15 +151,15 @@ class DashboardController extends Controller
             ->select('id', 'name', 'nidn')
             ->withCount([
                 'penelitian as total_penelitian' => function ($query) use ($tahun, $semester) {
-                    $query->where('tahun_akademik', 'like', $tahun . '%')
+                    $query->where('tahun', 'like', $tahun . '%')
                         ->where('semester', $semester);
                 },
                 'publikasi as total_publikasi' => function ($query) use ($tahun, $semester) {
-                    $query->where('tahun_akademik', 'like', $tahun . '%')
+                    $query->where('tahun', 'like', $tahun . '%')
                         ->where('semester', $semester);
                 },
                 'pengabdianMasyarakat as total_pengmas' => function ($query) use ($tahun, $semester) {
-                    $query->where('tahun_akademik', 'like', $tahun . '%')
+                    $query->where('tahun', 'like', $tahun . '%')
                         ->where('semester', $semester);
                 },
             ])
@@ -177,7 +177,7 @@ class DashboardController extends Controller
             });
 
         return response()->json([
-            'tahun_akademik' => (int) $validated['tahun_akademik'],
+            'tahun' => (int) $validated['tahun'],
             'semester' => $semester,
             'stats' => $stats,
             'topLecturers' => $topLecturers,

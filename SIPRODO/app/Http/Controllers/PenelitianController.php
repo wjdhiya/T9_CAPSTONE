@@ -46,8 +46,8 @@ class PenelitianController extends Controller
             });
         }
 
-        if ($request->has('tahun_akademik') && $request->tahun_akademik != '') {
-            $query->where('tahun_akademik', 'like', $request->tahun_akademik . '%');
+        if ($request->has('tahun') && $request->tahun != '') {
+            $query->where('tahun', 'like', $request->tahun . '%');
         }
 
         if ($request->has('semester') && $request->semester != '') {
@@ -93,7 +93,7 @@ class PenelitianController extends Controller
             'jenis' => 'required|in:internal,eksternal,mandiri,hibah_internal,hibah_eksternal,kerjasama',
             'sumber_dana' => 'nullable|string|max:255',
             'dana' => 'nullable|numeric|min:0',
-            'tahun_akademik' => 'required|string|max:20',
+            'tahun' => 'required|string|max:20',
             'semester' => 'required|in:ganjil,genap',
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
@@ -171,7 +171,7 @@ class PenelitianController extends Controller
             'jenis' => 'required|in:internal,eksternal,mandiri,hibah_internal,hibah_eksternal,kerjasama',
             'sumber_dana' => 'nullable|string|max:255',
             'dana' => 'nullable|numeric|min:0',
-            'tahun_akademik' => 'required|string|max:20',
+            'tahun' => 'required|string|max:20',
             'semester' => 'required|in:ganjil,genap',
             'tanggal_mulai' => 'nullable|date',
             'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',

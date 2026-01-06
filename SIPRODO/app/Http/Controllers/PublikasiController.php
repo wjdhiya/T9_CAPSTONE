@@ -40,8 +40,8 @@ class PublikasiController extends Controller
         }
 
         // Filter by year
-        if ($request->filled('tahun_akademik')) {
-            $query->where('tahun_akademik', $request->tahun_akademik);
+        if ($request->filled('tahun')) {
+            $query->where('tahun', $request->tahun);
         }
 
         // Filter by jenis
@@ -115,7 +115,7 @@ class PublikasiController extends Controller
             'doi' => 'nullable|string|max:255',
             'indexing' => 'nullable|in:scopus,wos,sinta1,sinta2,sinta3,sinta4,sinta5,sinta6,non-indexed',
             'quartile' => 'nullable|in:Q1,Q2,Q3,Q4,non-quartile',
-            'tahun_akademik' => 'required|integer|min:1900|max:' . (date('Y') + 1),
+            'tahun' => 'required|integer|min:1900|max:' . (date('Y') + 1),
             'semester' => 'required|in:ganjil,genap',
             'penelitian_id' => 'nullable|exists:penelitian,id',
             'file_publikasi' => 'nullable|file|mimes:pdf|max:10240',

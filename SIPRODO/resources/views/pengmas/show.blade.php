@@ -24,8 +24,8 @@
                 <div class="border-b border-gray-200 pb-4 mb-6">
                     <h3 class="text-2xl font-bold text-gray-900 leading-tight">{{ $pengabdianMasyarakat->judul }}</h3>
                     <div class="mt-2 flex items-center text-sm text-gray-500">
-                        <span class="mr-4"><i class="far fa-calendar-alt mr-1"></i> {{ $pengabdianMasyarakat->tahun_akademik }} ({{ ucfirst($pengabdianMasyarakat->semester) }})</span>
-                        <span><i class="fas fa-map-marker-alt mr-1"></i> {{ $pengabdianMasyarakat->lokasi }}</span>
+                        <span class="mr-4"><i class="far fa-calendar-alt mr-1"></i> {{ $pengabdianMasyarakat->tahun }} ({{ ucfirst($pengabdianMasyarakat->semester) }})</span>
+                        <span><i class="fas fa-lightbulb mr-1"></i> {{ $pengabdianMasyarakat->skema }}</span>
                     </div>
                 </div>
                 
@@ -82,7 +82,9 @@
                     };
 
                     $anggotaDosen = $processList($pengabdianMasyarakat->anggota);
+                    $dosenNip = $processList($pengabdianMasyarakat->dosen_nip);
                     $anggotaMahasiswa = $processList($pengabdianMasyarakat->mahasiswa ?? $pengabdianMasyarakat->mahasiswa_terlibat);
+                    $mahasiswaNim = $processList($pengabdianMasyarakat->mahasiswa_nim);
                 @endphp
 
                 {{-- Tim Pelaksana Section --}}
@@ -97,11 +99,18 @@
                                 <h5 class="font-bold text-gray-900">Dosen</h5>
                             </div>
                             <ul class="space-y-2">
-                                @forelse($anggotaDosen as $dosen)
+                                @forelse($anggotaDosen as $index => $dosen)
                                     @if(!empty($dosen))
-                                        <li class="flex items-center text-gray-700 bg-white p-2 rounded shadow-sm border border-gray-100">
-                                            <i class="fas fa-user-tie text-blue-400 mr-2 text-xs"></i> 
-                                            {{ $dosen }}
+                                        <li class="bg-white p-3 rounded shadow-sm border border-gray-100">
+                                            <div class="flex items-start">
+                                                <i class="fas fa-user-tie text-blue-400 mr-2 text-sm mt-1"></i> 
+                                                <div class="flex-1">
+                                                    <div class="font-medium text-gray-900">{{ $dosen }}</div>
+                                                    @if(isset($dosenNip[$index]) && !empty($dosenNip[$index]))
+                                                        <div class="text-xs text-gray-500 mt-1">NIP: {{ $dosenNip[$index] }}</div>
+                                                    @endif
+                                                </div>
+                                            </div>
                                         </li>
                                     @endif
                                 @empty
@@ -118,11 +127,18 @@
                                 <h5 class="font-bold text-gray-900">Mahasiswa</h5>
                             </div>
                             <ul class="space-y-2">
-                                @forelse($anggotaMahasiswa as $mahasiswa)
+                                @forelse($anggotaMahasiswa as $index => $mahasiswa)
                                     @if(!empty($mahasiswa))
-                                        <li class="flex items-center text-gray-700 bg-white p-2 rounded shadow-sm border border-gray-100">
-                                            <i class="fas fa-user text-green-400 mr-2 text-xs"></i> 
-                                            {{ $mahasiswa }}
+                                        <li class="bg-white p-3 rounded shadow-sm border border-gray-100">
+                                            <div class="flex items-start">
+                                                <i class="fas fa-user text-green-400 mr-2 text-sm mt-1"></i> 
+                                                <div class="flex-1">
+                                                    <div class="font-medium text-gray-900">{{ $mahasiswa }}</div>
+                                                    @if(isset($mahasiswaNim[$index]) && !empty($mahasiswaNim[$index]))
+                                                        <div class="text-xs text-gray-500 mt-1">NIM: {{ $mahasiswaNim[$index] }}</div>
+                                                    @endif
+                                                </div>
+                                            </div>
                                         </li>
                                     @endif
                                 @empty
@@ -145,8 +161,7 @@
                 </div>
             </div>
 
-            {{-- Dokumen Pendukung (Updated Layout to Match Penelitian) --}}
-            @if($pengabdianMasyarakat->file_proposal || $pengabdianMasyarakat->file_laporan || $pengabdianMasyarakat->file_dokumentasi)
+            {{-- Dokumen Pendukung --}}
             <div class="bg-white overflow-hidden shadow-lg sm:rounded-xl mb-6 border border-gray-100">
                 <div class="p-6">
                     <h4 class="text-lg font-semibold mb-4 text-gray-900">Dokumen Pendukung</h4>
@@ -222,9 +237,18 @@
                         @endif
 
                     </div>
+                    
+                    {{-- Pesan jika tidak ada file --}}
+                    @if(!$pengabdianMasyarakat->file_proposal && !$pengabdianMasyarakat->file_laporan && !$pengabdianMasyarakat->file_dokumentasi)
+                    <div class="text-center py-8">
+                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                            <i class="fas fa-folder-open text-gray-400 text-2xl"></i>
+                        </div>
+                        <p class="text-gray-500 text-sm">Tidak ada file yang terinput</p>
+                    </div>
+                    @endif
                 </div>
             </div>
-            @endif
 
             <!-- Verification Status Box -->
             <div class="bg-white shadow-lg sm:rounded-xl p-6 border-l-4 

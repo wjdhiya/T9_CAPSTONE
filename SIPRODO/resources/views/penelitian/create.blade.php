@@ -88,11 +88,11 @@
                     <div class="space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
-                                <label for="tahun_akademik" class="block text-sm font-medium text-gray-700 mb-2">Tahun Akademik <span class="text-red-600">*</span></label>
-                                <input type="text" id="tahun_akademik" name="tahun_akademik" value="{{ old('tahun_akademik', $penelitian->tahun_akademik ?? (date('Y') . '/' . (date('Y') + 1))) }}" required
+                                <label for="tahun" class="block text-sm font-medium text-gray-700 mb-2">Tahun <span class="text-red-600">*</span></label>
+                                <input type="text" id="tahun" name="tahun" value="{{ old('tahun', $penelitian->tahun ?? (date('Y') . '/' . (date('Y') + 1))) }}" required
                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
                                        placeholder="2024/2025">
-                                @error('tahun_akademik')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                                @error('tahun')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
 
                             <div>

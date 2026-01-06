@@ -39,19 +39,19 @@
                                 <i class="fas fa-search text-gray-400"></i>
                             </div>
                             <input type="text" id="search" name="search" value="{{ request('search') }}" 
-                                placeholder="Cari judul, dosen, lokasi..." 
+                                placeholder="Cari judul, dosen, skema..." 
                                 class="pl-10 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                         </div>
                     </div>
 
                     {{-- Filter Tahun --}}
                     <div>
-                        <label for="tahun_akademik" class="block text-sm font-medium text-gray-700 mb-1">Tahun Akademik</label>
-                        <select id="tahun_akademik" name="tahun_akademik" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <label for="tahun" class="block text-sm font-medium text-gray-700 mb-1">Tahun</label>
+                        <select id="tahun" name="tahun" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                             <option value="">Semua Tahun</option>
                             @php $currentYear = date('Y'); @endphp
                             @for($year = $currentYear; $year >= $currentYear - 5; $year--)
-                                <option value="{{ $year }}" {{ request('tahun_akademik') == $year ? 'selected' : '' }}>
+                                <option value="{{ $year }}" {{ request('tahun') == $year ? 'selected' : '' }}>
                                     {{ $year }}
                                 </option>
                             @endfor
@@ -63,7 +63,7 @@
                         <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status Pelaksanaan</label>
                         <select id="status" name="status" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                             <option value="">Semua Status</option>
-                            <option value="proposal" {{ request('status') == 'proposal' ? 'selected' : '' }}>Proposal</option>
+                            <option value="proposal" {{ request('s tatus') == 'proposal' ? 'selected' : '' }}>Proposal</option>
                             <option value="berjalan" {{ request('status') == 'berjalan' ? 'selected' : '' }}>Berjalan</option>
                             <option value="selesai" {{ request('status') == 'selesai' ? 'selected' : '' }}>Selesai</option>
                             <option value="ditolak" {{ request('status') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
@@ -76,7 +76,7 @@
                             Filter
                         </button>
                         {{-- Tombol Reset hanya muncul jika ada filter aktif --}}
-                        @if(request()->hasAny(['search', 'tahun_akademik', 'status']))
+                        @if(request()->hasAny(['search', 'tahun', 'status']))
                             <a href="{{ route('pengmas.index') }}" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition-colors border border-gray-300" title="Reset Filter">
                                 <i class="fas fa-undo"></i>
                             </a>
@@ -93,7 +93,7 @@
                             <tr>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judul & Tanggal</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dosen</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokasi & Mitra</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Skema & Mitra</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tahun</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">Aksi</th>
@@ -119,9 +119,9 @@
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-600">
                                     <div class="flex flex-col space-y-1">
-                                        <span class="flex items-center" title="Lokasi">
-                                            <i class="fas fa-map-marker-alt text-gray-400 w-4 mr-1"></i> 
-                                            {{ Str::limit($item->lokasi, 20) }}
+                                        <span class="flex items-center" title="Skema">
+                                            <i class="fas fa-lightbulb text-gray-400 w-4 mr-1"></i> 
+                                            {{ Str::limit($item->skema, 20) }}
                                         </span>
                                         <span class="flex items-center text-xs text-gray-500" title="Mitra">
                                             <i class="fas fa-handshake text-gray-400 w-4 mr-1"></i> 
@@ -130,7 +130,7 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    <div class="font-medium">{{ $item->tahun_akademik }}</div>
+                                    <div class="font-medium">{{ $item->tahun }}</div>
                                     <span class="text-xs text-gray-400">{{ ucfirst($item->semester) }}</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">

@@ -30,7 +30,7 @@ class PengabdianMasyarakatController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('judul', 'like', '%' . $search . '%')
-                  ->orWhere('lokasi', 'like', '%' . $search . '%')
+                  ->orWhere('skema', 'like', '%' . $search . '%')
                   ->orWhere('mitra', 'like', '%' . $search . '%')
                   // Cari berdasarkan nama user (dosen pengusul)
                   ->orWhereHas('user', function ($subQ) use ($search) {
@@ -40,8 +40,8 @@ class PengabdianMasyarakatController extends Controller
         }
 
         // Filter by year
-        if ($request->filled('tahun_akademik')) {
-            $query->where('tahun_akademik', 'like', $request->tahun_akademik . '%');
+        if ($request->filled('tahun')) {
+            $query->where('tahun', 'like', $request->tahun . '%');
         }
 
         // Filter by semester
@@ -97,10 +97,10 @@ class PengabdianMasyarakatController extends Controller
             'deskripsi' => 'nullable|string', 
             'abstrak'   => 'nullable|string',
 
-            'lokasi' => 'required|string|max:255',
+            'skema' => 'required|string|max:255',
             'mitra' => 'required|string|max:255',
             'jumlah_peserta' => 'required|integer|min:1',
-            'tahun_akademik' => 'required|string|max:20',
+            'tahun' => 'required|string|max:20',
             'semester' => 'required|string', 
             
             'tanggal_mulai' => 'required|date',
@@ -111,10 +111,14 @@ class PengabdianMasyarakatController extends Controller
             // Validasi Anggota (Dosen)
             'anggota' => 'nullable|array',
             'anggota.*' => 'nullable|string|max:255',
+            'dosen_nip' => 'nullable|array',
+            'dosen_nip.*' => 'nullable|string|max:50',
             
             // Validasi Mahasiswa (Input form bernama 'mahasiswa')
             'mahasiswa' => 'nullable|array',
             'mahasiswa.*' => 'nullable|string|max:255',
+            'mahasiswa_nim' => 'nullable|array',
+            'mahasiswa_nim.*' => 'nullable|string|max:50',
             
             'status' => 'required|string', 
             
@@ -150,6 +154,11 @@ class PengabdianMasyarakatController extends Controller
         $anggotaInput = $validated['anggota'] ?? [];
         $anggotaClean = array_values(array_filter($anggotaInput, fn($v) => !empty($v)));
         $validated['anggota'] = json_encode($anggotaClean);
+        
+        // 1b. Proses NIP Dosen
+        $nipInput = $validated['dosen_nip'] ?? [];
+        $nipClean = array_values(array_filter($nipInput, fn($v) => !empty($v)));
+        $validated['dosen_nip'] = json_encode($nipClean);
 
         // 2. Proses Mahasiswa
         // Kita simpan ke DUA key: 'mahasiswa' DAN 'mahasiswa_terlibat'.
@@ -160,6 +169,11 @@ class PengabdianMasyarakatController extends Controller
         
         $validated['mahasiswa'] = $mahasiswaJson;           // Untuk kolom 'mahasiswa'
         $validated['mahasiswa_terlibat'] = $mahasiswaJson;  // Untuk kolom 'mahasiswa_terlibat' (legacy support)
+        
+        // 2b. Proses NIM Mahasiswa
+        $nimInput = $validated['mahasiswa_nim'] ?? [];
+        $nimClean = array_values(array_filter($nimInput, fn($v) => !empty($v)));
+        $validated['mahasiswa_nim'] = json_encode($nimClean);
 
         // Handle file uploads
         if ($request->hasFile('file_proposal')) {
@@ -241,10 +255,10 @@ class PengabdianMasyarakatController extends Controller
             'judul' => 'required|string|max:500',
             'deskripsi' => 'nullable|string', 
             'abstrak'   => 'nullable|string',
-            'lokasi' => 'required|string|max:255',
+            'skema' => 'required|string|max:255',
             'mitra' => 'required|string|max:255',
             'jumlah_peserta' => 'required|integer|min:1',
-            'tahun_akademik' => 'required|string|max:20',
+            'tahun' => 'required|string|max:20',
             'semester' => 'required|string',
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
@@ -254,10 +268,14 @@ class PengabdianMasyarakatController extends Controller
             // Validasi Anggota
             'anggota' => 'nullable|array',
             'anggota.*' => 'nullable|string|max:255',
+            'dosen_nip' => 'nullable|array',
+            'dosen_nip.*' => 'nullable|string|max:50',
             
             // Validasi Mahasiswa
             'mahasiswa' => 'nullable|array',
             'mahasiswa.*' => 'nullable|string|max:255',
+            'mahasiswa_nim' => 'nullable|array',
+            'mahasiswa_nim.*' => 'nullable|string|max:50',
             
             'status' => 'required|string',
             'file_proposal' => 'nullable|file|mimes:pdf|max:10240',
@@ -281,6 +299,11 @@ class PengabdianMasyarakatController extends Controller
         $anggotaInput = $validated['anggota'] ?? [];
         $anggotaClean = array_values(array_filter($anggotaInput, fn($v) => !empty($v)));
         $validated['anggota'] = json_encode($anggotaClean);
+        
+        // 1b. Proses NIP Dosen
+        $nipInput = $validated['dosen_nip'] ?? [];
+        $nipClean = array_values(array_filter($nipInput, fn($v) => !empty($v)));
+        $validated['dosen_nip'] = json_encode($nipClean);
 
         // 2. Proses Mahasiswa
         // Simpan ke dua key untuk keamanan kompatibilitas
@@ -290,6 +313,11 @@ class PengabdianMasyarakatController extends Controller
         
         $validated['mahasiswa'] = $mahasiswaJson;
         $validated['mahasiswa_terlibat'] = $mahasiswaJson;
+        
+        // 2b. Proses NIM Mahasiswa
+        $nimInput = $validated['mahasiswa_nim'] ?? [];
+        $nimClean = array_values(array_filter($nimInput, fn($v) => !empty($v)));
+        $validated['mahasiswa_nim'] = json_encode($nimClean);
 
         // Handle file uploads
         if ($request->hasFile('file_proposal')) {
@@ -394,72 +422,98 @@ class PengabdianMasyarakatController extends Controller
     }
 
     /**
-     * Download proposal file (Admin/Kaprodi only)
+     * Download/Preview proposal file
      */
     public function downloadProposal(PengabdianMasyarakat $pengma)
     {
         /** @var User|null $user */
         $user = Auth::user();
-        if (!($user && $user->canReviewTriDharma())) {
-            abort(403, 'Unauthorized action.');
-        }
-
+        
+        // Admin/Kaprodi can download, others can only preview
+        $canDownload = $user && $user->canReviewTriDharma();
+        
         if (!$pengma->file_proposal || !Storage::disk('public')->exists($pengma->file_proposal)) {
             abort(404, 'File not found.');
         }
 
+        $filePath = Storage::disk('public')->path($pengma->file_proposal);
         $filename = basename($pengma->file_proposal);
-        // Remove timestamp prefix
         $originalName = preg_replace('/^\d+_/', '', $filename);
         
-        $filePath = Storage::disk('public')->path($pengma->file_proposal);
-        
-        return Response::download($filePath, $originalName);
+        // If admin/kaprodi, force download. Otherwise, inline preview
+        if ($canDownload) {
+            return Response::download($filePath, $originalName);
+        } else {
+            return Response::file($filePath, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . $originalName . '"'
+            ]);
+        }
     }
 
     /**
-     * Download laporan file (Admin/Kaprodi only)
+     * Download/Preview laporan file
      */
     public function downloadLaporan(PengabdianMasyarakat $pengma)
     {
         /** @var User|null $user */
         $user = Auth::user();
-        if (!($user && $user->canReviewTriDharma())) {
-            abort(403, 'Unauthorized action.');
-        }
-
+        
+        // Admin/Kaprodi can download, others can only preview
+        $canDownload = $user && $user->canReviewTriDharma();
+        
         if (!$pengma->file_laporan || !Storage::disk('public')->exists($pengma->file_laporan)) {
             abort(404, 'File not found.');
         }
 
+        $filePath = Storage::disk('public')->path($pengma->file_laporan);
         $filename = basename($pengma->file_laporan);
         $originalName = preg_replace('/^\d+_/', '', $filename);
         
-        $filePath = Storage::disk('public')->path($pengma->file_laporan);
-        
-        return Response::download($filePath, $originalName);
+        // If admin/kaprodi, force download. Otherwise, inline preview
+        if ($canDownload) {
+            return Response::download($filePath, $originalName);
+        } else {
+            return Response::file($filePath, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . $originalName . '"'
+            ]);
+        }
     }
 
     /**
-     * Download dokumentasi file (Admin/Kaprodi only)
+     * Download/Preview dokumentasi file
      */
     public function downloadDokumentasi(PengabdianMasyarakat $pengma)
     {
         /** @var User|null $user */
         $user = Auth::user();
-        if (!($user && $user->canReviewTriDharma())) {
-            abort(403, 'Unauthorized action.');
-        }
-
+        
+        // Admin/Kaprodi can download, others can only preview
+        $canDownload = $user && $user->canReviewTriDharma();
+        
         if (!$pengma->file_dokumentasi || !Storage::disk('public')->exists($pengma->file_dokumentasi)) {
             abort(404, 'File not found.');
         }
 
+        $filePath = Storage::disk('public')->path($pengma->file_dokumentasi);
         $filename = basename($pengma->file_dokumentasi);
         $originalName = preg_replace('/^\d+_/', '', $filename);
+        $mimeType = mime_content_type($filePath);
         
-        $filePath = Storage::disk('public')->path($pengma->file_dokumentasi);
-        
-        return Response::download($filePath, $originalName);
+        // If admin/kaprodi, force download. Otherwise, inline preview for supported types
+        if ($canDownload) {
+            return Response::download($filePath, $originalName);
+        } else {
+            // For images and PDFs, show inline. For others, download
+            if (str_starts_with($mimeType, 'image/') || $mimeType === 'application/pdf') {
+                return Response::file($filePath, [
+                    'Content-Type' => $mimeType,
+                    'Content-Disposition' => 'inline; filename="' . $originalName . '"'
+                ]);
+            } else {
+                return Response::download($filePath, $originalName);
+            }
+        }
     }
 }

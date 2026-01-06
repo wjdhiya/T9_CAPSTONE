@@ -19,11 +19,11 @@ class PengabdianMasyarakat extends Model
         'jenis',
         'sumber_dana',
         'dana',
-        'tahun_akademik',
+        'tahun',
         'semester',
         'tanggal_mulai',
         'tanggal_selesai',
-        'lokasi',
+        'skema',
         'mitra',
         'jumlah_peserta',
         'status',
@@ -31,7 +31,9 @@ class PengabdianMasyarakat extends Model
         'file_laporan',
         'file_dokumentasi',
         'anggota',
+        'dosen_nip',
         'mahasiswa_terlibat',
+        'mahasiswa_nim',
         'catatan',
         'status_verifikasi',
         'catatan_verifikasi',
@@ -41,7 +43,9 @@ class PengabdianMasyarakat extends Model
 
     protected $casts = [
         'anggota' => 'array',
+        'dosen_nip' => 'array',
         'mahasiswa_terlibat' => 'array',
+        'mahasiswa_nim' => 'array',
         'dana' => 'decimal:2',
         'tanggal_mulai' => 'date',
         'tanggal_selesai' => 'date',
@@ -72,7 +76,7 @@ class PengabdianMasyarakat extends Model
 
     public function scopeByYear($query, $year)
     {
-        return $query->where('tahun_akademik', 'like', "%$year%");
+        return $query->where('tahun', 'like', "%$year%");
     }
 
     public function scopeBySemester($query, $semester)
@@ -80,11 +84,11 @@ class PengabdianMasyarakat extends Model
         return $query->where('semester', $semester);
     }
 
-    public function scopeRentangTahunAkademik($query, int $startYear)
+    public function scopeRentangTahun($query, int $startYear)
     {
         return $query->where(function ($q) use ($startYear) {
             for ($year = $startYear; $year <= now()->year; $year++) {
-                $q->orWhere('tahun_akademik', 'like', $year . '%');
+                $q->orWhere('tahun', 'like', $year . '%');
             }
         });
     }

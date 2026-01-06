@@ -25,7 +25,7 @@ class Publikasi extends Model
         'volume',
         'nomor',
         'halaman',
-        'tahun_akademik',
+        'tahun',
         'semester',
         'tanggal_terbit',
         'quartile',
@@ -78,7 +78,7 @@ class Publikasi extends Model
 
     public function scopeByYear($query, $year)
     {
-        return $query->where('tahun_akademik', 'like', "%$year%");
+        return $query->where('tahun', 'like', "%$year%");
     }
 
     public function scopeBySemester($query, $semester)
@@ -91,11 +91,11 @@ class Publikasi extends Model
         return $query->where('indexing', $indexing);
     }
 
-    public function scopeRentangTahunAkademik($query, int $startYear)
+    public function scopeRentangTahun($query, int $startYear)
     {
         return $query->where(function ($q) use ($startYear) {
             for ($year = $startYear; $year <= now()->year; $year++) {
-                $q->orWhere('tahun_akademik', 'like', $year . '%');
+                $q->orWhere('tahun', 'like', $year . '%');
             }
         });
     }

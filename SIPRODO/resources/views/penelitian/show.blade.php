@@ -44,8 +44,8 @@
 
                     <div class="grid grid-cols-3 gap-4 mb-4">
                         <div>
-                            <p class="text-sm text-gray-600">Tahun Akademik</p>
-                            <p class="font-semibold">{{ $penelitian->tahun_akademik }}</p>
+                            <p class="text-sm text-gray-600">Tahun</p>
+                            <p class="font-semibold">{{ $penelitian->tahun }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-gray-600">Semester</p>
@@ -153,6 +153,16 @@
                         </div>
                         @endif
                     </div>
+                    
+                    {{-- Pesan jika tidak ada file --}}
+                    @if(!$penelitian->file_proposal && !$penelitian->file_laporan)
+                    <div class="text-center py-8">
+                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                            <i class="fas fa-folder-open text-gray-400 text-2xl"></i>
+                        </div>
+                        <p class="text-gray-500 text-sm">Tidak ada file yang terinput</p>
+                    </div>
+                    @endif
                 </div>
             </div>
 

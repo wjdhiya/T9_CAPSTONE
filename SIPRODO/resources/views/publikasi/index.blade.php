@@ -159,7 +159,7 @@
                                     {{-- Kolom Penulis dengan Fallback --}}
                                     <td class="px-6 py-4">
                                         <p class="text-sm text-gray-700">
-                                            {{ !empty($item->penulis) ? Str::limit($item->penulis, 30) : ($item->user->name ?? '-') }}
+                                            {{ !empty($item->penulis) ? Str::limit(implode(', ', (array) $item->penulis), 30) : ($item->user->name ?? '-') }}
                                         </p>
                                     </td>
                                     
@@ -196,7 +196,7 @@
                                     
                                     {{-- Kolom Tahun --}}
                                     <td class="px-6 py-4">
-                                        <p class="text-sm text-gray-700">{{ $item->tahun_akademik }}</p>
+                                        <p class="text-sm text-gray-700">{{ $item->tahun }}</p>
                                     </td>
                                     
                                     {{-- Kolom Status --}}
@@ -217,7 +217,7 @@
                                         @endphp
                                         {!! $statusBadge !!}
                                     </td>
-                                    
+
                                     {{-- Kolom Aksi --}}
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <a href="{{ route('publikasi.show', $item->id) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Lihat</a>

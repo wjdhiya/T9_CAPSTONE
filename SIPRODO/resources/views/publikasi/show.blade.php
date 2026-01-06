@@ -29,34 +29,15 @@
                     </div>
                 </div>
 
-                {{-- Logic Pemrosesan Penulis --}}
-                @php
-                    $processList = function($data) {
-                        if (empty($data)) return [];
-                        if (is_string($data)) {
-                            // Coba decode JSON, jika gagal anggap CSV
-                            $decoded = json_decode($data, true);
-                            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                                return $decoded;
-                            }
-                            return array_map('trim', explode(',', $data));
-                        }
-                        if (is_array($data)) return $data;
-                        return [];
-                    };
-
-                    $daftarPenulis = $processList($publikasi->penulis);
-                @endphp
-
                 {{-- Penulis Section --}}
                 <div class="mb-8">
                     <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">Penulis</h4>
                     <div class="rounded-lg p-4 border border-gray-100">
                         <ul class="space-y-2">
-                            @forelse($daftarPenulis as $penulis)
+                            @forelse($publikasi->penulis as $penulis)
                                 @if(!empty($penulis))
                                     <li class="flex items-center text-gray-700 bg-white p-2 rounded shadow-sm border border-gray-100">
-                                        <i class="fas fa-user-edit text-green-400 mr-2 text-xs"></i> 
+                                        <i class="fas fa-user-edit text-green-400 mr-2 text-xs"></i>
                                         <span class="font-medium">{{ $penulis }}</span>
                                     </li>
                                 @endif

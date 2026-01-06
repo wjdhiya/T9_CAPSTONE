@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\User;
+use App\Casts\SafeArray;
 
 class Publikasi extends Model
 {
@@ -43,8 +44,8 @@ class Publikasi extends Model
     ];
 
     protected $casts = [
-        'penulis' => 'array',
-        'mahasiswa_terlibat' => 'array',
+        'penulis' => SafeArray::class,
+        'mahasiswa_terlibat' => SafeArray::class,
         'tanggal_terbit' => 'date',
         'verified_at' => 'datetime',
     ];

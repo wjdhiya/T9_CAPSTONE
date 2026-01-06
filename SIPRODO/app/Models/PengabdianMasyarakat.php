@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Casts\SafeArray;
 
 class PengabdianMasyarakat extends Model
 {
@@ -16,9 +17,9 @@ class PengabdianMasyarakat extends Model
         'user_id',
         'judul_pkm',
         'deskripsi',
-        'jenis',
+        'jenis_hibah',
         'sumber_dana',
-        'dana',
+        'anggaran',
         'tahun',
         'semester',
         'tanggal_mulai',
@@ -30,23 +31,27 @@ class PengabdianMasyarakat extends Model
         'file_proposal',
         'file_laporan',
         'file_dokumentasi',
-        'anggota',
+        'tim_abdimas',
         'dosen_nip',
-        'mahasiswa_terlibat',
+        'anggota_mahasiswa',
         'mahasiswa_nim',
         'catatan',
         'status_verifikasi',
         'catatan_verifikasi',
         'verified_by',
         'verified_at',
+        'sdg',
+        'kesesuaian_roadmap_kk',
+        'tipe_pendanaan',
+        'status_kegiatan',
     ];
 
     protected $casts = [
-        'anggota' => 'array',
-        'dosen_nip' => 'array',
-        'mahasiswa_terlibat' => 'array',
-        'mahasiswa_nim' => 'array',
-        'dana' => 'decimal:2',
+        'tim_abdimas' => SafeArray::class,
+        'dosen_nip' => SafeArray::class,
+        'anggota_mahasiswa' => SafeArray::class,
+        'mahasiswa_nim' => SafeArray::class,
+        'anggaran' => 'decimal:2',
         'tanggal_mulai' => 'date',
         'tanggal_selesai' => 'date',
         'verified_at' => 'datetime',

@@ -50,7 +50,23 @@
                         </div>
                         <div>
                             <p class="text-xs text-gray-500 uppercase font-semibold">Jenis Hibah</p>
-                            <p class="font-medium text-gray-900">{{ ucfirst($pengabdianMasyarakat->jenis) }}</p>
+                            <p class="font-medium text-gray-900">{{ ucfirst($pengabdianMasyarakat->jenis_hibah) }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase font-semibold">SDG</p>
+                            <p class="font-medium text-gray-900">{{ $pengabdianMasyarakat->sdg ?? '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase font-semibold">Kesesuaian Roadmap KK</p>
+                            <p class="font-medium text-gray-900">{{ $pengabdianMasyarakat->kesesuaian_roadmap_kk ?? '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase font-semibold">Tipe Pendanaan</p>
+                            <p class="font-medium text-gray-900">{{ $pengabdianMasyarakat->tipe_pendanaan ?? '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase font-semibold">Status Kegiatan</p>
+                            <p class="font-medium text-gray-900">{{ $pengabdianMasyarakat->status_kegiatan ?? '-' }}</p>
                         </div>
                     </div>
                     <div class="space-y-4">
@@ -64,7 +80,11 @@
                         </div>
                         <div>
                             <p class="text-xs text-gray-500 uppercase font-semibold">Sumber Dana</p>
-                            <p class="font-medium text-gray-900">{{ $pengabdianMasyarakat->sumber_dana ?? 'Mandiri' }} @if($pengabdianMasyarakat->dana) (Rp {{ number_format($pengabdianMasyarakat->dana, 0, ',', '.') }}) @endif</p>
+                            <p class="font-medium text-gray-900">{{ $pengabdianMasyarakat->sumber_dana ?? 'Mandiri' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase font-semibold">Anggaran</p>
+                            <p class="font-medium text-gray-900">@if($pengabdianMasyarakat->anggaran) Rp {{ number_format($pengabdianMasyarakat->anggaran, 0, ',', '.') }} @else - @endif</p>
                         </div>
                     </div>
                 </div>
@@ -85,9 +105,9 @@
                         return [];
                     };
 
-                    $anggotaDosen = $processList($pengabdianMasyarakat->anggota);
+                    $anggotaDosen = $processList($pengabdianMasyarakat->tim_abdimas);
                     $dosenNip = $processList($pengabdianMasyarakat->dosen_nip);
-                    $anggotaMahasiswa = $processList($pengabdianMasyarakat->mahasiswa ?? $pengabdianMasyarakat->mahasiswa_terlibat);
+                    $anggotaMahasiswa = $processList($pengabdianMasyarakat->anggota_mahasiswa ?? $pengabdianMasyarakat->mahasiswa);
                     $mahasiswaNim = $processList($pengabdianMasyarakat->mahasiswa_nim);
                 @endphp
 
@@ -128,7 +148,7 @@
                             <div class="flex items-center mb-3">
                                 <div class="flex items-center justify-center mr-3">
                                 </div>
-                                <h5 class="font-bold text-gray-900">Mahasiswa</h5>
+                                <h5 class="font-bold text-gray-900">Anggota Mahasiswa</h5>
                             </div>
                             <ul class="space-y-2">
                                 @forelse($anggotaMahasiswa as $index => $mahasiswa)

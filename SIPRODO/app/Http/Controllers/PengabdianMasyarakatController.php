@@ -97,21 +97,25 @@ class PengabdianMasyarakatController extends Controller
             'deskripsi' => 'nullable|string',
             'abstrak'   => 'nullable|string',
 
-            'jenis' => 'required|string|in:internal,eksternal,mandiri',
+            'jenis_hibah' => 'required|string|in:internal,eksternal,mandiri',
             'skema' => 'required|string|max:255',
             'mitra' => 'required|string|max:255',
             'jumlah_peserta' => 'required|integer|min:1',
             'tahun' => 'required|string|max:20',
-            'semester' => 'required|string', 
-            
+            'semester' => 'required|string',
+            'sdg' => 'nullable|string|max:255',
+            'kesesuaian_roadmap_kk' => 'nullable|string|max:255',
+            'tipe_pendanaan' => 'nullable|string|max:255',
+            'status_kegiatan' => 'nullable|string|max:255',
+
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
-            'dana' => 'nullable|numeric|min:0',
+            'anggaran' => 'nullable|numeric|min:0',
             'sumber_dana' => 'nullable|string|max:255',
             
             // Validasi Anggota (Dosen)
-            'anggota' => 'nullable|array',
-            'anggota.*' => 'nullable|string|max:255',
+            'tim_abdimas' => 'nullable|array',
+            'tim_abdimas.*' => 'nullable|string|max:255',
             'dosen_nip' => 'nullable|array',
             'dosen_nip.*' => 'nullable|string|max:50',
             
@@ -150,11 +154,11 @@ class PengabdianMasyarakatController extends Controller
         $validated['status_verifikasi'] = 'pending';
 
         // --- PERBAIKAN PENTING DI SINI ---
-        
+
         // 1. Proses Anggota (Dosen)
-        $anggotaInput = $validated['anggota'] ?? [];
-        $anggotaClean = array_values(array_filter($anggotaInput, fn($v) => !empty($v)));
-        $validated['anggota'] = json_encode($anggotaClean);
+        $timAbdimInput = $validated['tim_abdimas'] ?? [];
+        $timAbdimClean = array_values(array_filter($timAbdimInput, fn($v) => !empty($v)));
+        $validated['tim_abdimas'] = json_encode($timAbdimClean);
         
         // 1b. Proses NIP Dosen
         $nipInput = $validated['dosen_nip'] ?? [];
@@ -169,7 +173,7 @@ class PengabdianMasyarakatController extends Controller
         $mahasiswaJson  = json_encode($mahasiswaClean);
         
         $validated['mahasiswa'] = $mahasiswaJson;           // Untuk kolom 'mahasiswa'
-        $validated['mahasiswa_terlibat'] = $mahasiswaJson;  // Untuk kolom 'mahasiswa_terlibat' (legacy support)
+        $validated['anggota_mahasiswa'] = $mahasiswaJson;  // Untuk kolom 'anggota_mahasiswa'
         
         // 2b. Proses NIM Mahasiswa
         $nimInput = $validated['mahasiswa_nim'] ?? [];
@@ -256,20 +260,24 @@ class PengabdianMasyarakatController extends Controller
             'judul_pkm' => 'required|string|max:500',
             'deskripsi' => 'nullable|string',
             'abstrak'   => 'nullable|string',
-            'jenis' => 'required|string|in:internal,eksternal,mandiri',
+            'jenis_hibah' => 'required|string|in:internal,eksternal,mandiri',
             'skema' => 'required|string|max:255',
             'mitra' => 'required|string|max:255',
             'jumlah_peserta' => 'required|integer|min:1',
             'tahun' => 'required|string|max:20',
             'semester' => 'required|string',
+            'sdg' => 'nullable|string|max:255',
+            'kesesuaian_roadmap_kk' => 'nullable|string|max:255',
+            'tipe_pendanaan' => 'nullable|string|max:255',
+            'status_kegiatan' => 'nullable|string|max:255',
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
-            'dana' => 'nullable|numeric|min:0',
+            'anggaran' => 'nullable|numeric|min:0',
             'sumber_dana' => 'nullable|string|max:255',
             
             // Validasi Anggota
-            'anggota' => 'nullable|array',
-            'anggota.*' => 'nullable|string|max:255',
+            'tim_abdimas' => 'nullable|array',
+            'tim_abdimas.*' => 'nullable|string|max:255',
             'dosen_nip' => 'nullable|array',
             'dosen_nip.*' => 'nullable|string|max:50',
             
@@ -291,16 +299,16 @@ class PengabdianMasyarakatController extends Controller
             $validated['abstrak'] = $validated['deskripsi'];
         }
         unset($validated['deskripsi']);
-        
+
         $validated['semester'] = strtolower($validated['semester']);
         $validated['status'] = strtolower($validated['status']);
 
         // --- PERBAIKAN PENTING DI SINI ---
 
         // 1. Proses Anggota (Dosen)
-        $anggotaInput = $validated['anggota'] ?? [];
-        $anggotaClean = array_values(array_filter($anggotaInput, fn($v) => !empty($v)));
-        $validated['anggota'] = json_encode($anggotaClean);
+        $timAbdimInput = $validated['tim_abdimas'] ?? [];
+        $timAbdimClean = array_values(array_filter($timAbdimInput, fn($v) => !empty($v)));
+        $validated['tim_abdimas'] = json_encode($timAbdimClean);
         
         // 1b. Proses NIP Dosen
         $nipInput = $validated['dosen_nip'] ?? [];
@@ -312,9 +320,9 @@ class PengabdianMasyarakatController extends Controller
         $mahasiswaInput = $validated['mahasiswa'] ?? [];
         $mahasiswaClean = array_values(array_filter($mahasiswaInput, fn($v) => !empty($v)));
         $mahasiswaJson  = json_encode($mahasiswaClean);
-        
+
         $validated['mahasiswa'] = $mahasiswaJson;
-        $validated['mahasiswa_terlibat'] = $mahasiswaJson;
+        $validated['anggota_mahasiswa'] = $mahasiswaJson;
         
         // 2b. Proses NIM Mahasiswa
         $nimInput = $validated['mahasiswa_nim'] ?? [];

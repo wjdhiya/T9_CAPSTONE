@@ -132,11 +132,11 @@
                     <div class="space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
-                                <label for="dana" class="block text-sm font-medium text-gray-700 mb-2">Nominal Dana (Rp)</label>
-                                <input type="number" id="dana" name="dana" value="{{ old('dana', $penelitian->dana ?? '') }}" min="0"
+                                <label for="anggaran" class="block text-sm font-medium text-gray-700 mb-2">Anggaran (Rp)</label>
+                                <input type="number" id="anggaran" name="anggaran" value="{{ old('anggaran', $penelitian->anggaran ?? '') }}" min="0"
                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
                                        placeholder="0">
-                                @error('dana')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                                @error('anggaran')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
 
                             <div>

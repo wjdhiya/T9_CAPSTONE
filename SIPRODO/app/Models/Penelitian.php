@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Casts\SafeArray;
 
 class Penelitian extends Model
 {
@@ -18,7 +19,7 @@ class Penelitian extends Model
         'abstrak',
         'jenis',
         'sumber_dana',
-        'dana',
+        'anggaran',
         'tahun',
         'semester',
         'tanggal_mulai',
@@ -36,8 +37,8 @@ class Penelitian extends Model
     ];
 
     protected $casts = [
-        'anggota' => 'array',
-        'mahasiswa_terlibat' => 'array',
+        'anggota' => SafeArray::class,
+        'mahasiswa_terlibat' => SafeArray::class,
         'dana' => 'decimal:2',
         'tanggal_mulai' => 'date',
         'tanggal_selesai' => 'date',

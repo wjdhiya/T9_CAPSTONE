@@ -4,8 +4,8 @@
     // --- LOGIKA PERSIAPAN DATA DOSEN (NAMA & NIP) ---
     $dosenList = [];
     // 1. Cek Old Input (validasi error)
-    if (old('anggota')) {
-        $oldNames = old('anggota', []);
+    if (old('tim_abdimas')) {
+        $oldNames = old('tim_abdimas', []);
         $oldNips = old('dosen_nip', []);
         foreach($oldNames as $index => $name) {
             $dosenList[] = [
@@ -15,8 +15,8 @@
         }
     } 
     // 2. Cek Data Database (Edit Mode)
-    elseif (isset($pengabdianMasyarakat) && $pengabdianMasyarakat->anggota) {
-        $decoded = json_decode($pengabdianMasyarakat->anggota, true);
+    elseif (isset($pengabdianMasyarakat) && $pengabdianMasyarakat->tim_abdimas) {
+        $decoded = json_decode($pengabdianMasyarakat->tim_abdimas, true);
         if (is_array($decoded)) {
             foreach($decoded as $item) {
                 // Handle jika format lama (string) atau baru (object)
@@ -46,8 +46,8 @@
         }
     }
     // 2. Cek Data Database
-    elseif (isset($pengabdianMasyarakat) && $pengabdianMasyarakat->mahasiswa) {
-        $decodedMhs = json_decode($pengabdianMasyarakat->mahasiswa, true);
+    elseif (isset($pengabdianMasyarakat) && ($pengabdianMasyarakat->anggota_mahasiswa ?? $pengabdianMasyarakat->mahasiswa)) {
+        $decodedMhs = json_decode($pengabdianMasyarakat->anggota_mahasiswa ?? $pengabdianMasyarakat->mahasiswa, true);
         if (is_array($decodedMhs)) {
             foreach($decodedMhs as $item) {
                 if (is_string($item)) {
@@ -131,15 +131,49 @@
                         </div>
 
                         <div>
-                            <label for="jenis" class="block text-sm font-medium text-gray-700 mb-2">Jenis Hibah <span class="text-red-600">*</span></label>
-                            <select id="jenis" name="jenis" required
+                            <label for="jenis_hibah" class="block text-sm font-medium text-gray-700 mb-2">Jenis Hibah <span class="text-red-600">*</span></label>
+                            <select id="jenis_hibah" name="jenis_hibah" required
                                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all bg-white">
                                 <option value="">Pilih Jenis</option>
-                                <option value="internal" {{ old('jenis') == 'internal' ? 'selected' : '' }}>Internal</option>
-                                <option value="eksternal" {{ old('jenis') == 'eksternal' ? 'selected' : '' }}>Eksternal</option>
-                                <option value="mandiri" {{ old('jenis') == 'mandiri' ? 'selected' : '' }}>Mandiri</option>
+                                <option value="internal" {{ old('jenis_hibah') == 'internal' ? 'selected' : '' }}>Internal</option>
+                                <option value="eksternal" {{ old('jenis_hibah') == 'eksternal' ? 'selected' : '' }}>Eksternal</option>
+                                <option value="mandiri" {{ old('jenis_hibah') == 'mandiri' ? 'selected' : '' }}>Mandiri</option>
                             </select>
-                            @error('jenis')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                            @error('jenis_hibah')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label for="sdg" class="block text-sm font-medium text-gray-700 mb-2">SDG</label>
+                                <input type="text" id="sdg" name="sdg" value="{{ old('sdg', $pengabdianMasyarakat->sdg ?? '') }}"
+                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
+                                       placeholder="Masukkan SDG">
+                                @error('sdg')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                            </div>
+
+                            <div>
+                                <label for="kesesuaian_roadmap_kk" class="block text-sm font-medium text-gray-700 mb-2">Kesesuaian Roadmap KK</label>
+                                <input type="text" id="kesesuaian_roadmap_kk" name="kesesuaian_roadmap_kk" value="{{ old('kesesuaian_roadmap_kk', $pengabdianMasyarakat->kesesuaian_roadmap_kk ?? '') }}"
+                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
+                                       placeholder="Masukkan Kesesuaian Roadmap KK">
+                                @error('kesesuaian_roadmap_kk')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                            </div>
+
+                            <div>
+                                <label for="tipe_pendanaan" class="block text-sm font-medium text-gray-700 mb-2">Tipe Pendanaan</label>
+                                <input type="text" id="tipe_pendanaan" name="tipe_pendanaan" value="{{ old('tipe_pendanaan', $pengabdianMasyarakat->tipe_pendanaan ?? '') }}"
+                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
+                                       placeholder="Masukkan Tipe Pendanaan">
+                                @error('tipe_pendanaan')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                            </div>
+
+                            <div>
+                                <label for="status_kegiatan" class="block text-sm font-medium text-gray-700 mb-2">Status Kegiatan</label>
+                                <input type="text" id="status_kegiatan" name="status_kegiatan" value="{{ old('status_kegiatan', $pengabdianMasyarakat->status_kegiatan ?? '') }}"
+                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
+                                       placeholder="Masukkan Status Kegiatan">
+                                @error('status_kegiatan')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -203,11 +237,11 @@
                     <div class="space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
-                                <label for="dana" class="block text-sm font-medium text-gray-700 mb-2">Nominal Dana (Rp)</label>
-                                <input type="number" id="dana" name="dana" value="{{ old('dana', $pengabdianMasyarakat->dana ?? '') }}"
+                                <label for="anggaran" class="block text-sm font-medium text-gray-700 mb-2">Anggaran (Rp)</label>
+                                <input type="number" id="anggaran" name="anggaran" value="{{ old('anggaran', $pengabdianMasyarakat->anggaran ?? '') }}"
                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
                                        placeholder="0">
-                                @error('dana')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                                @error('anggaran')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
 
                             <div>
@@ -249,7 +283,7 @@
                                     <div class="flex flex-col md:flex-row gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200 items-end hover:border-blue-200 transition-colors">
                                         <div class="flex-1 w-full">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Nama Dosen</label>
-                                            <input type="text" name="anggota[]" x-model="dosen.nama"
+                                            <input type="text" name="tim_abdimas[]" x-model="dosen.nama"
                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-telkom-blue focus:border-telkom-blue text-sm"
                                                    placeholder="Nama Lengkap Dosen">
                                         </div>
@@ -282,12 +316,12 @@
                             </div>
                         </div>
 
-                        {{-- Bagian Mahasiswa --}}
+                        {{-- Bagian Anggota --}}
                         <div>
                             <div class="flex items-center justify-between mb-3">
-                                <label class="block text-sm font-bold text-gray-800">Mahasiswa Terlibat</label>
+                                <label class="block text-sm font-bold text-gray-800">Anggota Mahasiswa</label>
                                 <button type="button" @click="addMahasiswa()" class="text-sm text-telkom-blue hover:text-blue-700 font-medium flex items-center">
-                                    <i class="fas fa-plus-circle mr-1"></i> Tambah Mahasiswa
+                                    <i class="fas fa-plus-circle mr-1"></i> Tambah Anggota
                                 </button>
                             </div>
                             
@@ -295,16 +329,16 @@
                                 <template x-for="(mhs, index) in mahasiswaItems" :key="'mhs-'+index">
                                     <div class="flex flex-col md:flex-row gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200 items-end hover:border-blue-200 transition-colors">
                                         <div class="flex-1 w-full">
-                                            <label class="block text-xs font-medium text-gray-500 mb-1">Nama Mahasiswa</label>
+                                            <label class="block text-xs font-medium text-gray-500 mb-1">Nama Anggota</label>
                                             <input type="text" name="mahasiswa[]" x-model="mhs.nama"
                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-telkom-blue focus:border-telkom-blue text-sm"
-                                                   placeholder="Nama Lengkap Mahasiswa">
+                                                   placeholder="Nama Lengkap Anggota">
                                         </div>
                                         <div class="w-full md:w-1/3">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">NIM</label>
                                             <input type="text" name="mahasiswa_nim[]" x-model="mhs.nim"
                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-telkom-blue focus:border-telkom-blue text-sm"
-                                                   placeholder="NIM Mahasiswa">
+                                                   placeholder="NIM Anggota">
                                         </div>
                                         <div class="w-auto">
                                             <button type="button"

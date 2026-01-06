@@ -278,7 +278,13 @@ class TriDharmaImportController extends Controller
 
     private function buildPayload(string $type, array $assoc, int $userId): array
     {
-        $judul = trim((string)($assoc['judul'] ?? ''));
+        $judulKey = match ($type) {
+            'penelitian' => 'judul_penelitian',
+            'publikasi' => 'judul_publikasi',
+            'pengmas' => 'judul_pkm',
+            default => 'judul',
+        };
+        $judul = trim((string)($assoc[$judulKey] ?? $assoc['judul'] ?? ''));
         $tahun = trim((string)($assoc['tahun'] ?? ''));
         $semester = strtolower(trim((string)($assoc['semester'] ?? '')));
 
@@ -294,7 +300,7 @@ class TriDharmaImportController extends Controller
 
         $base = [
             'user_id' => $userId,
-            'judul' => $judul,
+            $judulKey => $judul,
             'tahun' => (int) $tahun,
             'semester' => $semester,
             'status_verifikasi' => 'pending',
@@ -318,12 +324,12 @@ class TriDharmaImportController extends Controller
                 'abstrak' => $assoc['abstrak'] ?? null,
                 'jenis' => $jenis,
                 'sumber_dana' => $assoc['sumber_dana'] ?? null,
-                'dana' => $this->toDecimal($assoc['dana'] ?? null),
+                'anggaran' => $this->toDecimal($assoc['anggaran'] ?? $assoc['dana'] ?? null),
                 'tanggal_mulai' => $this->toDate($assoc['tanggal_mulai'] ?? null),
                 'tanggal_selesai' => $this->toDate($assoc['tanggal_selesai'] ?? null),
                 'status' => $status,
                 'anggota' => $this->toJsonArray($assoc['anggota'] ?? null),
-                'mahasiswa_terlibat' => $this->toJsonArray($assoc['mahasiswa_terlibat'] ?? null),
+                'anggota_mahasiswa' => $this->toJsonArray($assoc['anggota_mahasiswa'] ?? $assoc['mahasiswa_terlibat'] ?? null),
                 'catatan' => $assoc['catatan'] ?? null,
             ]);
         }
@@ -382,17 +388,17 @@ class TriDharmaImportController extends Controller
 
             return array_merge($base, [
                 'deskripsi' => $assoc['deskripsi'] ?? $assoc['abstrak'] ?? null,
-                'jenis' => $jenis,
+                'jenis_hibah' => $jenis,
                 'sumber_dana' => $assoc['sumber_dana'] ?? null,
-                'dana' => $this->toDecimal($assoc['dana'] ?? null),
+                'anggaran' => $this->toDecimal($assoc['anggaran'] ?? $assoc['dana'] ?? null),
                 'tanggal_mulai' => $this->toDate($assoc['tanggal_mulai'] ?? null),
                 'tanggal_selesai' => $this->toDate($assoc['tanggal_selesai'] ?? null),
-                'lokasi' => $assoc['lokasi'] ?? null,
+                'skema' => $assoc['skema'] ?? $assoc['lokasi'] ?? null,
                 'mitra' => $assoc['mitra'] ?? null,
                 'jumlah_peserta' => $this->toInt($assoc['jumlah_peserta'] ?? null),
                 'status' => $status,
-                'anggota' => $this->toJsonArray($assoc['anggota'] ?? null),
-                'mahasiswa_terlibat' => $this->toJsonArray($assoc['mahasiswa_terlibat'] ?? null),
+                'tim_abdimas' => $this->toJsonArray($assoc['tim_abdimas'] ?? $assoc['anggota'] ?? null),
+                'anggota_mahasiswa' => $this->toJsonArray($assoc['anggota_mahasiswa'] ?? $assoc['mahasiswa_terlibat'] ?? null),
                 'catatan' => $assoc['catatan'] ?? null,
             ]);
         }
@@ -480,9 +486,9 @@ class TriDharmaImportController extends Controller
     private function uniqueBy(string $type): array
     {
         return match ($type) {
-            'penelitian' => ['user_id', 'judul', 'tahun', 'semester'],
-            'publikasi' => ['user_id', 'judul', 'jenis', 'tahun', 'semester'],
-            'pengmas' => ['user_id', 'judul', 'tahun', 'semester'],
+            'penelitian' => ['user_id', 'judul_penelitian', 'tahun', 'semester'],
+            'publikasi' => ['user_id', 'judul_publikasi', 'jenis', 'tahun', 'semester'],
+            'pengmas' => ['user_id', 'judul_pkm', 'tahun', 'semester'],
             default => ['user_id', 'judul', 'tahun', 'semester'],
         };
     }

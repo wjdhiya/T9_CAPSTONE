@@ -45,9 +45,9 @@ class ReportController extends Controller
         $stats = [];
 
         // Penelitian statistics - handle tahun akademik kosong
-        $penelitianQuery = $tahun ? 
+        $penelitianQuery = $tahun ?
             Penelitian::where('tahun', 'like', $tahun . '%') :
-            Penelitian::rentangTahunAkademik(2022);
+            Penelitian::rentangTahun(2022);
         
         if ($semester) {
             $penelitianQuery->where('semester', $semester);
@@ -169,11 +169,11 @@ class ReportController extends Controller
                 foreach ($query->get() as $item) {
                     fputcsv($file, [
                         $item->judul_penelitian,
-                        $item->user->name,
+                        $item->user ? $item->user->name : 'N/A',
                         $item->jenis,
                         $item->tahun,
                         $item->semester,
-                        $item->dana,
+                        $item->anggaran,
                         $item->status,
                         $item->status_verifikasi,
                     ]);
@@ -199,7 +199,7 @@ class ReportController extends Controller
                 foreach ($query->get() as $item) {
                     fputcsv($file, [
                         $item->judul_publikasi,
-                        $item->penulis,
+                        implode(', ', $this->parseArrayField($item->getAttributes()['penulis'] ?? $item->penulis)),
                         $item->jenis,
                         $item->penerbit,
                         $item->tanggal_terbit,
@@ -214,7 +214,7 @@ class ReportController extends Controller
             if ($jenis === 'all' || $jenis === 'pengmas') {
                 // Pengmas header
                 fputcsv($file, ['LAPORAN PENGABDIAN MASYARAKAT']);
-                fputcsv($file, ['Judul', 'Dosen', 'Skema', 'Mitra', 'Peserta', 'Tahun', 'Semester', 'Status', 'Verifikasi']);
+                fputcsv($file, ['Judul', 'Dosen', 'Skema', 'Mitra', 'Peserta', 'Tahun', 'Semester', 'Jenis Hibah', 'Tim Abdimas', 'Dosen NIP', 'Anggota Mahasiswa', 'Mahasiswa NIM', 'Sumber Dana', 'Tipe Pendanaan', 'Anggaran', 'SDG', 'Kesesuaian Roadmap KK', 'Status Kegiatan', 'Status', 'Verifikasi']);
 
                 // Handle tahun akademik kosong (semua periode)
                 $query = PengabdianMasyarakat::with('user');
@@ -230,12 +230,23 @@ class ReportController extends Controller
                 foreach ($query->get() as $item) {
                     fputcsv($file, [
                         $item->judul_pkm,
-                        $item->user->name,
+                        $item->user ? $item->user->name : 'N/A',
                         $item->skema,
                         $item->mitra,
                         $item->jumlah_peserta,
                         $item->tahun,
                         $item->semester,
+                        $item->jenis_hibah,
+                        implode(', ', $this->parseArrayField($item->getAttributes()['tim_abdimas'] ?? $item->tim_abdimas)),
+                        implode(', ', $this->parseArrayField($item->getAttributes()['dosen_nip'] ?? $item->dosen_nip)),
+                        implode(', ', $this->parseArrayField($item->getAttributes()['anggota_mahasiswa'] ?? $item->anggota_mahasiswa)),
+                        implode(', ', $this->parseArrayField($item->getAttributes()['mahasiswa_nim'] ?? $item->mahasiswa_nim)),
+                        $item->sumber_dana,
+                        $item->tipe_pendanaan,
+                        $item->anggaran,
+                        $item->sdg,
+                        $item->kesesuaian_roadmap_kk,
+                        $item->status_kegiatan,
                         $item->status,
                         $item->status_verifikasi,
                     ]);
@@ -352,6 +363,35 @@ class ReportController extends Controller
         $years = range(date('Y'), date('Y') - 5);
 
         return view('reports.productivity', compact('productivity', 'years', 'tahun'));
+    }
+
+    /**
+     * Parse array field from database value
+     */
+    private function parseArrayField($value)
+    {
+        try {
+            if (is_array($value)) {
+                return $value;
+            }
+
+            if (is_null($value) || $value === '') {
+                return [];
+            }
+
+            $decoded = json_decode($value, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                return $decoded;
+            }
+
+            if (is_string($value)) {
+                return array_map('trim', explode(',', $value));
+            }
+
+            return [];
+        } catch (\Exception $e) {
+            return [];
+        }
     }
 }
 

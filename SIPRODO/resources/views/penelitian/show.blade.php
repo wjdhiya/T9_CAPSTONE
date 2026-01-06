@@ -79,12 +79,12 @@
                         </div>
                     </div>
 
-                    @if($penelitian->dana || $penelitian->sumber_dana)
+                    @if($penelitian->anggaran || $penelitian->sumber_dana)
                     <div class="grid grid-cols-2 gap-4 mb-4">
-                        @if($penelitian->dana)
+                        @if($penelitian->anggaran)
                         <div>
-                            <p class="text-sm text-gray-600">Dana</p>
-                            <p class="font-semibold">Rp {{ number_format($penelitian->dana, 0, ',', '.') }}</p>
+                            <p class="text-sm text-gray-600">Anggaran</p>
+                            <p class="font-semibold">Rp {{ number_format($penelitian->anggaran, 0, ',', '.') }}</p>
                         </div>
                         @endif
                         @if($penelitian->sumber_dana)

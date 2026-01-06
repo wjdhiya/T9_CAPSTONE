@@ -63,6 +63,11 @@ class DashboardController extends Controller
         // Role-specific dashboard widgets
         $topLecturers = [];
         $verificationQueue = [];
+        $kaprodiNotifications = [
+            'penelitian' => 0,
+            'publikasi' => 0,
+            'pengmas' => 0,
+        ];
         
         if ($isKaprodi) {
             // Get top 5 most active lecturers in current semester
@@ -83,6 +88,26 @@ class DashboardController extends Controller
                     $user->total_activities = $user->total_penelitian + $user->total_publikasi + $user->total_pengmas;
                     return $user;
                 });
+
+            // Count newly verified items since Kaprodi last viewed each category
+            $sincePenelitian = $user->kaprodi_seen_penelitian_at ?? $user->created_at;
+            $sincePublikasi = $user->kaprodi_seen_publikasi_at ?? $user->created_at;
+            $sincePengmas = $user->kaprodi_seen_pengmas_at ?? $user->created_at;
+
+            $kaprodiNotifications['penelitian'] = Penelitian::where('status_verifikasi', 'verified')
+                ->whereNotNull('verified_at')
+                ->where('verified_at', '>', $sincePenelitian)
+                ->count();
+
+            $kaprodiNotifications['publikasi'] = Publikasi::where('status_verifikasi', 'verified')
+                ->whereNotNull('verified_at')
+                ->where('verified_at', '>', $sincePublikasi)
+                ->count();
+
+            $kaprodiNotifications['pengmas'] = PengabdianMasyarakat::where('status_verifikasi', 'verified')
+                ->whereNotNull('verified_at')
+                ->where('verified_at', '>', $sincePengmas)
+                ->count();
         }
 
         if ($isAdmin) {
@@ -94,7 +119,7 @@ class DashboardController extends Controller
             ];
         }
 
-        return view('dashboard', compact('stats', 'topLecturers', 'verificationQueue', 'isAdmin', 'isKaprodi', 'currentSemester', 'currentYear'));
+        return view('dashboard', compact('stats', 'topLecturers', 'verificationQueue', 'kaprodiNotifications', 'isAdmin', 'isKaprodi', 'currentSemester', 'currentYear'));
     }
 
     public function kaprodiSummary(Request $request)

@@ -21,6 +21,10 @@ class PublikasiController extends Controller
         // Filter by user role
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
+
+        if ($user && $user->isKaprodi()) {
+            \App\Models\User::where('id', $user->id)->update(['kaprodi_seen_publikasi_at' => now()]);
+        }
         if ($user && $user->isDosen()) {
             $query->where('user_id', $user->id);
         }

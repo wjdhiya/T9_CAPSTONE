@@ -21,6 +21,10 @@ class PengabdianMasyarakatController extends Controller
         // Filter by user role
         /** @var User|null $user */
         $user = Auth::user();
+
+        if ($user && $user->isKaprodi()) {
+            User::where('id', $user->id)->update(['kaprodi_seen_pengmas_at' => now()]);
+        }
         if ($user && $user->isDosen()) {
             $query->where('user_id', $user->id);
         }

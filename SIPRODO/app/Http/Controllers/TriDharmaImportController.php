@@ -19,6 +19,497 @@ class TriDharmaImportController extends Controller
         return view('imports.index');
     }
 
+    private function isIdentifierHeader(string $h): bool
+    {
+        if ($h === '') {
+            return false;
+        }
+
+        if (in_array($h, ['user_id', 'id_user', 'dosen_id', 'id_dosen'], true)) {
+            return true;
+        }
+
+        if (str_contains($h, 'nidn')) {
+            return true;
+        }
+
+        if (str_contains($h, 'nip') && !str_contains($h, 'mahasiswa')) {
+            return true;
+        }
+
+        if (str_contains($h, 'email')) {
+            return true;
+        }
+
+        if (str_contains($h, 'nama_dosen') || $h === 'nama' || $h === 'name' || $h === 'dosen') {
+            return true;
+        }
+
+        // For Pengmas imports, identity might be embedded inside team/member columns
+        if (str_contains($h, 'tim_abdimas') || (str_contains($h, 'tim') && str_contains($h, 'abdimas'))) {
+            return true;
+        }
+        if (str_contains($h, 'anggota_abdimas') || (str_contains($h, 'anggota') && str_contains($h, 'abdimas'))) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function isRowEmpty(array $row): bool
+    {
+        foreach ($row as $cell) {
+            if ($cell === null) {
+                continue;
+            }
+            if (trim((string) $cell) !== '') {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private function normalizeNidn($value): string
+    {
+        if ($value === null) {
+            return '';
+        }
+
+        // Excel can provide numeric/scientific notation; normalize to digit string.
+        // IMPORTANT: if the value is a numeric-looking string, do NOT cast to float
+        // because it can drop leading zeros.
+        if (is_int($value) || is_float($value)) {
+            $float = (float) $value;
+            // Avoid scientific notation in string casting.
+            $s = number_format($float, 0, '', '');
+            return trim($s);
+        }
+
+        $s = trim((string) $value);
+        if ($s === '') {
+            return '';
+        }
+
+        // Handle scientific notation represented as string.
+        if (preg_match('/^[0-9]+(\.[0-9]+)?[eE][\+\-]?[0-9]+$/', $s)) {
+            $s = number_format((float) $s, 0, '', '');
+            return trim($s);
+        }
+
+        // Strip common separators but keep digits.
+        $clean = str_replace([' ', "\t", "\n", "\r", '-', '.', '/', '\\', ',', ';', ':', '(', ')'], '', $s);
+
+        // If it becomes pure digits, keep it (preserves leading zeros)
+        if (preg_match('/^[0-9]+$/', $clean)) {
+            return $clean;
+        }
+
+        // Otherwise, extract the FIRST reasonably-long digit sequence
+        if (preg_match('/([0-9]{6,})/', $s, $m)) {
+            return $m[1];
+        }
+
+        return '';
+    }
+
+    private function normalizeNip($value): string
+    {
+        return $this->normalizeNidn($value);
+    }
+
+    private function extractNipsFromText($value): array
+    {
+        $s = trim((string) ($value ?? ''));
+        if ($s === '') {
+            return [];
+        }
+
+        $matches = [];
+        preg_match_all('/\bNIP\s*[:=]?\s*([0-9]{6,})\b/i', $s, $matches);
+        $nips = $matches[1] ?? [];
+
+        // Fallback: any long digit sequence (if no explicit NIP label)
+        if (count($nips) === 0) {
+            preg_match_all('/\b([0-9]{8,})\b/', $s, $matches);
+            $nips = $matches[1] ?? [];
+        }
+
+        $nips = array_values(array_unique(array_filter(array_map(fn($x) => $this->normalizeNip($x), $nips), fn($x) => $x !== '')));
+        return $nips;
+    }
+
+    private function extractNimsFromText($value): array
+    {
+        $s = trim((string) ($value ?? ''));
+        if ($s === '') {
+            return [];
+        }
+
+        $matches = [];
+        preg_match_all('/\bNIM\s*[:=]?\s*([0-9]{6,})\b/i', $s, $matches);
+        $nims = $matches[1] ?? [];
+
+        // Fallback: any long digit sequence (common NIM length 8+)
+        if (count($nims) === 0) {
+            preg_match_all('/\b([0-9]{8,})\b/', $s, $matches);
+            $nims = $matches[1] ?? [];
+        }
+
+        $nims = array_values(array_unique(array_filter(array_map(fn($x) => $this->normalizeNidn($x), $nims), fn($x) => $x !== '')));
+        return $nims;
+    }
+
+    private function detectCsvDelimiter($uploadedFile): string
+    {
+        try {
+            $ext = strtolower((string) ($uploadedFile?->getClientOriginalExtension() ?? ''));
+            if (!in_array($ext, ['csv', 'txt'], true)) {
+                return ',';
+            }
+
+            $path = $uploadedFile->getRealPath();
+            if (!$path) {
+                return ',';
+            }
+
+            $fh = @fopen($path, 'rb');
+            if (!$fh) {
+                return ',';
+            }
+
+            $line = fgets($fh);
+            fclose($fh);
+            $sample = $line !== false ? $line : '';
+
+            $counts = [
+                ',' => substr_count($sample, ','),
+                ';' => substr_count($sample, ';'),
+                "\t" => substr_count($sample, "\t"),
+            ];
+
+            arsort($counts);
+            $best = array_key_first($counts);
+            if (($counts[$best] ?? 0) <= 0) {
+                return ',';
+            }
+            return $best;
+        } catch (\Throwable $e) {
+            return ',';
+        }
+    }
+
+    private function findUserByNumericFromRow(array $row, string $column, array &$cache): ?User
+    {
+        foreach ($row as $cell) {
+            $candidate = $this->normalizeNidn($cell);
+            if ($candidate === '') {
+                continue;
+            }
+            if (!preg_match('/^[0-9]{6,}$/', $candidate)) {
+                continue;
+            }
+
+            $cacheKey = $column . ':' . $candidate;
+            if (array_key_exists($cacheKey, $cache)) {
+                return $cache[$cacheKey];
+            }
+
+            $user = User::where($column, $candidate)->where('role', User::ROLE_DOSEN)->first();
+            if (!$user && $column === 'nip') {
+                $alt = ltrim($candidate, '0');
+                if ($alt !== '' && $alt !== $candidate) {
+                    $user = User::where($column, $alt)->where('role', User::ROLE_DOSEN)->first();
+                }
+
+                // Some datasets store lecturer number under NIDN instead of NIP
+                if (!$user) {
+                    $user = User::where('nidn', $candidate)->where('role', User::ROLE_DOSEN)->first();
+                }
+                if (!$user && isset($alt) && $alt !== '' && $alt !== $candidate) {
+                    $user = User::where('nidn', $alt)->where('role', User::ROLE_DOSEN)->first();
+                }
+            }
+            $cache[$cacheKey] = $user;
+            if ($user) {
+                return $user;
+            }
+        }
+        return null;
+    }
+
+    private function resolveUserForImport(array $assoc, array $row, array &$cache, array &$debug = []): ?User
+    {
+        $debug = [];
+
+        // 1) user_id
+        $userIdRaw = $this->getVal($assoc, ['user_id', 'id_user', 'dosen_id', 'id_dosen'], '');
+        if ($userIdRaw !== '' && is_numeric($userIdRaw)) {
+            $debug[] = 'user_id=' . (string) $userIdRaw;
+            $cacheKey = 'id:' . (string) $userIdRaw;
+            if (array_key_exists($cacheKey, $cache)) {
+                return $cache[$cacheKey];
+            }
+            $user = User::where('id', (int) $userIdRaw)->where('role', User::ROLE_DOSEN)->first();
+            $cache[$cacheKey] = $user;
+            if ($user) {
+                return $user;
+            }
+        }
+
+        // 2) nidn
+        $nidn = $this->normalizeNidn($this->getVal($assoc, ['nidn', 'nidn_dosen', 'nidn_pengusul', 'nidn_ketua', 'nomor_induk_dosen_nasional'], ''));
+        if ($nidn === '') {
+            foreach (array_keys($assoc) as $k) {
+                if (strpos($k, 'nidn') !== false) {
+                    $nidn = $this->normalizeNidn($assoc[$k] ?? null);
+                    if ($nidn !== '') {
+                        break;
+                    }
+                }
+            }
+        }
+        if ($nidn !== '') {
+            $debug[] = 'nidn=' . $nidn;
+            $cacheKey = 'nidn:' . $nidn;
+            if (array_key_exists($cacheKey, $cache)) {
+                return $cache[$cacheKey];
+            }
+            $user = User::where('nidn', $nidn)->where('role', User::ROLE_DOSEN)->first();
+            $cache[$cacheKey] = $user;
+            if ($user) {
+                return $user;
+            }
+        }
+
+        // 3) nip
+        $nip = $this->normalizeNip($this->getVal($assoc, ['nip', 'dosen_nip', 'nip_dosen', 'nip_ketua'], ''));
+        if ($nip === '') {
+            foreach (array_keys($assoc) as $k) {
+                if (strpos($k, 'nip') !== false && strpos($k, 'mahasiswa') === false) {
+                    $nip = $this->normalizeNip($assoc[$k] ?? null);
+                    if ($nip !== '') {
+                        break;
+                    }
+                }
+            }
+        }
+        if ($nip !== '') {
+            $debug[] = 'nip=' . $nip;
+            $cacheKey = 'nip:' . $nip;
+            if (array_key_exists($cacheKey, $cache)) {
+                return $cache[$cacheKey];
+            }
+            $user = User::where('nip', $nip)->where('role', User::ROLE_DOSEN)->first();
+            if (!$user) {
+                $alt = ltrim($nip, '0');
+                if ($alt !== '' && $alt !== $nip) {
+                    $user = User::where('nip', $alt)->where('role', User::ROLE_DOSEN)->first();
+                }
+            }
+
+            if (!$user) {
+                // Fallback: try matching against nidn
+                $user = User::where('nidn', $nip)->where('role', User::ROLE_DOSEN)->first();
+                if (!$user) {
+                    $alt = ltrim($nip, '0');
+                    if ($alt !== '' && $alt !== $nip) {
+                        $user = User::where('nidn', $alt)->where('role', User::ROLE_DOSEN)->first();
+                    }
+                }
+            }
+            $cache[$cacheKey] = $user;
+            if ($user) {
+                return $user;
+            }
+        }
+
+        // 4) email
+        $email = strtolower(trim((string) $this->getVal($assoc, ['email', 'email_dosen', 'email_ketua'], '')));
+        if ($email === '') {
+            foreach (array_keys($assoc) as $k) {
+                if (strpos($k, 'email') !== false) {
+                    $email = strtolower(trim((string)($assoc[$k] ?? '')));
+                    if ($email !== '') {
+                        break;
+                    }
+                }
+            }
+        }
+        if ($email !== '') {
+            $debug[] = 'email=' . $email;
+            $cacheKey = 'email:' . $email;
+            if (array_key_exists($cacheKey, $cache)) {
+                return $cache[$cacheKey];
+            }
+            $user = User::where('email', $email)->where('role', User::ROLE_DOSEN)->first();
+            $cache[$cacheKey] = $user;
+            if ($user) {
+                return $user;
+            }
+        }
+
+        // 5) name (only if unique match)
+        $name = trim((string) $this->getVal($assoc, ['nama_dosen', 'nama', 'dosen', 'name'], ''));
+        if ($name !== '') {
+            $debug[] = 'name=' . $name;
+            $cacheKey = 'name:' . strtolower($name);
+            if (array_key_exists($cacheKey, $cache)) {
+                return $cache[$cacheKey];
+            }
+            $matches = User::where('role', User::ROLE_DOSEN)->whereRaw('LOWER(name) = ?', [strtolower($name)])->limit(2)->get();
+            $user = ($matches->count() === 1) ? $matches->first() : null;
+            $cache[$cacheKey] = $user;
+            if ($user) {
+                return $user;
+            }
+        }
+
+        // 6) Pengmas: infer dosen from NIP inside tim abdimas field (often no explicit nip/user_id column)
+        $timAbdimas = null;
+        foreach ($assoc as $k => $v) {
+            $kk = (string) $k;
+            if ((str_contains($kk, 'tim') && str_contains($kk, 'abdimas')) || str_contains($kk, 'tim_abdimas')) {
+                $timAbdimas = $v;
+                break;
+            }
+        }
+        if ($timAbdimas !== null && trim((string) $timAbdimas) !== '') {
+            $nips = $this->extractNipsFromText($timAbdimas);
+            if (count($nips) > 0) {
+                $debug[] = 'tim_abdimas_nip=' . implode(',', array_slice($nips, 0, 3));
+                foreach ($nips as $nipFromTeam) {
+                    $cacheKey = 'nip:' . $nipFromTeam;
+                    if (array_key_exists($cacheKey, $cache)) {
+                        $u = $cache[$cacheKey];
+                        if ($u) {
+                            return $u;
+                        }
+                        continue;
+                    }
+                    $u = User::where('nip', $nipFromTeam)->where('role', User::ROLE_DOSEN)->first();
+                    if (!$u) {
+                        $alt = ltrim($nipFromTeam, '0');
+                        if ($alt !== '' && $alt !== $nipFromTeam) {
+                            $u = User::where('nip', $alt)->where('role', User::ROLE_DOSEN)->first();
+                        }
+                    }
+
+                    if (!$u) {
+                        // Fallback: try matching against nidn
+                        $u = User::where('nidn', $nipFromTeam)->where('role', User::ROLE_DOSEN)->first();
+                        if (!$u) {
+                            $alt = ltrim($nipFromTeam, '0');
+                            if ($alt !== '' && $alt !== $nipFromTeam) {
+                                $u = User::where('nidn', $alt)->where('role', User::ROLE_DOSEN)->first();
+                            }
+                        }
+                    }
+                    $cache[$cacheKey] = $u;
+                    if ($u) {
+                        return $u;
+                    }
+                }
+            }
+        }
+
+        // Fallback: scan row cells for NIDN / NIP that exists
+        $user = $this->findUserByNumericFromRow($row, 'nidn', $cache);
+        if ($user) {
+            $debug[] = 'row_scan=nidn';
+            return $user;
+        }
+        $user = $this->findUserByNumericFromRow($row, 'nip', $cache);
+        if ($user) {
+            $debug[] = 'row_scan=nip';
+        }
+        return $user;
+    }
+
+    private function findUserByNidnFromRow(array $row, array &$nidnUserCache): ?User
+    {
+        // Backward compatible wrapper
+        return $this->findUserByNumericFromRow($row, 'nidn', $nidnUserCache);
+    }
+
+    private function findHeaderRowIndex(array $rowsRaw): int
+    {
+        $maxScan = min(20, count($rowsRaw));
+        $identifierAliases = [
+            'user_id', 'id_user', 'dosen_id', 'id_dosen',
+            'nidn', 'nidn_dosen', 'nidn_pengusul', 'nidn_ketua', 'nomor_induk_dosen_nasional',
+            'nip', 'dosen_nip', 'nip_dosen', 'nip_ketua',
+            'email', 'email_dosen', 'email_ketua',
+            'nama_dosen', 'nama', 'name',
+        ];
+        $judulAliases = ['judul', 'judul_penelitian', 'judul_publikasi', 'judul_pkm', 'judul_pengabdian', 'nama_kegiatan'];
+
+        for ($i = 0; $i < $maxScan; $i++) {
+            $row = $rowsRaw[$i] ?? [];
+            if (!is_array($row) || $this->isRowEmpty($row)) {
+                continue;
+            }
+
+            $headers = array_map(fn($h) => $this->normalizeHeader($h), $row);
+
+            // Must have an identifier column header (user_id / nidn / nip / email)
+            $idIndexes = [];
+            foreach ($headers as $idx => $h) {
+                if ($h !== '' && (in_array($h, $identifierAliases, true) || $this->isIdentifierHeader($h))) {
+                    $idIndexes[] = $idx;
+                }
+            }
+            if (count($idIndexes) === 0) {
+                continue;
+            }
+
+            // Header row should have several columns (avoid picking a title row that only contains 'NIDN')
+            $nonEmptyHeaderCount = count(array_filter($headers, fn($h) => $h !== ''));
+            if ($nonEmptyHeaderCount < 3) {
+                continue;
+            }
+
+            // Prefer rows that also contain a 'judul' key, but still validate against data below.
+            $hasJudul = false;
+            foreach ($judulAliases as $k) {
+                if (in_array($k, $headers, true)) {
+                    $hasJudul = true;
+                    break;
+                }
+            }
+
+            // Validate: under one of the identifier columns, at least one of the next rows contains a value.
+            $maxLookahead = min($i + 6, count($rowsRaw));
+            $looksValid = false;
+            for ($j = $i + 1; $j < $maxLookahead; $j++) {
+                $dataRow = $rowsRaw[$j] ?? [];
+                if (!is_array($dataRow) || $this->isRowEmpty($dataRow)) {
+                    continue;
+                }
+                foreach ($idIndexes as $col) {
+                    $val = $dataRow[$col] ?? null;
+                    if ($val === null) {
+                        continue;
+                    }
+                    if (trim((string) $val) !== '') {
+                        $looksValid = true;
+                        break 2;
+                    }
+                }
+            }
+
+            if ($looksValid) {
+                return $i;
+            }
+
+            // If it has judul but still failed validation, keep scanning.
+            if ($hasJudul) {
+                continue;
+            }
+        }
+
+        return 0;
+    }
+
     public function importAuto(Request $request)
     {
         /** @var User|null $actor */
@@ -31,13 +522,43 @@ class TriDharmaImportController extends Controller
             'file' => 'required|file|mimes:xlsx,xls,csv,txt|max:20480',
         ]);
 
-        $sheets = Excel::toArray(new RawArrayImport(), $validated['file']);
+        $delimiter = $this->detectCsvDelimiter($request->file('file'));
+        $sheets = Excel::toArray(new RawArrayImport($delimiter), $validated['file']);
         $rowsRaw = $sheets[0] ?? [];
         if (count($rowsRaw) < 2) {
             return back()->with('error', 'File kosong atau tidak memiliki data.');
         }
 
-        $headers = array_map(fn($h) => $this->normalizeHeader($h), array_shift($rowsRaw));
+        $headerIdx = $this->findHeaderRowIndex($rowsRaw);
+        $headersRow = $rowsRaw[$headerIdx] ?? [];
+        $headers = array_map(fn($h) => $this->normalizeHeader($h), $headersRow);
+        $rowsRaw = array_slice($rowsRaw, $headerIdx + 1);
+
+        $identifierAliases = [
+            'user_id', 'id_user', 'dosen_id', 'id_dosen',
+            'nip', 'dosen_nip', 'nip_dosen', 'nip_ketua',
+            'email', 'email_dosen', 'email_ketua',
+            'nidn', 'nidn_dosen', 'nidn_pengusul', 'nidn_ketua', 'nomor_induk_dosen_nasional',
+            'nama_dosen', 'nama', 'name',
+        ];
+        $hasIdentifierHeader = false;
+        foreach ($identifierAliases as $k) {
+            if (in_array($k, $headers, true)) {
+                $hasIdentifierHeader = true;
+                break;
+            }
+        }
+        if (!$hasIdentifierHeader) {
+            foreach ($headers as $h) {
+                if ($this->isIdentifierHeader($h)) {
+                    $hasIdentifierHeader = true;
+                    break;
+                }
+            }
+        }
+        if (!$hasIdentifierHeader) {
+            return back()->with('error', 'Kolom identitas dosen tidak ditemukan pada header file. Gunakan salah satu kolom: user_id / nip / email / nidn.');
+        }
 
         $batches = [
             'penelitian' => [],
@@ -46,19 +567,21 @@ class TriDharmaImportController extends Controller
         ];
         $errors = [];
 
-        foreach ($rowsRaw as $i => $row) {
-            $rowNumber = $i + 2;
-            $assoc = $this->rowToAssoc($headers, $row);
+        $nidnUserCache = [];
 
-            $nidn = trim((string)($assoc['nidn'] ?? ''));
-            if ($nidn === '') {
-                $errors[] = ['row' => $rowNumber, 'message' => 'NIDN wajib diisi'];
+        foreach ($rowsRaw as $i => $row) {
+            if (!is_array($row) || $this->isRowEmpty($row)) {
                 continue;
             }
+            // original (1-indexed) row number in sheet
+            $rowNumber = $headerIdx + 2 + $i;
+            $assoc = $this->rowToAssoc($headers, $row);
 
-            $user = User::where('nidn', $nidn)->where('role', User::ROLE_DOSEN)->first();
+            $debug = [];
+            $user = $this->resolveUserForImport($assoc, $row, $nidnUserCache, $debug);
             if (!$user) {
-                $errors[] = ['row' => $rowNumber, 'message' => "NIDN tidak ditemukan: {$nidn}"];
+                $extra = count($debug) ? (' Detected: ' . implode(', ', array_slice($debug, 0, 4)) . '.') : '';
+                $errors[] = ['row' => $rowNumber, 'message' => 'Identitas dosen tidak ditemukan. Isi salah satu: user_id / nip / email / nidn (dan pastikan dosen terdaftar).' . $extra];
                 continue;
             }
 
@@ -132,42 +655,102 @@ class TriDharmaImportController extends Controller
         /** @var User|null $actor */
         $actor = Auth::user();
         if (!($actor && $actor->isKaprodi())) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk melakukan import.'], 403);
+            }
             abort(403, 'Anda tidak memiliki akses untuk melakukan import.');
         }
 
         $type = strtolower($type);
         if (!in_array($type, ['penelitian', 'publikasi', 'pengmas'], true)) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Tipe import tidak valid.'], 404);
+            }
             abort(404);
         }
 
-        $validated = $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls,csv,txt|max:20480',
-        ]);
+        try {
+            $validated = $request->validate([
+                'file' => 'required|file|mimes:xlsx,xls,csv,txt|max:20480',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'File tidak valid. Pastikan format CSV/XLSX dan ukuran maksimal 20MB.', 'errors' => $e->errors()], 422);
+            }
+            throw $e;
+        }
 
-        $sheets = Excel::toArray(new RawArrayImport(), $validated['file']);
+        try {
+            $delimiter = $this->detectCsvDelimiter($request->file('file'));
+            $sheets = Excel::toArray(new RawArrayImport($delimiter), $validated['file']);
+        } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Gagal membaca file: ' . $e->getMessage()], 422);
+            }
+            return back()->with('error', 'Gagal membaca file: ' . $e->getMessage());
+        }
+
         $rowsRaw = $sheets[0] ?? [];
         if (count($rowsRaw) < 2) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'File kosong atau tidak memiliki data.'], 422);
+            }
             return back()->with('error', 'File kosong atau tidak memiliki data.');
         }
 
-        $headers = array_map(fn($h) => $this->normalizeHeader($h), array_shift($rowsRaw));
+        $headerIdx = $this->findHeaderRowIndex($rowsRaw);
+        $headersRow = $rowsRaw[$headerIdx] ?? [];
+        $headers = array_map(fn($h) => $this->normalizeHeader($h), $headersRow);
+        $rowsRaw = array_slice($rowsRaw, $headerIdx + 1);
+
+        $identifierAliases = [
+            'user_id', 'id_user', 'dosen_id', 'id_dosen',
+            'nip', 'dosen_nip', 'nip_dosen', 'nip_ketua',
+            'email', 'email_dosen', 'email_ketua',
+            'nidn', 'nidn_dosen', 'nidn_pengusul', 'nidn_ketua', 'nomor_induk_dosen_nasional',
+            'nama_dosen', 'nama', 'name',
+        ];
+        $hasIdentifierHeader = false;
+        foreach ($identifierAliases as $k) {
+            if (in_array($k, $headers, true)) {
+                $hasIdentifierHeader = true;
+                break;
+            }
+        }
+        if (!$hasIdentifierHeader) {
+            foreach ($headers as $h) {
+                if ($this->isIdentifierHeader($h)) {
+                    $hasIdentifierHeader = true;
+                    break;
+                }
+            }
+        }
+        if (!$hasIdentifierHeader) {
+            $msg = 'Kolom identitas dosen tidak ditemukan pada header file. Gunakan salah satu kolom: user_id / nip / email / nidn.';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('error', $msg);
+        }
 
         $rows = [];
         $errors = [];
 
-        foreach ($rowsRaw as $i => $row) {
-            $rowNumber = $i + 2;
-            $assoc = $this->rowToAssoc($headers, $row);
+        $nidnUserCache = [];
 
-            $nidn = trim((string)($assoc['nidn'] ?? ''));
-            if ($nidn === '') {
-                $errors[] = ['row' => $rowNumber, 'message' => 'NIDN wajib diisi'];
+        foreach ($rowsRaw as $i => $row) {
+            if (!is_array($row) || $this->isRowEmpty($row)) {
                 continue;
             }
+            // original (1-indexed) row number in sheet
+            $rowNumber = $headerIdx + 2 + $i;
+            $assoc = $this->rowToAssoc($headers, $row);
 
-            $user = User::where('nidn', $nidn)->where('role', User::ROLE_DOSEN)->first();
+            $debug = [];
+            $user = $this->resolveUserForImport($assoc, $row, $nidnUserCache, $debug);
             if (!$user) {
-                $errors[] = ['row' => $rowNumber, 'message' => "NIDN tidak ditemukan: {$nidn}"]; 
+                $extra = count($debug) ? (' Detected: ' . implode(', ', array_slice($debug, 0, 4)) . '.') : '';
+                $errors[] = ['row' => $rowNumber, 'message' => 'Identitas dosen tidak ditemukan. Isi salah satu: user_id / nip / email / nidn (dan pastikan dosen terdaftar).' . $extra];
                 continue;
             }
 
@@ -180,7 +763,19 @@ class TriDharmaImportController extends Controller
         }
 
         if (count($rows) === 0) {
-            return back()->with('error', 'Tidak ada data valid untuk diimport.')->with('import_errors', $errors);
+            $msg = 'Tidak ada data valid untuk diimport.';
+            if (count($errors) > 0) {
+                $firstErrors = array_slice($errors, 0, 5);
+                $errorDetails = array_map(fn($e) => "Baris {$e['row']}: {$e['message']}", $firstErrors);
+                $msg .= ' ' . implode('; ', $errorDetails);
+                if (count($errors) > 5) {
+                    $msg .= ' ... dan ' . (count($errors) - 5) . ' error lainnya.';
+                }
+            }
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg, 'errors' => $errors], 422);
+            }
+            return back()->with('error', $msg)->with('import_errors', $errors);
         }
 
         $uniqueBy = $this->uniqueBy($type);
@@ -204,7 +799,11 @@ class TriDharmaImportController extends Controller
         }
 
         if (count($upsertRows) === 0) {
-            return back()->with('error', 'Semua baris dilewati karena data sudah terverifikasi.')->with('import_errors', $errors);
+            $msg = 'Semua baris dilewati karena data sudah terverifikasi.';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg, 'skipped_verified' => $skippedVerified], 422);
+            }
+            return back()->with('error', $msg)->with('import_errors', $errors);
         }
 
         $model = $this->modelClass($type);
@@ -213,8 +812,21 @@ class TriDharmaImportController extends Controller
         $successCount = count($upsertRows);
         $failedCount = count($errors);
 
+        $msg = "Import {$type} selesai. Berhasil diproses: {$successCount}. Dilewati (verified): {$skippedVerified}. Error: {$failedCount}.";
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $msg,
+                'processed' => $successCount,
+                'skipped_verified' => $skippedVerified,
+                'failed' => $failedCount,
+                'errors' => $errors,
+            ]);
+        }
+
         return back()
-            ->with('success', "Import {$type} selesai. Berhasil diproses: {$successCount}. Dilewati (verified): {$skippedVerified}. Error: {$failedCount}.")
+            ->with('success', $msg)
             ->with('import_errors', $errors);
     }
 
@@ -276,17 +888,43 @@ class TriDharmaImportController extends Controller
         return $assoc;
     }
 
+    private function getVal(array $assoc, array $keys, $default = null)
+    {
+        foreach ($keys as $key) {
+            $val = $assoc[$key] ?? null;
+            if ($val !== null && trim((string)$val) !== '') {
+                return trim((string)$val);
+            }
+        }
+        return $default;
+    }
+
     private function buildPayload(string $type, array $assoc, int $userId): array
     {
+        // Flexible column aliases for judul
+        $judulAliases = match ($type) {
+            'penelitian' => ['judul_penelitian', 'judul', 'title', 'nama_penelitian'],
+            'publikasi' => ['judul_publikasi', 'judul', 'title', 'nama_publikasi'],
+            'pengmas' => ['judul_pkm', 'judul', 'title', 'nama_pkm', 'judul_pengabdian', 'nama_kegiatan'],
+            default => ['judul', 'title'],
+        };
         $judulKey = match ($type) {
             'penelitian' => 'judul_penelitian',
             'publikasi' => 'judul_publikasi',
             'pengmas' => 'judul_pkm',
             default => 'judul',
         };
-        $judul = trim((string)($assoc[$judulKey] ?? $assoc['judul'] ?? ''));
-        $tahun = trim((string)($assoc['tahun'] ?? ''));
-        $semester = strtolower(trim((string)($assoc['semester'] ?? '')));
+
+        $judul = $this->getVal($assoc, $judulAliases, '');
+        $tahun = $this->getVal($assoc, ['tahun', 'tahun_akademik', 'year', 'ta'], '');
+        $semesterRaw = strtolower($this->getVal($assoc, ['semester', 'sem', 'periode'], ''));
+
+        // Normalize semester
+        $semesterMap = [
+            'ganjil' => 'ganjil', 'gasal' => 'ganjil', 'odd' => 'ganjil', '1' => 'ganjil',
+            'genap' => 'genap', 'even' => 'genap', '2' => 'genap',
+        ];
+        $semester = $semesterMap[$semesterRaw] ?? null;
 
         if ($judul === '') {
             throw new \InvalidArgumentException('Judul wajib diisi');
@@ -294,8 +932,8 @@ class TriDharmaImportController extends Controller
         if ($tahun === '' || !is_numeric($tahun)) {
             throw new \InvalidArgumentException('Tahun akademik wajib diisi (angka)');
         }
-        if (!in_array($semester, ['ganjil', 'genap'], true)) {
-            throw new \InvalidArgumentException('Semester harus ganjil atau genap');
+        if ($semester === null) {
+            throw new \InvalidArgumentException("Semester tidak valid: '{$semesterRaw}'. Gunakan: ganjil, genap, 1, atau 2");
         }
 
         $base = [
@@ -310,10 +948,15 @@ class TriDharmaImportController extends Controller
         ];
 
         if ($type === 'penelitian') {
-            $jenis = strtolower(trim((string)($assoc['jenis'] ?? '')));
-            if (!in_array($jenis, ['mandiri', 'hibah_internal', 'hibah_eksternal', 'kerjasama'], true)) {
-                throw new \InvalidArgumentException('Jenis penelitian tidak valid');
-            }
+            $jenis = strtolower($this->getVal($assoc, ['jenis', 'jenis_penelitian', 'type'], 'mandiri'));
+            // Normalize jenis aliases
+            $jenisMap = [
+                'mandiri' => 'mandiri',
+                'hibah_internal' => 'hibah_internal', 'hibah internal' => 'hibah_internal', 'internal' => 'hibah_internal',
+                'hibah_eksternal' => 'hibah_eksternal', 'hibah eksternal' => 'hibah_eksternal', 'eksternal' => 'hibah_eksternal',
+                'kerjasama' => 'kerjasama', 'kerja sama' => 'kerjasama',
+            ];
+            $jenis = $jenisMap[$jenis] ?? 'mandiri';
 
             $status = strtolower(trim((string)($assoc['status'] ?? 'proposal')));
             if (!in_array($status, ['proposal', 'berjalan', 'selesai', 'ditolak'], true)) {
@@ -335,14 +978,21 @@ class TriDharmaImportController extends Controller
         }
 
         if ($type === 'publikasi') {
-            $jenis = strtolower(trim((string)($assoc['jenis'] ?? '')));
-            if (!in_array($jenis, ['jurnal', 'prosiding', 'buku', 'book_chapter', 'paten', 'hki'], true)) {
-                throw new \InvalidArgumentException('Jenis publikasi tidak valid');
-            }
+            $jenis = strtolower($this->getVal($assoc, ['jenis', 'jenis_publikasi', 'type'], 'jurnal'));
+            // Normalize jenis aliases
+            $jenisMap = [
+                'jurnal' => 'jurnal', 'journal' => 'jurnal',
+                'prosiding' => 'prosiding', 'proceeding' => 'prosiding', 'proceedings' => 'prosiding',
+                'buku' => 'buku', 'book' => 'buku',
+                'book_chapter' => 'book_chapter', 'book chapter' => 'book_chapter', 'chapter' => 'book_chapter',
+                'paten' => 'paten', 'patent' => 'paten',
+                'hki' => 'hki',
+            ];
+            $jenis = $jenisMap[$jenis] ?? 'jurnal';
 
-            $namaPublikasi = trim((string)($assoc['nama_publikasi'] ?? $assoc['nama_jurnal'] ?? ''));
+            $namaPublikasi = $this->getVal($assoc, ['nama_publikasi', 'nama_jurnal', 'journal_name', 'publisher'], '');
             if ($namaPublikasi === '') {
-                throw new \InvalidArgumentException('Nama publikasi (nama_publikasi) wajib diisi');
+                $namaPublikasi = $judul; // Use judul as fallback
             }
 
             $indexing = strtolower(trim((string)($assoc['indexing'] ?? '')));
@@ -376,30 +1026,57 @@ class TriDharmaImportController extends Controller
         }
 
         if ($type === 'pengmas') {
-            $jenis = strtolower(trim((string)($assoc['jenis'] ?? '')));
-            if (!in_array($jenis, ['internal', 'eksternal', 'mandiri'], true)) {
-                throw new \InvalidArgumentException('Jenis pengabdian tidak valid');
-            }
+            $jenis = strtolower($this->getVal($assoc, ['jenis', 'jenis_hibah', 'jenis_pengabdian', 'type'], 'mandiri'));
+            // Normalize jenis aliases
+            $jenisMap = [
+                'internal' => 'internal', 'hibah_internal' => 'internal', 'hibah internal' => 'internal',
+                'eksternal' => 'eksternal', 'hibah_eksternal' => 'eksternal', 'hibah eksternal' => 'eksternal',
+                'mandiri' => 'mandiri',
+            ];
+            $jenis = $jenisMap[$jenis] ?? 'mandiri';
 
             $status = strtolower(trim((string)($assoc['status'] ?? 'proposal')));
             if (!in_array($status, ['proposal', 'berjalan', 'selesai', 'ditolak'], true)) {
                 $status = 'proposal';
             }
 
+            $timAbdimasText = $this->getVal($assoc, ['tim_abdimas', 'tim abdimas', 'tim'], null);
+            $anggotaAbdimasText = $this->getVal($assoc, ['anggota_abdimas', 'anggota abdimas', 'anggota_mahasiswa', 'mahasiswa_terlibat'], null);
+            $extractedNips = $this->extractNipsFromText($timAbdimasText);
+            $extractedNims = $this->extractNimsFromText($anggotaAbdimasText);
+
+            $dosenNipJson = $this->toJsonArray($this->getVal($assoc, ['dosen_nip', 'nip'], null));
+            if ($dosenNipJson === null && count($extractedNips) > 0) {
+                $dosenNipJson = json_encode($extractedNips);
+            }
+
+            $mahasiswaNimJson = $this->toJsonArray($this->getVal($assoc, ['mahasiswa_nim', 'nim'], null));
+            if ($mahasiswaNimJson === null && count($extractedNims) > 0) {
+                $mahasiswaNimJson = json_encode($extractedNims);
+            }
+
             return array_merge($base, [
-                'deskripsi' => $assoc['deskripsi'] ?? $assoc['abstrak'] ?? null,
+                'deskripsi' => $this->getVal($assoc, ['deskripsi', 'deskripsi_kegiatan', 'abstrak'], null),
                 'jenis_hibah' => $jenis,
-                'sumber_dana' => $assoc['sumber_dana'] ?? null,
-                'anggaran' => $this->toDecimal($assoc['anggaran'] ?? $assoc['dana'] ?? null),
-                'tanggal_mulai' => $this->toDate($assoc['tanggal_mulai'] ?? null),
-                'tanggal_selesai' => $this->toDate($assoc['tanggal_selesai'] ?? null),
-                'skema' => $assoc['skema'] ?? $assoc['lokasi'] ?? null,
-                'mitra' => $assoc['mitra'] ?? null,
-                'jumlah_peserta' => $this->toInt($assoc['jumlah_peserta'] ?? null),
+                'sumber_dana' => $this->getVal($assoc, ['sumber_dana', 'sumber', 'pendanaan'], null),
+                'anggaran' => $this->toDecimal($this->getVal($assoc, ['anggaran', 'dana'], null)),
+                'tanggal_mulai' => $this->toDate($this->getVal($assoc, ['tanggal_mulai', 'tgl_mulai', 'start_date'], null)),
+                'tanggal_selesai' => $this->toDate($this->getVal($assoc, ['tanggal_selesai', 'tgl_selesai', 'end_date'], null)),
+                'skema' => $this->getVal($assoc, ['skema', 'lokasi'], null),
+                'mitra' => $this->getVal($assoc, ['mitra'], null),
+                'jumlah_peserta' => $this->toInt($this->getVal($assoc, ['jumlah_peserta', 'peserta'], null)),
                 'status' => $status,
-                'tim_abdimas' => $this->toJsonArray($assoc['tim_abdimas'] ?? $assoc['anggota'] ?? null),
-                'anggota_mahasiswa' => $this->toJsonArray($assoc['anggota_mahasiswa'] ?? $assoc['mahasiswa_terlibat'] ?? null),
-                'catatan' => $assoc['catatan'] ?? null,
+                'tim_abdimas' => $this->toJsonArray($timAbdimasText),
+                'dosen_nip' => $dosenNipJson,
+                'anggota_mahasiswa' => $this->toJsonArray($this->getVal($assoc, ['anggota_mahasiswa', 'mahasiswa_terlibat', 'anggota_abdimas', 'anggota abdimas'], null)),
+                'mahasiswa_nim' => $mahasiswaNimJson,
+                'catatan' => $this->getVal($assoc, ['catatan'], null),
+
+                // Optional analytics/extra columns (if provided)
+                'sdg' => $this->getVal($assoc, ['sdg'], null),
+                'kesesuaian_roadmap_kk' => $this->getVal($assoc, ['kesesuaian_roadmap_kk', 'roadmap_kk'], null),
+                'tipe_pendanaan' => $this->getVal($assoc, ['tipe_pendanaan'], null),
+                'status_kegiatan' => $this->getVal($assoc, ['status_kegiatan'], null),
             ]);
         }
 

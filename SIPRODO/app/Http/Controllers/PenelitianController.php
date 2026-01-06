@@ -24,6 +24,10 @@ class PenelitianController extends Controller
         /** @var User|null $user */
         $user = Auth::user();
 
+        if ($user && $user->isKaprodi()) {
+            User::where('id', $user->id)->update(['kaprodi_seen_penelitian_at' => now()]);
+        }
+
         // PERBAIKAN LOGIKA:
         // Batasi query ke user_id hanya jika user adalah Dosen BIASA.
         // Jika user adalah Dosen TAPI juga bisa memverifikasi (Kaprodi/Admin), jangan batasi query.

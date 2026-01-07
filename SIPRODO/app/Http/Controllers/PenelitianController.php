@@ -8,12 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-
-/**
- * @property Filesystem $storage
- */
 
 class PenelitianController extends Controller
 {
@@ -28,17 +25,10 @@ class PenelitianController extends Controller
             User::where('id', $user->id)->update(['kaprodi_seen_penelitian_at' => now()]);
         }
 
-        // PERBAIKAN LOGIKA:
-        // Batasi query ke user_id hanya jika user adalah Dosen BIASA.
-        // Jika user adalah Dosen TAPI juga bisa memverifikasi (Kaprodi/Admin), jangan batasi query.
-        // Kita gunakan !canVerify() atau !canReviewTriDharma() tergantung role Anda, 
-        // di sini saya gunakan !canVerify() agar Konsisten dengan method verify.
         if ($user && $user->isDosen() && !$user->canVerify()) {
             $query->where('user_id', $user->id);
         }
 
-        // PERBAIKAN: Menambahkan pencarian berdasarkan Nama Dosen (User)
-        // Menggunakan 'filled' agar tidak tereksekusi jika search kosong
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -66,9 +56,29 @@ class PenelitianController extends Controller
             $query->where('status_verifikasi', $request->status_verifikasi);
         }
 
-        $penelitian = $query->latest()->paginate(10);
+        $stats = [
+            'total' => Penelitian::count(),
+            'verified' => Penelitian::where('status_verifikasi', 'verified')->count(),
+            'pending' => Penelitian::where('status_verifikasi', 'pending')->count(),
+            'selesai' => Penelitian::where('status', 'selesai')->count(),
+        ];
 
-        return view('penelitian.index', compact('penelitian'));
+        if ($user && $user->isDosen() && !$user->canVerify()) {
+            $stats = [
+                'total' => Penelitian::where('user_id', $user->id)->count(),
+                'verified' => Penelitian::where('user_id', $user->id)->where('status_verifikasi', 'verified')->count(),
+                'pending' => Penelitian::where('user_id', $user->id)->where('status_verifikasi', 'pending')->count(),
+                'selesai' => Penelitian::where('user_id', $user->id)->where('status', 'selesai')->count(),
+            ];
+        }
+
+        if ($request->query('show_all') === '1') {
+            $penelitian = $query->latest()->get();
+        } else {
+            $penelitian = $query->latest()->paginate(10);
+        }
+
+        return view('penelitian.index', compact('penelitian', 'stats'));
     }
 
     public function create()
@@ -90,7 +100,6 @@ class PenelitianController extends Controller
             abort(403, 'Anda tidak memiliki akses untuk menambahkan data.');
         }
 
-
         $validated = $request->validate([
             'judul_penelitian' => 'required|string|max:500',
             'abstrak' => 'nullable|string',
@@ -110,14 +119,9 @@ class PenelitianController extends Controller
             'anggota_peneliti.*.nip' => 'nullable|string',
         ]);
 
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
-
         $validated['user_id'] = Auth::id();
         $validated['status_verifikasi'] = 'pending';
 
-        // Process Anggota Peneliti
         if ($request->has('anggota_peneliti')) {
             $validated['anggota'] = json_encode(array_values($request->anggota_peneliti));
         }
@@ -143,8 +147,9 @@ class PenelitianController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
-        if ($user && $user->isDosen() && $penelitian->user_id !== $user->id) {
-            abort(403, 'Unauthorized action.');
+
+        if ($user && !$user->canReviewTriDharma() && $penelitian->user_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki akses ke penelitian ini.');
         }
 
         $penelitian->load('user', 'verifiedBy', 'publikasi');
@@ -156,11 +161,20 @@ class PenelitianController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
+
+        // 1. Cek Permission Input
         if (!($user && $user->canInputTriDharma())) {
             abort(403, 'Unauthorized action.');
         }
-        if ($user && $penelitian->user_id !== $user->id) {
+
+        // 2. Cek Kepemilikan (FIX: Gunakan != bukan !== agar aman tipe data)
+        if ($user && $penelitian->user_id != $user->id) {
             abort(403, 'Unauthorized action.');
+        }
+
+        // 3. Cek Status Verifikasi (Hanya blokir jika sudah disetujui)
+        if (in_array($penelitian->status_verifikasi, ['verified', 'disetujui'])) {
+            abort(403, 'Data yang sudah diverifikasi tidak dapat diedit.');
         }
 
         return view('penelitian.edit', compact('penelitian'));
@@ -170,11 +184,20 @@ class PenelitianController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
+
+        // 1. Cek Permission Input
         if (!($user && $user->canInputTriDharma())) {
             abort(403, 'Unauthorized action.');
         }
-        if ($user && $penelitian->user_id !== $user->id) {
+
+        // 2. Cek Kepemilikan (FIX: Gunakan != bukan !== agar aman tipe data)
+        if ($user && $penelitian->user_id != $user->id) {
             abort(403, 'Unauthorized action.');
+        }
+
+        // 3. Cek Status Verifikasi (Hanya blokir jika sudah disetujui)
+        if (in_array($penelitian->status_verifikasi, ['verified', 'disetujui'])) {
+            abort(403, 'Data yang sudah diverifikasi tidak dapat diubah.');
         }
 
         $validated = $request->validate([
@@ -185,8 +208,8 @@ class PenelitianController extends Controller
             'anggaran' => 'nullable|numeric|min:0',
             'tahun' => 'required|string|max:20',
             'semester' => 'required|in:ganjil,genap',
-            'tanggal_mulai' => 'nullable|date',
-            'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
+            'tanggal_mulai' => 'required|date',
+            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'status' => 'required|in:proposal,berjalan,selesai,ditolak',
             'file_proposal' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
             'file_laporan' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
@@ -196,13 +219,8 @@ class PenelitianController extends Controller
             'anggota_peneliti.*.nip' => 'nullable|string',
         ]);
 
-        // Process Anggota Peneliti
         if ($request->has('anggota_peneliti')) {
             $validated['anggota'] = json_encode(array_values($request->anggota_peneliti));
-        } else {
-            // If not present (e.g. empty), it might be cleared or just not sent.
-            // Given the view sends empty array or hidden inputs, we should check if we need to explicitly set it to null or empty json.
-            // For now, let's assume if it is sent as array it overwrites.
         }
 
         if ($request->hasFile('file_proposal')) {
@@ -223,28 +241,37 @@ class PenelitianController extends Controller
             $validated['file_laporan'] = $request->file('file_laporan')->storeAs('penelitian/laporan', $safeName, 'public');
         }
 
-        if ($penelitian->status_verifikasi === 'verified') {
+        // Reset verifikasi jika status sebelumnya ditolak, agar bisa direview ulang
+        if ($penelitian->status_verifikasi === 'rejected' || $penelitian->status_verifikasi === 'ditolak') {
             $validated['status_verifikasi'] = 'pending';
             $validated['verified_by'] = null;
             $validated['verified_at'] = null;
-            $validated['catatan_verifikasi'] = null;
         }
 
         $penelitian->update($validated);
 
-        return redirect()->route('penelitian.index')
-            ->with('success', 'Data penelitian berhasil diperbarui.');
+        return redirect()->route('penelitian.index')->with('success', 'Data penelitian berhasil diperbarui.');
     }
 
     public function destroy(Penelitian $penelitian)
     {
         /** @var User|null $user */
         $user = Auth::user();
+
+        // 1. Cek Permission
         if (!($user && $user->canInputTriDharma())) {
             abort(403, 'Unauthorized action.');
         }
-        if ($user && $penelitian->user_id !== $user->id) {
+
+        // 2. Cek Kepemilikan (FIX: Gunakan != bukan !== agar aman tipe data)
+        if ($user && $penelitian->user_id != $user->id) {
             abort(403, 'Unauthorized action.');
+        }
+
+        // 3. Cek Status Verifikasi
+        // Hapus hanya dilarang jika sudah Verified. Pending & Rejected boleh dihapus.
+        if (in_array($penelitian->status_verifikasi, ['verified', 'disetujui'])) {
+            abort(403, 'Data yang sudah diverifikasi tidak dapat dihapus.');
         }
 
         if ($penelitian->file_proposal) {
@@ -256,16 +283,9 @@ class PenelitianController extends Controller
 
         $penelitian->delete();
 
-        return redirect()->route('penelitian.index')
-            ->with('success', 'Data penelitian berhasil dihapus.');
+        return redirect()->route('penelitian.index')->with('success', 'Data penelitian berhasil dihapus.');
     }
 
-    /**
-     * Download proposal file (Admin/Kaprodi only)
-     * * @param Penelitian $penelitian
-     * @return BinaryFileResponse
-     * * @method BinaryFileResponse download(string $path, string|null $name = null, array $headers = [])
-     */
     public function downloadProposal(Penelitian $penelitian)
     {
         /** @var User|null $user */
@@ -279,20 +299,13 @@ class PenelitianController extends Controller
         }
 
         $filename = basename($penelitian->file_proposal);
-        // Remove timestamp prefix (format: timestamp_filename)
         $originalName = preg_replace('/^\d+_/', '', $filename);
 
         $filePath = Storage::disk('public')->path($penelitian->file_proposal);
-        /** @phpstan-ignore-next-line */
+        
         return Response::download($filePath, $originalName);
     }
 
-    /**
-     * Download laporan file (Admin/Kaprodi only)
-     * * @param Penelitian $penelitian
-     * @return BinaryFileResponse
-     * * @method BinaryFileResponse download(string $path, string|null $name = null, array $headers = [])
-     */
     public function downloadLaporan(Penelitian $penelitian)
     {
         /** @var User|null $user */
@@ -306,20 +319,15 @@ class PenelitianController extends Controller
         }
 
         $filename = basename($penelitian->file_laporan);
-        // Remove timestamp prefix (format: timestamp_filename)
         $originalName = preg_replace('/^\d+_/', '', $filename);
 
         $filePath = Storage::disk('public')->path($penelitian->file_laporan);
-        /** @phpstan-ignore-next-line */
+        
         return Response::download($filePath, $originalName);
     }
 
-    /**
-     * Verify penelitian (Admin/Kaprodi only)
-     */
     public function verify(Request $request, Penelitian $penelitian)
     {
-        // Authorization check
         /** @var User|null $user */
         $user = Auth::user();
         if (!($user && $user->canVerify())) {
@@ -340,14 +348,9 @@ class PenelitianController extends Controller
 
         $status = $validated['status_verifikasi'] === 'verified' ? 'diverifikasi' : 'ditolak';
 
-        return redirect()->back()
-            ->with('success', "Penelitian berhasil {$status}.");
+        return redirect()->back()->with('success', "Penelitian berhasil {$status}.");
     }
 
-    /**
-     * Bulk destroy functionality
-     * @param Request $request
-     */
     public function bulkDestroy(Request $request)
     {
         /** @var User|null $user */
@@ -378,10 +381,6 @@ class PenelitianController extends Controller
         return redirect()->route('penelitian.index')->with('success', "{$count} data penelitian berhasil dihapus.");
     }
 
-    /**
-     * Empty table functionality
-     * @param Request $request
-     */
     public function emptyTable(Request $request)
     {
         /** @var User|null $user */
@@ -390,7 +389,6 @@ class PenelitianController extends Controller
             abort(403, 'Anda tidak memiliki akses untuk mengosongkan data.');
         }
 
-        // Delete all files first
         $allPenelitian = Penelitian::all();
         foreach ($allPenelitian as $penelitian) {
             if ($penelitian->file_proposal) {
@@ -401,8 +399,9 @@ class PenelitianController extends Controller
             }
         }
 
-        // Truncate or delete all
+        Schema::disableForeignKeyConstraints();
         Penelitian::truncate();
+        Schema::enableForeignKeyConstraints();
 
         return redirect()->route('penelitian.index')->with('success', 'Semua data penelitian berhasil dihapus.');
     }

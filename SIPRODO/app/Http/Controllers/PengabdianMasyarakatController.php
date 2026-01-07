@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Schema; // Tambahkan ini untuk fix truncate
 
 class PengabdianMasyarakatController extends Controller
 {
@@ -25,7 +26,9 @@ class PengabdianMasyarakatController extends Controller
         if ($user && $user->isKaprodi()) {
             User::where('id', $user->id)->update(['kaprodi_seen_pengmas_at' => now()]);
         }
-        if ($user && $user->isDosen()) {
+
+        // PERBAIKAN: Jika user adalah Dosen BIASA (bukan Admin/Kaprodi), batasi query
+        if ($user && $user->isDosen() && !$user->canVerify()) {
             $query->where('user_id', $user->id);
         }
 
@@ -63,9 +66,32 @@ class PengabdianMasyarakatController extends Controller
             $query->where('status_verifikasi', $request->status_verifikasi);
         }
 
-        $pengmas = $query->latest()->paginate(10);
+        // Tambahan Statistik untuk View Index (Agar konsisten dengan Blade)
+        $stats = [
+            'total' => PengabdianMasyarakat::count(),
+            'verified' => PengabdianMasyarakat::where('status_verifikasi', 'verified')->count(),
+            'pending' => PengabdianMasyarakat::where('status_verifikasi', 'pending')->count(),
+            'selesai' => PengabdianMasyarakat::where('status', 'selesai')->count(),
+        ];
 
-        return view('pengmas.index', compact('pengmas'));
+        // Jika user dibatasi, statistik juga harus dibatasi
+        if ($user && $user->isDosen() && !$user->canVerify()) {
+            $stats = [
+                'total' => PengabdianMasyarakat::where('user_id', $user->id)->count(),
+                'verified' => PengabdianMasyarakat::where('user_id', $user->id)->where('status_verifikasi', 'verified')->count(),
+                'pending' => PengabdianMasyarakat::where('user_id', $user->id)->where('status_verifikasi', 'pending')->count(),
+                'selesai' => PengabdianMasyarakat::where('user_id', $user->id)->where('status', 'selesai')->count(),
+            ];
+        }
+
+        // Support for Show All functionality
+        if ($request->query('show_all') === '1') {
+            $pengmas = $query->latest()->get();
+        } else {
+            $pengmas = $query->latest()->paginate(10);
+        }
+
+        return view('pengmas.index', compact('pengmas', 'stats'));
     }
 
     /**
@@ -96,11 +122,8 @@ class PengabdianMasyarakatController extends Controller
         // 1. VALIDASI
         $validated = $request->validate([
             'judul_pkm' => 'required|string|max:500',
-
-            // Terima input 'deskripsi' atau 'abstrak'
             'deskripsi' => 'nullable|string',
             'abstrak' => 'nullable|string',
-
             'jenis_hibah' => 'required|string|in:internal,eksternal,mandiri',
             'skema' => 'required|string|max:255',
             'mitra' => 'required|string|max:255',
@@ -111,26 +134,19 @@ class PengabdianMasyarakatController extends Controller
             'kesesuaian_roadmap_kk' => 'nullable|string|max:255',
             'tipe_pendanaan' => 'nullable|string|max:255',
             'status_kegiatan' => 'nullable|string|max:255',
-
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'anggaran' => 'nullable|numeric|min:0',
             'sumber_dana' => 'nullable|string|max:255',
-
-            // Validasi Anggota (Dosen)
             'tim_abdimas' => 'nullable|array',
             'tim_abdimas.*' => 'nullable|string|max:255',
             'dosen_nip' => 'nullable|array',
             'dosen_nip.*' => 'nullable|string|max:50',
-
-            // Validasi Mahasiswa (Input form bernama 'mahasiswa')
             'mahasiswa' => 'nullable|array',
             'mahasiswa.*' => 'nullable|string|max:255',
             'mahasiswa_nim' => 'nullable|array',
             'mahasiswa_nim.*' => 'nullable|string|max:50',
-
             'status' => 'required|string',
-
             'file_proposal' => 'nullable|file|mimes:pdf|max:10240',
             'file_laporan' => 'nullable|file|mimes:pdf|max:10240',
             'file_dokumentasi' => 'nullable|file|mimes:pdf,jpg,jpeg,png,zip|max:20480',
@@ -138,53 +154,41 @@ class PengabdianMasyarakatController extends Controller
         ]);
 
         // 2. MAPPING DATA
-
-        // Mapping deskripsi ke abstrak jika diperlukan
         if (isset($validated['deskripsi']) && !isset($validated['abstrak'])) {
             $validated['abstrak'] = $validated['deskripsi'];
         }
         unset($validated['deskripsi']);
 
-        // Default abstrak
         if (empty($validated['abstrak'])) {
             $validated['abstrak'] = '-';
         }
 
-        // Format data
         $validated['semester'] = strtolower($validated['semester']);
         $validated['status'] = strtolower($validated['status']);
-
         $validated['user_id'] = Auth::id();
         $validated['status_verifikasi'] = 'pending';
 
-        // --- PERBAIKAN PENTING DI SINI ---
-
-        // 1. Proses Anggota (Dosen)
+        // PROSES JSON DATA
         $timAbdimInput = $validated['tim_abdimas'] ?? [];
         $timAbdimClean = array_values(array_filter($timAbdimInput, fn($v) => !empty($v)));
         $validated['tim_abdimas'] = json_encode($timAbdimClean);
 
-        // 1b. Proses NIP Dosen
         $nipInput = $validated['dosen_nip'] ?? [];
         $nipClean = array_values(array_filter($nipInput, fn($v) => !empty($v)));
         $validated['dosen_nip'] = json_encode($nipClean);
 
-        // 2. Proses Mahasiswa
-        // Kita simpan ke DUA key: 'mahasiswa' DAN 'mahasiswa_terlibat'.
-        // Ini memastikan data tersimpan terlepas dari nama kolom mana yang dipakai di database/model Anda.
         $mahasiswaInput = $validated['mahasiswa'] ?? [];
         $mahasiswaClean = array_values(array_filter($mahasiswaInput, fn($v) => !empty($v)));
         $mahasiswaJson = json_encode($mahasiswaClean);
 
-        $validated['mahasiswa'] = $mahasiswaJson;           // Untuk kolom 'mahasiswa'
-        $validated['anggota_mahasiswa'] = $mahasiswaJson;  // Untuk kolom 'anggota_mahasiswa'
+        $validated['mahasiswa'] = $mahasiswaJson;
+        $validated['anggota_mahasiswa'] = $mahasiswaJson;
 
-        // 2b. Proses NIM Mahasiswa
         $nimInput = $validated['mahasiswa_nim'] ?? [];
         $nimClean = array_values(array_filter($nimInput, fn($v) => !empty($v)));
         $validated['mahasiswa_nim'] = json_encode($nimClean);
 
-        // Handle file uploads
+        // FILE UPLOAD
         if ($request->hasFile('file_proposal')) {
             $originalName = $request->file('file_proposal')->getClientOriginalName();
             $safeName = time() . '_' . preg_replace('/[^a-zA-Z0-9\._-]/', '_', $originalName);
@@ -216,7 +220,9 @@ class PengabdianMasyarakatController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
-        if ($user && $user->isDosen() && $pengma->user_id !== $user->id) {
+
+        // Admin & Reviewer bisa lihat semua, Dosen hanya miliknya
+        if ($user && !$user->canReviewTriDharma() && $pengma->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses ke pengabdian masyarakat ini.');
         }
 
@@ -234,11 +240,21 @@ class PengabdianMasyarakatController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
+
+        // 1. Cek Permission
         if (!($user && $user->canInputTriDharma())) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit pengabdian masyarakat ini.');
         }
+
+        // 2. Cek Kepemilikan
         if ($user && $pengma->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit pengabdian masyarakat ini.');
+        }
+
+        // 3. Cek Status Verifikasi (Hanya blokir jika sudah disetujui/verified)
+        // Data yang ditolak (rejected) BOLEH diedit untuk revisi
+        if (in_array($pengma->status_verifikasi, ['verified', 'disetujui'])) {
+            abort(403, 'Data yang sudah diverifikasi tidak dapat diedit.');
         }
 
         return view('pengmas.edit', [
@@ -253,11 +269,20 @@ class PengabdianMasyarakatController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
+
+        // 1. Cek Permission
         if (!($user && $user->canInputTriDharma())) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit pengabdian masyarakat ini.');
         }
+
+        // 2. Cek Kepemilikan
         if ($user && $pengma->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit pengabdian masyarakat ini.');
+        }
+
+        // 3. Cek Status Verifikasi Sebelum Update (Hanya blokir jika sudah disetujui)
+        if (in_array($pengma->status_verifikasi, ['verified', 'disetujui'])) {
+            abort(403, 'Data yang sudah diverifikasi tidak dapat diubah.');
         }
 
         $validated = $request->validate([
@@ -278,19 +303,14 @@ class PengabdianMasyarakatController extends Controller
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'anggaran' => 'nullable|numeric|min:0',
             'sumber_dana' => 'nullable|string|max:255',
-
-            // Validasi Anggota
             'tim_abdimas' => 'nullable|array',
             'tim_abdimas.*' => 'nullable|string|max:255',
             'dosen_nip' => 'nullable|array',
             'dosen_nip.*' => 'nullable|string|max:50',
-
-            // Validasi Mahasiswa
             'mahasiswa' => 'nullable|array',
             'mahasiswa.*' => 'nullable|string|max:255',
             'mahasiswa_nim' => 'nullable|array',
             'mahasiswa_nim.*' => 'nullable|string|max:50',
-
             'status' => 'required|string',
             'file_proposal' => 'nullable|file|mimes:pdf|max:10240',
             'file_laporan' => 'nullable|file|mimes:pdf|max:10240',
@@ -298,7 +318,6 @@ class PengabdianMasyarakatController extends Controller
             'catatan' => 'nullable|string',
         ]);
 
-        // MAPPING DATA UPDATE
         if (isset($validated['deskripsi']) && !isset($validated['abstrak'])) {
             $validated['abstrak'] = $validated['deskripsi'];
         }
@@ -307,20 +326,15 @@ class PengabdianMasyarakatController extends Controller
         $validated['semester'] = strtolower($validated['semester']);
         $validated['status'] = strtolower($validated['status']);
 
-        // --- PERBAIKAN PENTING DI SINI ---
-
-        // 1. Proses Anggota (Dosen)
+        // PROSES JSON
         $timAbdimInput = $validated['tim_abdimas'] ?? [];
         $timAbdimClean = array_values(array_filter($timAbdimInput, fn($v) => !empty($v)));
         $validated['tim_abdimas'] = json_encode($timAbdimClean);
 
-        // 1b. Proses NIP Dosen
         $nipInput = $validated['dosen_nip'] ?? [];
         $nipClean = array_values(array_filter($nipInput, fn($v) => !empty($v)));
         $validated['dosen_nip'] = json_encode($nipClean);
 
-        // 2. Proses Mahasiswa
-        // Simpan ke dua key untuk keamanan kompatibilitas
         $mahasiswaInput = $validated['mahasiswa'] ?? [];
         $mahasiswaClean = array_values(array_filter($mahasiswaInput, fn($v) => !empty($v)));
         $mahasiswaJson = json_encode($mahasiswaClean);
@@ -328,12 +342,11 @@ class PengabdianMasyarakatController extends Controller
         $validated['mahasiswa'] = $mahasiswaJson;
         $validated['anggota_mahasiswa'] = $mahasiswaJson;
 
-        // 2b. Proses NIM Mahasiswa
         $nimInput = $validated['mahasiswa_nim'] ?? [];
         $nimClean = array_values(array_filter($nimInput, fn($v) => !empty($v)));
         $validated['mahasiswa_nim'] = json_encode($nimClean);
 
-        // Handle file uploads
+        // FILE UPLOAD UPDATE
         if ($request->hasFile('file_proposal')) {
             if ($pengma->file_proposal) {
                 Storage::disk('public')->delete($pengma->file_proposal);
@@ -361,12 +374,12 @@ class PengabdianMasyarakatController extends Controller
             $validated['file_dokumentasi'] = $request->file('file_dokumentasi')->storeAs('pengmas/dokumentasi', $safeName, 'public');
         }
 
-        // Reset verification status if data changed
-        if ($pengma->status_verifikasi === 'verified') {
+        // --- Opsional: Reset Status Verifikasi jika diedit ---
+        // Hapus blok ini jika status tetap 'rejected' saat diedit.
+        if ($pengma->status_verifikasi === 'rejected' || $pengma->status_verifikasi === 'ditolak') {
             $validated['status_verifikasi'] = 'pending';
             $validated['verified_by'] = null;
             $validated['verified_at'] = null;
-            $validated['catatan_verifikasi'] = null;
         }
 
         $pengma->update($validated);
@@ -382,11 +395,21 @@ class PengabdianMasyarakatController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
+
+        // 1. Cek Permission
         if (!($user && $user->canInputTriDharma())) {
             abort(403, 'Anda tidak memiliki akses untuk menghapus pengabdian masyarakat ini.');
         }
+
+        // 2. Cek Kepemilikan
         if ($user && $pengma->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk menghapus pengabdian masyarakat ini.');
+        }
+
+        // 3. Cek Status Verifikasi Sebelum Hapus (Hanya blokir jika sudah disetujui)
+        // Data yang ditolak (rejected) BOLEH dihapus oleh pemilik
+        if (in_array($pengma->status_verifikasi, ['verified', 'disetujui'])) {
+            abort(403, 'Data yang sudah diverifikasi tidak dapat dihapus.');
         }
 
         // Delete files if exist
@@ -405,6 +428,8 @@ class PengabdianMasyarakatController extends Controller
         return redirect()->route('pengmas.index')
             ->with('success', 'Pengabdian Masyarakat berhasil dihapus.');
     }
+
+    // ... (Sisa method seperti downloadProposal, verify, bulkDestroy, emptyTable sama seperti sebelumnya)
 
     /**
      * Verify pengabdian masyarakat (Admin/Kaprodi only)
@@ -516,7 +541,6 @@ class PengabdianMasyarakatController extends Controller
         $mimeType = mime_content_type($filePath);
 
         // If admin/kaprodi, force download. Otherwise, inline preview for supported types
-        // If admin/kaprodi, force download. Otherwise, inline preview for supported types
         if ($canDownload) {
             return Response::download($filePath, $originalName);
         } else {
@@ -534,7 +558,6 @@ class PengabdianMasyarakatController extends Controller
 
     /**
      * Bulk destroy functionality
-     * @param Request $request
      */
     public function bulkDestroy(Request $request)
     {
@@ -571,7 +594,6 @@ class PengabdianMasyarakatController extends Controller
 
     /**
      * Empty table functionality
-     * @param Request $request
      */
     public function emptyTable(Request $request)
     {
@@ -595,8 +617,10 @@ class PengabdianMasyarakatController extends Controller
             }
         }
 
-        // Truncate or delete all
+        // FIX: Truncate Foreign Key Constraint
+        Schema::disableForeignKeyConstraints();
         PengabdianMasyarakat::truncate();
+        Schema::enableForeignKeyConstraints();
 
         return redirect()->route('pengmas.index')->with('success', 'Semua data pengabdian masyarakat berhasil dihapus.');
     }

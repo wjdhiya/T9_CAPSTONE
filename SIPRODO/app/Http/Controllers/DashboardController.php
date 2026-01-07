@@ -142,65 +142,170 @@ class DashboardController extends Controller
         $tahun = (string) $validated['tahun'];
         $semester = $validated['semester'];
 
-        $tahun = (string) $validated['tahun'];
-        $semester = $validated['semester'];
+        // Queries for Global Stats (ALL data, no year/semester filter)
+        $statsQuery = [
+            'penelitian' => Penelitian::query(),
+            'publikasi' => Publikasi::query(),
+            'pengmas' => PengabdianMasyarakat::query(),
+        ];
 
-        // Queries for Stats (Global / All Time per user request "keseluruhan data")
-        $penelitianStatsQuery = Penelitian::query();
-        $publikasiStatsQuery = Publikasi::query();
-        $pengmasStatsQuery = PengabdianMasyarakat::query();
-
-        // Calculate Global Stats
         $stats = [
             'penelitian' => [
-                'total' => (clone $penelitianStatsQuery)->count(),
-                'verified' => (clone $penelitianStatsQuery)->where('status_verifikasi', 'verified')->count(),
-                'pending' => (clone $penelitianStatsQuery)->where('status_verifikasi', 'pending')->count(),
-                'rejected' => (clone $penelitianStatsQuery)->where('status_verifikasi', 'rejected')->count(),
+                'total' => (clone $statsQuery['penelitian'])->count(),
+                'verified' => (clone $statsQuery['penelitian'])->where('status_verifikasi', 'verified')->count(),
+                'pending' => (clone $statsQuery['penelitian'])->where('status_verifikasi', 'pending')->count(),
+                'rejected' => (clone $statsQuery['penelitian'])->where('status_verifikasi', 'rejected')->count(),
             ],
             'publikasi' => [
-                'total' => (clone $publikasiStatsQuery)->count(),
-                'verified' => (clone $publikasiStatsQuery)->where('status_verifikasi', 'verified')->count(),
-                'pending' => (clone $publikasiStatsQuery)->where('status_verifikasi', 'pending')->count(),
-                'rejected' => (clone $publikasiStatsQuery)->where('status_verifikasi', 'rejected')->count(),
+                'total' => (clone $statsQuery['publikasi'])->count(),
+                'verified' => (clone $statsQuery['publikasi'])->where('status_verifikasi', 'verified')->count(),
+                'pending' => (clone $statsQuery['publikasi'])->where('status_verifikasi', 'pending')->count(),
+                'rejected' => (clone $statsQuery['publikasi'])->where('status_verifikasi', 'rejected')->count(),
             ],
             'pengmas' => [
-                'total' => (clone $pengmasStatsQuery)->count(),
-                'verified' => (clone $pengmasStatsQuery)->where('status_verifikasi', 'verified')->count(),
-                'pending' => (clone $pengmasStatsQuery)->where('status_verifikasi', 'pending')->count(),
-                'rejected' => (clone $pengmasStatsQuery)->where('status_verifikasi', 'rejected')->count(),
+                'total' => (clone $statsQuery['pengmas'])->count(),
+                'verified' => (clone $statsQuery['pengmas'])->where('status_verifikasi', 'verified')->count(),
+                'pending' => (clone $statsQuery['pengmas'])->where('status_verifikasi', 'pending')->count(),
+                'rejected' => (clone $statsQuery['pengmas'])->where('status_verifikasi', 'rejected')->count(),
             ],
         ];
 
-        $topLecturers = User::where('role', User::ROLE_DOSEN)
-            ->where('is_active', true)
-            ->select('id', 'name', 'nip')
-            ->withCount([
-                'penelitian as total_penelitian' => function ($query) use ($tahun, $semester) {
-                    $query->where('tahun', 'like', $tahun . '%')
-                        ->where('semester', $semester);
-                },
-                'publikasi as total_publikasi' => function ($query) use ($tahun, $semester) {
-                    $query->where('tahun', 'like', $tahun . '%')
-                        ->where('semester', $semester);
-                },
-                'pengabdianMasyarakat as total_pengmas' => function ($query) use ($tahun, $semester) {
-                    $query->where('tahun', 'like', $tahun . '%')
-                        ->where('semester', $semester);
-                },
-            ])
-            ->orderByRaw('(total_penelitian + total_publikasi + total_pengmas) DESC')
+        // --- Calculate Top Lecturers by Member Names ---
+
+        // 1. Get all Lecturers Maps for lookup
+        $allLecturers = User::where('role', 'dosen')->get();
+        $lecturersByName = $allLecturers->keyBy(fn($item) => strtoupper(trim($item->name)));
+        $lecturersByNip = $allLecturers->whereNotNull('nip')->keyBy(fn($item) => (string) trim($item->nip));
+
+        // Structure: ['KEY' => ['name' => 'Real Name', 'nip' => '...', 'total_penelitian' => 0, ...]]
+        $scores = [];
+
+        // Helper to process names
+        $processNames = function ($names, $nips, $type) use (&$scores, $lecturersByName, $lecturersByNip) {
+            // Robust parsing: Handle if Cast failed or if data is raw string
+            if (is_string($names)) {
+                $decoded = json_decode($names, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded))
+                    $names = $decoded;
+                else
+                    $names = array_map('trim', explode(',', $names)); // Fallback CSV
+            }
+            if (empty($names))
+                return;
+
+            if (is_string($nips)) {
+                $decoded = json_decode($nips, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded))
+                    $nips = $decoded;
+                else
+                    $nips = array_map('trim', explode(',', $nips));
+            }
+            if (empty($nips))
+                $nips = [];
+
+            // We need to track unique people in THIS activity to avoid double counting
+            $seenInActivity = [];
+
+            foreach ($names as $index => $rawName) {
+                if (empty($rawName))
+                    continue;
+
+                // 1. Clean Name
+                // Remove " NIP" suffix case-insensitive
+                $cleanName = trim(preg_replace('/ NIP$/i', '', trim($rawName)));
+                if (empty($cleanName) || $cleanName === '-')
+                    continue;
+
+                // 2. Get provided NIP if any
+                $providedNip = isset($nips[$index]) && !empty($nips[$index]) ? trim($nips[$index]) : null;
+
+                // 3. Resolve User Identity
+                $realName = ucwords(strtolower($cleanName));
+                $finalNip = $providedNip ?? '-';
+                $key = strtoupper($cleanName); // Default key
+
+                // Try Lookup by NIP first (most reliable)
+                if ($providedNip && $user = $lecturersByNip->get($providedNip)) {
+                    $realName = $user->name;
+                    $finalNip = $user->nip;
+                    $key = 'NIP_' . $finalNip;
+                }
+                // Try Lookup by Name
+                elseif ($user = $lecturersByName->get(strtoupper($cleanName))) {
+                    $realName = $user->name;
+                    $finalNip = $user->nip;
+                    $key = 'NIP_' . $finalNip;
+                }
+
+                // If we haven't seen this person in this activity yet
+                if (in_array($key, $seenInActivity))
+                    continue;
+                $seenInActivity[] = $key;
+
+                // Initialize if not exists
+                if (!isset($scores[$key])) {
+                    $scores[$key] = [
+                        'name' => $realName,
+                        'nip' => $finalNip,
+                        'total_penelitian' => 0,
+                        'total_publikasi' => 0,
+                        'total_pengmas' => 0,
+                    ];
+                }
+
+                // Increment
+                if ($type === 'penelitian')
+                    $scores[$key]['total_penelitian']++;
+                elseif ($type === 'publikasi')
+                    $scores[$key]['total_publikasi']++;
+                elseif ($type === 'pengmas')
+                    $scores[$key]['total_pengmas']++;
+            }
+        };
+
+        // 2. Process Penelitian
+        $penelitianItems = Penelitian::where('tahun', 'like', $tahun . '%')
+            ->where('semester', $semester)
+            ->get();
+
+        foreach ($penelitianItems as $item) {
+            $members = $item->anggota;
+            // Penelitian doesn't have a separate NIP array in DB usually, but we check model
+            // Model: 'anggota' => SafeArray. No 'anggota_nip'.
+            $processNames($members, [], 'penelitian');
+        }
+
+        // 3. Process Publikasi
+        $publikasiItems = Publikasi::where('tahun', 'like', $tahun . '%')
+            ->where('semester', $semester)
+            ->get();
+
+        foreach ($publikasiItems as $item) {
+            $members = $item->penulis;
+            $processNames($members, [], 'publikasi');
+        }
+
+        // 4. Process Pengmas
+        $pengmasItems = PengabdianMasyarakat::where('tahun', 'like', $tahun . '%')
+            ->where('semester', $semester)
+            ->get();
+
+        foreach ($pengmasItems as $item) {
+            // Pengmas has PARALLEL arrays: tim_abdimas and dosen_nip
+            $members = $item->tim_abdimas;
+            $nips = $item->dosen_nip;
+            $processNames($members, $nips, 'pengmas');
+        }
+
+        // 5. Sort and Limit
+        $topLecturers = collect(array_values($scores))
+            ->map(function ($item) {
+                $item['total'] = $item['total_penelitian'] + $item['total_publikasi'] + $item['total_pengmas'];
+                return (object) $item;
+            })
+            ->sortByDesc('total')
             ->take(5)
-            ->get()
-            ->map(function ($u) {
-                return [
-                    'name' => $u->name,
-                    'nip' => $u->nip,
-                    'total_penelitian' => (int) ($u->total_penelitian ?? 0),
-                    'total_publikasi' => (int) ($u->total_publikasi ?? 0),
-                    'total_pengmas' => (int) ($u->total_pengmas ?? 0),
-                ];
-            });
+            ->values();
 
         return response()->json([
             'tahun' => (int) $validated['tahun'],

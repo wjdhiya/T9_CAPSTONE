@@ -588,23 +588,10 @@ class TriDharmaImportController extends Controller
 
             $debug = [];
             $user = $this->resolveUserForImport($assoc, $row, $nidnUserCache, $debug);
+
+            // FALLBACK: Jika user tidak ditemukan, gunakan user yang sedang login (Kaprodi)
             if (!$user) {
-                // Determine if any identifier columns even had data
-                $idValues = [];
-                foreach (['nip', 'nidn', 'email', 'nama', 'user_id', 'dosen_id'] as $keyPart) {
-                    foreach ($assoc as $k => $v) {
-                        if (str_contains($k, $keyPart) && !empty($v)) {
-                            $idValues[] = "$k=$v";
-                        }
-                    }
-                }
-
-                $extra = count($debug) ?
-                    (' (Nilai terdeteksi: ' . implode(', ', array_slice($debug, 0, 4)) . ')') :
-                    (count($idValues) ? ' (Nilai kolom: ' . implode(', ', array_slice($idValues, 0, 3)) . ')' : ' (Tidak ada data identitas dosen yang terbaca di baris ini)');
-
-                $errors[] = ['row' => $rowNumber, 'message' => 'Dosen tidak ditemukan di database.' . $extra . ' Pastikan NIP/NIDN/Email sesuai user terdaftar.'];
-                continue;
+                $user = Auth::user();
             }
 
             $detectedType = $this->detectType($assoc);
@@ -784,23 +771,10 @@ class TriDharmaImportController extends Controller
 
             $debug = [];
             $user = $this->resolveUserForImport($assoc, $row, $nidnUserCache, $debug);
+
+            // FALLBACK: Jika user tidak ditemukan, gunakan user yang sedang login (Kaprodi)
             if (!$user) {
-                // Determine if any identifier columns even had data
-                $idValues = [];
-                foreach (['nip', 'nidn', 'email', 'nama', 'user_id', 'dosen_id'] as $keyPart) {
-                    foreach ($assoc as $k => $v) {
-                        if (str_contains($k, $keyPart) && !empty($v)) {
-                            $idValues[] = "$k=$v";
-                        }
-                    }
-                }
-
-                $extra = count($debug) ?
-                    (' (Nilai terdeteksi: ' . implode(', ', array_slice($debug, 0, 4)) . ')') :
-                    (count($idValues) ? ' (Nilai kolom: ' . implode(', ', array_slice($idValues, 0, 3)) . ')' : ' (Tidak ada data identitas dosen yang terbaca di baris ini)');
-
-                $errors[] = ['row' => $rowNumber, 'message' => 'Dosen tidak ditemukan di database.' . $extra . ' Pastikan NIP/NIDN/Email sesuai user terdaftar.'];
-                continue;
+                $user = $actor;
             }
 
             try {

@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Publikasi;
 use App\Models\Penelitian;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema; // Tambahkan ini untuk fix truncate
 
 class PublikasiController extends Controller
 {
@@ -19,24 +21,24 @@ class PublikasiController extends Controller
         $query = Publikasi::with(['user', 'penelitian', 'verifiedBy']);
 
         // Filter by user role
-        /** @var \App\Models\User|null $user */
+        /** @var User|null $user */
         $user = Auth::user();
 
         if ($user && $user->isKaprodi()) {
-            \App\Models\User::where('id', $user->id)->update(['kaprodi_seen_publikasi_at' => now()]);
+            User::where('id', $user->id)->update(['kaprodi_seen_publikasi_at' => now()]);
         }
-        if ($user && $user->isDosen()) {
+
+        // Only restrict to user's own data if they are Dosen AND cannot verify (regular Dosen)
+        if ($user && $user->isDosen() && !$user->canVerify()) {
             $query->where('user_id', $user->id);
         }
 
-        // Search (Judul, Penulis, Penerbit, dan Nama Dosen/User)
+        // Search (Judul, Penerbit, dan Nama Dosen/User)
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('judul_publikasi', 'like', '%' . $search . '%')
-                    ->orWhere('penulis', 'like', '%' . $search . '%') // Pencarian Penulis (Manual input)
                     ->orWhere('penerbit', 'like', '%' . $search . '%')
-                    // Tambahan: Cari berdasarkan nama user (Dosen pemilik data)
                     ->orWhereHas('user', function ($subQ) use ($search) {
                         $subQ->where('name', 'like', '%' . $search . '%');
                     });
@@ -63,15 +65,30 @@ class PublikasiController extends Controller
             $query->where('status_verifikasi', $request->status_verifikasi);
         }
 
-        $publikasi = $query->latest()->paginate(10);
-
-        // Get statistics
+        // Get statistics (Global default)
         $stats = [
             'total' => Publikasi::count(),
             'verified' => Publikasi::where('status_verifikasi', 'verified')->count(),
             'pending' => Publikasi::where('status_verifikasi', 'pending')->count(),
             'high_impact' => Publikasi::whereIn('indexing', ['scopus', 'wos'])->count(),
         ];
+
+        // Adjust stats if user is restricted
+        if ($user && $user->isDosen() && !$user->canVerify()) {
+            $stats = [
+                'total' => Publikasi::where('user_id', $user->id)->count(),
+                'verified' => Publikasi::where('user_id', $user->id)->where('status_verifikasi', 'verified')->count(),
+                'pending' => Publikasi::where('user_id', $user->id)->where('status_verifikasi', 'pending')->count(),
+                'high_impact' => Publikasi::where('user_id', $user->id)->whereIn('indexing', ['scopus', 'wos'])->count(),
+            ];
+        }
+
+        // Support for Show All functionality
+        if ($request->query('show_all') === '1') {
+            $publikasi = $query->latest()->get();
+        } else {
+            $publikasi = $query->latest()->paginate(10);
+        }
 
         return view('publikasi.index', compact('publikasi', 'stats'));
     }
@@ -81,14 +98,15 @@ class PublikasiController extends Controller
      */
     public function create()
     {
-        /** @var \App\Models\User|null $user */
+        /** @var User|null $user */
         $user = Auth::user();
         if (!($user && $user->canInputTriDharma())) {
             abort(403, 'Anda tidak memiliki akses untuk menambahkan data.');
         }
 
+        // Ambil list penelitian milik user yang sudah verified untuk dikaitkan
         $penelitianList = Penelitian::where('user_id', Auth::id())
-            ->where('status_verifikasi', 'verified')
+            ->where('status_verifikasi', 'verified') // Opsional: hanya penelitian verified yg bisa dikaitkan
             ->get();
 
         return view('publikasi.create', compact('penelitianList'));
@@ -99,7 +117,7 @@ class PublikasiController extends Controller
      */
     public function store(Request $request)
     {
-        /** @var \App\Models\User|null $user */
+        /** @var User|null $user */
         $user = Auth::user();
         if (!($user && $user->canInputTriDharma())) {
             abort(403, 'Anda tidak memiliki akses untuk menambahkan data.');
@@ -130,8 +148,9 @@ class PublikasiController extends Controller
 
         $validated['nama_publikasi'] = $validated['judul_publikasi'];
 
-        // Process Penulis
+        // Process Penulis JSON
         if ($request->has('penulis')) {
+            // Pastikan array re-indexed agar jadi JSON array standard
             $validated['penulis'] = json_encode(array_values($request->penulis));
         }
 
@@ -156,10 +175,12 @@ class PublikasiController extends Controller
      */
     public function show(Publikasi $publikasi)
     {
-        // Authorization check
-        /** @var \App\Models\User|null $user */
+        /** @var User|null $user */
         $user = Auth::user();
-        if ($user && $user->isDosen() && $publikasi->user_id !== $user->id) {
+
+        // Admin dan Reviewer bisa melihat semua data
+        // Dosen biasa hanya bisa melihat data miliknya sendiri
+        if ($user && !$user->canReviewTriDharma() && $publikasi->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses ke publikasi ini.');
         }
 
@@ -173,14 +194,23 @@ class PublikasiController extends Controller
      */
     public function edit(Publikasi $publikasi)
     {
-        // Authorization check
-        /** @var \App\Models\User|null $user */
+        /** @var User|null $user */
         $user = Auth::user();
+        
+        // 1. Cek Permission
         if (!($user && $user->canInputTriDharma())) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit publikasi ini.');
         }
+        
+        // 2. Cek Kepemilikan
         if ($user && $publikasi->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit publikasi ini.');
+        }
+
+        // 3. (BARU) Cek Status Verifikasi
+        // Jika sudah verified atau rejected (tergantung kebijakan), lock data.
+        if (in_array($publikasi->status_verifikasi, ['verified', 'disetujui'])) {
+            abort(403, 'Data yang sudah diverifikasi tidak dapat diedit.');
         }
 
         $penelitianList = Penelitian::where('user_id', Auth::id())
@@ -195,14 +225,22 @@ class PublikasiController extends Controller
      */
     public function update(Request $request, Publikasi $publikasi)
     {
-        // Authorization check
-        /** @var \App\Models\User|null $user */
+        /** @var User|null $user */
         $user = Auth::user();
+        
+        // 1. Cek Permission
         if (!($user && $user->canInputTriDharma())) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit publikasi ini.');
         }
+        
+        // 2. Cek Kepemilikan
         if ($user && $publikasi->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit publikasi ini.');
+        }
+
+        // 3. (BARU) Cek Status Verifikasi Sebelum Update
+        if (in_array($publikasi->status_verifikasi, ['verified', 'disetujui'])) {
+            abort(403, 'Data yang sudah diverifikasi tidak dapat diubah.');
         }
 
         $validated = $request->validate([
@@ -210,7 +248,7 @@ class PublikasiController extends Controller
             'penulis' => 'nullable|array',
             'penulis.*.nama' => 'required_with:penulis|string',
             'penulis.*.nip' => 'nullable|string',
-            'jenis' => 'required|in:jurnal,prosiding,buku,paten,hki',
+            'jenis' => 'required|in:jurnal,prosiding,buku,book_chapter,paten,hki',
             'penerbit' => 'required|string|max:255',
             'tanggal_publikasi' => 'required|date',
             'issn_isbn' => 'nullable|string|max:50',
@@ -219,12 +257,16 @@ class PublikasiController extends Controller
             'halaman' => 'nullable|string|max:50',
             'url' => 'nullable|url|max:500',
             'doi' => 'nullable|string|max:255',
-            'indexing' => 'nullable|in:scopus,wos,sinta_1,sinta_2,sinta_3,sinta_4,sinta_5,sinta_6,none',
-            'quartile' => 'nullable|in:q1,q2,q3,q4',
+            'indexing' => 'nullable|in:scopus,wos,sinta1,sinta2,sinta3,sinta4,sinta5,sinta6,non-indexed',
+            'quartile' => 'nullable|in:Q1,Q2,Q3,Q4,non-quartile',
+            'tahun' => 'required|integer|min:1900|max:' . (date('Y') + 1),
+            'semester' => 'required|in:ganjil,genap',
             'penelitian_id' => 'nullable|exists:penelitian,id',
             'file_publikasi' => 'nullable|file|mimes:pdf|max:10240',
             'catatan' => 'nullable|string',
         ]);
+
+        $validated['nama_publikasi'] = $validated['judul_publikasi'];
 
         // Process Penulis
         if ($request->has('penulis')) {
@@ -242,12 +284,13 @@ class PublikasiController extends Controller
             $validated['file_publikasi'] = $request->file('file_publikasi')->storeAs('publikasi', $safeName, 'public');
         }
 
-        // Reset verification status if data changed
-        if ($publikasi->status_verifikasi === 'verified') {
+        // Reset verification status if data changed (e.g. from rejected -> pending)
+        // Jika sebelumnya rejected, kembalikan ke pending agar bisa direview ulang
+        if ($publikasi->status_verifikasi === 'rejected' || $publikasi->status_verifikasi === 'ditolak') {
             $validated['status_verifikasi'] = 'pending';
             $validated['verified_by'] = null;
             $validated['verified_at'] = null;
-            $validated['catatan_verifikasi'] = null;
+            // Catatan lama opsional mau dihapus atau tidak
         }
 
         $publikasi->update($validated);
@@ -261,14 +304,22 @@ class PublikasiController extends Controller
      */
     public function destroy(Publikasi $publikasi)
     {
-        // Authorization check
-        /** @var \App\Models\User|null $user */
+        /** @var User|null $user */
         $user = Auth::user();
+        
+        // 1. Cek Permission
         if (!($user && $user->canInputTriDharma())) {
             abort(403, 'Anda tidak memiliki akses untuk menghapus publikasi ini.');
         }
+        
+        // 2. Cek Kepemilikan
         if ($user && $publikasi->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk menghapus publikasi ini.');
+        }
+
+        // 3. (BARU) Cek Status Verifikasi
+        if (in_array($publikasi->status_verifikasi, ['verified', 'disetujui'])) {
+            abort(403, 'Data yang sudah diverifikasi tidak dapat dihapus.');
         }
 
         // Delete file if exists
@@ -287,8 +338,7 @@ class PublikasiController extends Controller
      */
     public function verify(Request $request, Publikasi $publikasi)
     {
-        // Authorization check
-        /** @var \App\Models\User|null $user */
+        /** @var User|null $user */
         $user = Auth::user();
         if (!$user || !$user->canVerify()) {
             abort(403, 'Anda tidak memiliki akses untuk verifikasi.');
@@ -314,13 +364,13 @@ class PublikasiController extends Controller
 
     /**
      * Download publikasi file (Admin/Kaprodi only)
-     * * @param Publikasi $publikasi
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function downloadPublikasi(Publikasi $publikasi)
     {
-        /** @var \App\Models\User|null $user */
+        /** @var User|null $user */
         $user = Auth::user();
+        // Hanya yang punya hak review/admin atau pemilik data (jika perlu) yang bisa download
+        // Di sini kita pakai canReviewTriDharma (Admin/Kaprodi/Reviewer)
         if (!$user || !$user->canReviewTriDharma()) {
             abort(403, 'Unauthorized action.');
         }
@@ -340,12 +390,12 @@ class PublikasiController extends Controller
 
     /**
      * Bulk destroy functionality
-     * @param Request $request
      */
     public function bulkDestroy(Request $request)
     {
-        /** @var \App\Models\User|null $user */
+        /** @var User|null $user */
         $user = Auth::user();
+        // Hanya Admin yang bisa hapus massal tanpa peduli status
         if (!($user && $user->isAdmin())) {
             abort(403, 'Anda tidak memiliki akses untuk menghapus data massal.');
         }
@@ -371,11 +421,10 @@ class PublikasiController extends Controller
 
     /**
      * Empty table functionality
-     * @param Request $request
      */
     public function emptyTable(Request $request)
     {
-        /** @var \App\Models\User|null $user */
+        /** @var User|null $user */
         $user = Auth::user();
         if (!($user && $user->isAdmin())) {
             abort(403, 'Anda tidak memiliki akses untuk mengosongkan data.');
@@ -389,8 +438,15 @@ class PublikasiController extends Controller
             }
         }
 
-        // Truncate or delete all
+        // --- SOLUSI FOREIGN KEY CONSTRAINT ---
+        // Matikan sementara foreign key check untuk bypass error truncate
+        Schema::disableForeignKeyConstraints();
+
         Publikasi::truncate();
+
+        // Hidupkan kembali foreign key check
+        Schema::enableForeignKeyConstraints();
+        // -------------------------------------
 
         return redirect()->route('publikasi.index')->with('success', 'Semua data publikasi berhasil dihapus.');
     }

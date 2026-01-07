@@ -228,10 +228,13 @@ class ReportController extends Controller
         $no = 1;
 
         foreach ($items as $item) {
+            $anggota = $this->parseArrayField($item->getAttributes()['anggota'] ?? $item->anggota);
+            $namaDosen = !empty($anggota) ? $anggota[0] : ($item->user ? $item->user->name : '-');
+
             $data->push([
                 $no++,
                 $item->judul_penelitian,
-                $item->user ? $item->user->name : '-',
+                $namaDosen,
                 $item->user ? $item->user->nip : '-',
                 $item->jenis,
                 $item->tahun,
@@ -259,10 +262,13 @@ class ReportController extends Controller
         $no = 1;
 
         foreach ($items as $item) {
+            $penulis = $this->parseArrayField($item->getAttributes()['penulis'] ?? $item->penulis);
+            $namaDosen = !empty($penulis) ? $penulis[0] : ($item->user ? $item->user->name : '-');
+
             $data->push([
                 $no++,
                 $item->judul_publikasi,
-                $item->user ? $item->user->name : '-',
+                $namaDosen,
                 $item->user ? $item->user->nip : '-',
                 $item->jenis,
                 $item->nama_publikasi ?? '-',
@@ -305,6 +311,8 @@ class ReportController extends Controller
             $anggotaMahasiswa = $this->parseArrayField($item->getAttributes()['anggota_mahasiswa'] ?? $item->anggota_mahasiswa);
             $mahasiswaNim = $this->parseArrayField($item->getAttributes()['mahasiswa_nim'] ?? $item->mahasiswa_nim);
 
+            $namaDosen = !empty($timAbdimas) ? $timAbdimas[0] : ($item->user ? $item->user->name : '-');
+
             $countTim = count($timAbdimas);
             $countMhs = count($anggotaMahasiswa);
             $maxRows = max($countTim, $countMhs, 1);
@@ -328,7 +336,7 @@ class ReportController extends Controller
                 $data->push([
                     $i === 0 ? $no++ : '',
                     $item->judul_pkm,
-                    $item->user ? $item->user->name : '-',
+                    $namaDosen,
                     $item->user ? $item->user->nip : '-',
                     $item->jenis_hibah ?? '-',
                     $item->skema ?? '-',

@@ -1,5 +1,6 @@
 @php
     use Illuminate\Support\Str;
+    use Carbon\Carbon;
 @endphp
 <x-app-layout>
     <x-slot name="header">
@@ -29,16 +30,32 @@
                     </div>
                 </div>
 
-                {{-- Penulis Section --}}
+                {{-- Penulis Section (DIPERBAIKI) --}}
                 <div class="mb-8">
                     <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">Penulis</h4>
                     <div class="rounded-lg p-4 border border-gray-100">
                         <ul class="space-y-2">
-                            @forelse($publikasi->penulis as $penulis)
-                                @if(!empty($penulis))
+                            @forelse($publikasi->penulis as $p)
+                                @php
+                                    // Logika untuk menangani berbagai format data penulis
+                                    $namaPenulis = '-';
+                                    
+                                    if (is_string($p)) {
+                                        // Jika formatnya langsung teks: "Budi Santoso"
+                                        $namaPenulis = $p;
+                                    } elseif (is_array($p)) {
+                                        // Jika formatnya array: ['nama' => 'Budi Santoso']
+                                        $namaPenulis = $p['nama'] ?? $p['name'] ?? '-';
+                                    } elseif (is_object($p)) {
+                                        // Jika formatnya object: {'nama': 'Budi Santoso'}
+                                        $namaPenulis = $p->nama ?? $p->name ?? '-';
+                                    }
+                                @endphp
+
+                                @if(!empty($namaPenulis) && $namaPenulis !== '-')
                                     <li class="flex items-center text-gray-700 bg-white p-2 rounded shadow-sm border border-gray-100">
                                         <i class="fas fa-user-edit text-green-400 mr-2 text-xs"></i>
-                                        <span class="font-medium">{{ $penulis }}</span>
+                                        <span class="font-medium">{{ $namaPenulis }}</span>
                                     </li>
                                 @endif
                             @empty
@@ -67,7 +84,7 @@
                     <div class="space-y-4">
                         <div>
                             <p class="text-xs text-gray-500 uppercase font-semibold">Tanggal Terbit</p>
-                            <p class="font-medium text-gray-900">{{ $publikasi->tanggal_terbit ? \Carbon\Carbon::parse($publikasi->tanggal_terbit)->format('d M Y') : '-' }}</p>
+                            <p class="font-medium text-gray-900">{{ $publikasi->tanggal_terbit ? Carbon::parse($publikasi->tanggal_terbit)->format('d M Y') : '-' }}</p>
                         </div>
                         @if($publikasi->volume || $publikasi->nomor || $publikasi->halaman)
                         <div>

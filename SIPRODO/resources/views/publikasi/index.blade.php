@@ -189,27 +189,37 @@
                                             </p>
                                         </div>
                                     </td>
-                                    
-                                    {{-- Kolom Penulis dengan Fallback --}}
+
+                                    {{-- Kolom Penulis --}}
                                     <td class="px-6 py-4">
-                                        <p class="text-sm text-gray-700">
-                                            {{ !empty($item->penulis) ? Str::limit(implode(', ', (array) $item->penulis), 30) : ($item->user->name ?? '-') }}
-                                        </p>
-                                    </td>
-                                    
-                                    {{-- Kolom Jenis --}}
-                                    <td class="px-6 py-4">
-                                        @php
-                                            $jenisClass = [
-                                                'jurnal' => 'bg-blue-100 text-blue-700',
-                                                'prosiding' => 'bg-purple-100 text-purple-700',
-                                                'buku' => 'bg-orange-100 text-orange-700',
-                                                'chapter' => 'bg-pink-100 text-pink-700'
-                                            ][$item->jenis] ?? 'bg-gray-100 text-gray-700';
-                                        @endphp
-                                        <span class="px-2 py-1 rounded text-xs font-medium {{ $jenisClass }}">
-                                            {{ ucfirst($item->jenis) }}
-                                        </span>
+                                        <div class="text-sm text-gray-900">
+                                            @php
+                                                $penulisOutput = $item->user->name ?? '-'; // Default
+                                                
+                                                // 1. Simpan ke variabel lokal dulu (PENTING untuk menghindari error Indirect modification)
+                                                $listPenulis = $item->penulis; 
+
+                                                // 2. Cek variabel lokal
+                                                if (!empty($listPenulis) && is_array($listPenulis)) {
+                                                // 3. Ambil elemen pertama tanpa reset()
+                                                $first = $listPenulis[0] ?? null; 
+
+                                                if (is_string($first)) {
+                                                    // Kasus A: Array string ["Budi", "Siti"]
+                                                    $penulisOutput = implode(', ', $listPenulis);
+                                                } else {
+                                                    // Kasus B: Array object [{"nama": "Budi"}, ...]
+                                                    $names = array_map(function($p) {
+                                                            $p = (array)$p; 
+                                                            return $p['nama'] ?? $p['name'] ?? '';
+                                                        }, $listPenulis);
+                                
+                                                    $penulisOutput = implode(', ', array_filter($names));
+                                                }
+                                            }
+                                            @endphp
+                                            {{ Str::limit($penulisOutput, 30) }}
+                                        </div>
                                     </td>
                                     
                                     {{-- Kolom Indexing --}}
@@ -256,18 +266,12 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <a href="{{ route('publikasi.show', $item->id) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Lihat</a>
                                         
-                                        {{-- LOGIKA DIUBAH: Tombol Edit & Hapus HANYA muncul jika status BUKAN verified DAN BUKAN rejected --}}
-                                        @if (!in_array($item->status_verifikasi, ['verified', 'rejected']) && auth()->user()->canInputTriDharma() && $item->user_id === auth()->id())
+                                        @if (!in_array($item->status_verifikasi, ['verified', 'disetujui']) && auth()->user()->canInputTriDharma() && $item->user_id == auth()->id())
                                             <a href="{{ route('publikasi.edit', $item->id) }}" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
                                             
                                             <button type="button" onclick="if(confirm('Apakah Anda yakin ingin menghapus data ini?')) document.getElementById('delete-form-{{ $item->id }}').submit()" class="text-red-600 hover:text-red-900">
                                                 Hapus
                                             </button>
-                                            
-                                            <form id="delete-form-{{ $item->id }}" action="{{ route('publikasi.destroy', $item->id) }}" method="POST" class="hidden">
-                                                @csrf
-                                                @method('DELETE')
-                                            </form>
                                         @endif
                                     </td>
                                 </tr>
@@ -287,6 +291,18 @@
                         </tbody>
                     </table>
                     </form>
+
+                    {{-- Delete Forms (Di luar bulk form untuk menghindari nested form) --}}
+                    @foreach ($publikasi as $item)
+                        @if (!in_array($item->status_verifikasi, ['verified', 'disetujui']) && 
+                             auth()->user()->canInputTriDharma() && 
+                             $item->user_id == auth()->id())
+                            <form id="delete-form-{{ $item->id }}" action="{{ route('publikasi.destroy', $item->id) }}" method="POST" class="hidden">
+                                @csrf
+                                @method('DELETE')
+                            </form>
+                        @endif
+                    @endforeach
                 </div>
 
                 @if(auth()->user()->isAdmin())
@@ -318,8 +334,27 @@
                 @endif
 
                 {{-- Pagination --}}
-                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
-                    {{ $publikasi->withQueryString()->links() }}
+                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
+                    <div>
+                        @if(request('show_all') !== '1')
+                            {{ $publikasi->withQueryString()->links() }}
+                        @else
+                            <p class="text-sm text-gray-700">Showing all {{ $publikasi->count() }} records</p>
+                        @endif
+                    </div>
+                    <div>
+                        @if(request('show_all') !== '1')
+                            <a href="{{ request()->fullUrlWithQuery(['show_all' => '1']) }}" 
+                               class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                <i class="fas fa-list mr-2"></i> Show All
+                            </a>
+                        @else
+                            <a href="{{ request()->fullUrlWithQuery(['show_all' => null]) }}" 
+                               class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                <i class="fas fa-th mr-2"></i> Show Paginated
+                            </a>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>

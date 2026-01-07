@@ -69,7 +69,7 @@ class TriDharmaImportController extends Controller
         return true;
     }
 
-    private function normalizeNidn($value): string
+    private function normalizeNip($value): string
     {
         if ($value === null) {
             return '';
@@ -112,9 +112,10 @@ class TriDharmaImportController extends Controller
         return '';
     }
 
-    private function normalizeNip($value): string
+    // alias
+    private function normalizeNidn($value): string
     {
-        return $this->normalizeNidn($value);
+        return $this->normalizeNip($value);
     }
 
     private function extractNipsFromText($value): array
@@ -155,7 +156,7 @@ class TriDharmaImportController extends Controller
             $nims = $matches[1] ?? [];
         }
 
-        $nims = array_values(array_unique(array_filter(array_map(fn($x) => $this->normalizeNidn($x), $nims), fn($x) => $x !== '')));
+        $nims = array_values(array_unique(array_filter(array_map(fn($x) => $this->normalizeNip($x), $nims), fn($x) => $x !== '')));
         return $nims;
     }
 
@@ -201,7 +202,7 @@ class TriDharmaImportController extends Controller
     private function findUserByNumericFromRow(array $row, string $column, array &$cache): ?User
     {
         foreach ($row as $cell) {
-            $candidate = $this->normalizeNidn($cell);
+            $candidate = $this->normalizeNip($cell);
             if ($candidate === '') {
                 continue;
             }
@@ -219,14 +220,6 @@ class TriDharmaImportController extends Controller
                 $alt = ltrim($candidate, '0');
                 if ($alt !== '' && $alt !== $candidate) {
                     $user = User::where($column, $alt)->where('role', User::ROLE_DOSEN)->first();
-                }
-
-                // Some datasets store lecturer number under NIDN instead of NIP
-                if (!$user) {
-                    $user = User::where('nidn', $candidate)->where('role', User::ROLE_DOSEN)->first();
-                }
-                if (!$user && isset($alt) && $alt !== '' && $alt !== $candidate) {
-                    $user = User::where('nidn', $alt)->where('role', User::ROLE_DOSEN)->first();
                 }
             }
             $cache[$cacheKey] = $user;
@@ -256,12 +249,12 @@ class TriDharmaImportController extends Controller
             }
         }
 
-        // 2) nidn
-        $nidn = $this->normalizeNidn($this->getVal($assoc, ['nidn', 'nidn_dosen', 'nidn_pengusul', 'nidn_ketua', 'nomor_induk_dosen_nasional'], ''));
+        // 2) nidn (rename map to nip)
+        $nidn = $this->normalizeNip($this->getVal($assoc, ['nidn', 'nidn_dosen', 'nidn_pengusul', 'nidn_ketua', 'nomor_induk_dosen_nasional'], ''));
         if ($nidn === '') {
             foreach (array_keys($assoc) as $k) {
                 if (strpos($k, 'nidn') !== false) {
-                    $nidn = $this->normalizeNidn($assoc[$k] ?? null);
+                    $nidn = $this->normalizeNip($assoc[$k] ?? null);
                     if ($nidn !== '') {
                         break;
                     }
@@ -269,12 +262,12 @@ class TriDharmaImportController extends Controller
             }
         }
         if ($nidn !== '') {
-            $debug[] = 'nidn=' . $nidn;
-            $cacheKey = 'nidn:' . $nidn;
+            $debug[] = 'nidn_mapped_to_nip=' . $nidn;
+            $cacheKey = 'nip:' . $nidn;
             if (array_key_exists($cacheKey, $cache)) {
                 return $cache[$cacheKey];
             }
-            $user = User::where('nidn', $nidn)->where('role', User::ROLE_DOSEN)->first();
+            $user = User::where('nip', $nidn)->where('role', User::ROLE_DOSEN)->first();
             $cache[$cacheKey] = $user;
             if ($user) {
                 return $user;
@@ -308,14 +301,8 @@ class TriDharmaImportController extends Controller
             }
 
             if (!$user) {
-                // Fallback: try matching against nidn
-                $user = User::where('nidn', $nip)->where('role', User::ROLE_DOSEN)->first();
-                if (!$user) {
-                    $alt = ltrim($nip, '0');
-                    if ($alt !== '' && $alt !== $nip) {
-                        $user = User::where('nidn', $alt)->where('role', User::ROLE_DOSEN)->first();
-                    }
-                }
+                // Fallback
+                // Removing nidn check as it is now nip
             }
             $cache[$cacheKey] = $user;
             if ($user) {
@@ -328,7 +315,7 @@ class TriDharmaImportController extends Controller
         if ($email === '') {
             foreach (array_keys($assoc) as $k) {
                 if (strpos($k, 'email') !== false) {
-                    $email = strtolower(trim((string)($assoc[$k] ?? '')));
+                    $email = strtolower(trim((string) ($assoc[$k] ?? '')));
                     if ($email !== '') {
                         break;
                     }
@@ -395,14 +382,7 @@ class TriDharmaImportController extends Controller
                     }
 
                     if (!$u) {
-                        // Fallback: try matching against nidn
-                        $u = User::where('nidn', $nipFromTeam)->where('role', User::ROLE_DOSEN)->first();
-                        if (!$u) {
-                            $alt = ltrim($nipFromTeam, '0');
-                            if ($alt !== '' && $alt !== $nipFromTeam) {
-                                $u = User::where('nidn', $alt)->where('role', User::ROLE_DOSEN)->first();
-                            }
-                        }
+                        // Fallback removed
                     }
                     $cache[$cacheKey] = $u;
                     if ($u) {
@@ -413,9 +393,9 @@ class TriDharmaImportController extends Controller
         }
 
         // Fallback: scan row cells for NIDN / NIP that exists
-        $user = $this->findUserByNumericFromRow($row, 'nidn', $cache);
+        $user = $this->findUserByNumericFromRow($row, 'nip', $cache);
         if ($user) {
-            $debug[] = 'row_scan=nidn';
+            $debug[] = 'row_scan=nip_via_nidn_alias';
             return $user;
         }
         $user = $this->findUserByNumericFromRow($row, 'nip', $cache);
@@ -428,18 +408,33 @@ class TriDharmaImportController extends Controller
     private function findUserByNidnFromRow(array $row, array &$nidnUserCache): ?User
     {
         // Backward compatible wrapper
-        return $this->findUserByNumericFromRow($row, 'nidn', $nidnUserCache);
+        // Backward compatible wrapper (scans for nidn column in row but uses normalizeNip)
+        return $this->findUserByNumericFromRow($row, 'nip', $nidnUserCache);
     }
 
     private function findHeaderRowIndex(array $rowsRaw): int
     {
         $maxScan = min(20, count($rowsRaw));
         $identifierAliases = [
-            'user_id', 'id_user', 'dosen_id', 'id_dosen',
-            'nidn', 'nidn_dosen', 'nidn_pengusul', 'nidn_ketua', 'nomor_induk_dosen_nasional',
-            'nip', 'dosen_nip', 'nip_dosen', 'nip_ketua',
-            'email', 'email_dosen', 'email_ketua',
-            'nama_dosen', 'nama', 'name',
+            'user_id',
+            'id_user',
+            'dosen_id',
+            'id_dosen',
+            'nidn',
+            'nidn_dosen',
+            'nidn_pengusul',
+            'nidn_ketua',
+            'nomor_induk_dosen_nasional',
+            'nip',
+            'dosen_nip',
+            'nip_dosen',
+            'nip_ketua',
+            'email',
+            'email_dosen',
+            'email_ketua',
+            'nama_dosen',
+            'nama',
+            'name',
         ];
         $judulAliases = ['judul', 'judul_penelitian', 'judul_publikasi', 'judul_pkm', 'judul_pengabdian', 'nama_kegiatan'];
 
@@ -535,11 +530,25 @@ class TriDharmaImportController extends Controller
         $rowsRaw = array_slice($rowsRaw, $headerIdx + 1);
 
         $identifierAliases = [
-            'user_id', 'id_user', 'dosen_id', 'id_dosen',
-            'nip', 'dosen_nip', 'nip_dosen', 'nip_ketua',
-            'email', 'email_dosen', 'email_ketua',
-            'nidn', 'nidn_dosen', 'nidn_pengusul', 'nidn_ketua', 'nomor_induk_dosen_nasional',
-            'nama_dosen', 'nama', 'name',
+            'user_id',
+            'id_user',
+            'dosen_id',
+            'id_dosen',
+            'nip',
+            'dosen_nip',
+            'nip_dosen',
+            'nip_ketua',
+            'email',
+            'email_dosen',
+            'email_ketua',
+            'nidn',
+            'nidn_dosen',
+            'nidn_pengusul',
+            'nidn_ketua',
+            'nomor_induk_dosen_nasional',
+            'nama_dosen',
+            'nama',
+            'name',
         ];
         $hasIdentifierHeader = false;
         foreach ($identifierAliases as $k) {
@@ -704,11 +713,25 @@ class TriDharmaImportController extends Controller
         $rowsRaw = array_slice($rowsRaw, $headerIdx + 1);
 
         $identifierAliases = [
-            'user_id', 'id_user', 'dosen_id', 'id_dosen',
-            'nip', 'dosen_nip', 'nip_dosen', 'nip_ketua',
-            'email', 'email_dosen', 'email_ketua',
-            'nidn', 'nidn_dosen', 'nidn_pengusul', 'nidn_ketua', 'nomor_induk_dosen_nasional',
-            'nama_dosen', 'nama', 'name',
+            'user_id',
+            'id_user',
+            'dosen_id',
+            'id_dosen',
+            'nip',
+            'dosen_nip',
+            'nip_dosen',
+            'nip_ketua',
+            'email',
+            'email_dosen',
+            'email_ketua',
+            'nidn',
+            'nidn_dosen',
+            'nidn_pengusul',
+            'nidn_ketua',
+            'nomor_induk_dosen_nasional',
+            'nama_dosen',
+            'nama',
+            'name',
         ];
         $hasIdentifierHeader = false;
         foreach ($identifierAliases as $k) {
@@ -840,7 +863,7 @@ class TriDharmaImportController extends Controller
 
     private function detectType(array $assoc): ?string
     {
-        $category = strtolower(trim((string)($assoc['kategori'] ?? $assoc['jenis_data'] ?? $assoc['category'] ?? '')));
+        $category = strtolower(trim((string) ($assoc['kategori'] ?? $assoc['jenis_data'] ?? $assoc['category'] ?? '')));
         if ($category !== '') {
             if (in_array($category, ['penelitian', 'riset', 'research'], true)) {
                 return 'penelitian';
@@ -892,8 +915,8 @@ class TriDharmaImportController extends Controller
     {
         foreach ($keys as $key) {
             $val = $assoc[$key] ?? null;
-            if ($val !== null && trim((string)$val) !== '') {
-                return trim((string)$val);
+            if ($val !== null && trim((string) $val) !== '') {
+                return trim((string) $val);
             }
         }
         return $default;
@@ -921,8 +944,13 @@ class TriDharmaImportController extends Controller
 
         // Normalize semester
         $semesterMap = [
-            'ganjil' => 'ganjil', 'gasal' => 'ganjil', 'odd' => 'ganjil', '1' => 'ganjil',
-            'genap' => 'genap', 'even' => 'genap', '2' => 'genap',
+            'ganjil' => 'ganjil',
+            'gasal' => 'ganjil',
+            'odd' => 'ganjil',
+            '1' => 'ganjil',
+            'genap' => 'genap',
+            'even' => 'genap',
+            '2' => 'genap',
         ];
         $semester = $semesterMap[$semesterRaw] ?? null;
 
@@ -952,13 +980,18 @@ class TriDharmaImportController extends Controller
             // Normalize jenis aliases
             $jenisMap = [
                 'mandiri' => 'mandiri',
-                'hibah_internal' => 'hibah_internal', 'hibah internal' => 'hibah_internal', 'internal' => 'hibah_internal',
-                'hibah_eksternal' => 'hibah_eksternal', 'hibah eksternal' => 'hibah_eksternal', 'eksternal' => 'hibah_eksternal',
-                'kerjasama' => 'kerjasama', 'kerja sama' => 'kerjasama',
+                'hibah_internal' => 'hibah_internal',
+                'hibah internal' => 'hibah_internal',
+                'internal' => 'hibah_internal',
+                'hibah_eksternal' => 'hibah_eksternal',
+                'hibah eksternal' => 'hibah_eksternal',
+                'eksternal' => 'hibah_eksternal',
+                'kerjasama' => 'kerjasama',
+                'kerja sama' => 'kerjasama',
             ];
             $jenis = $jenisMap[$jenis] ?? 'mandiri';
 
-            $status = strtolower(trim((string)($assoc['status'] ?? 'proposal')));
+            $status = strtolower(trim((string) ($assoc['status'] ?? 'proposal')));
             if (!in_array($status, ['proposal', 'berjalan', 'selesai', 'ditolak'], true)) {
                 $status = 'proposal';
             }
@@ -981,11 +1014,18 @@ class TriDharmaImportController extends Controller
             $jenis = strtolower($this->getVal($assoc, ['jenis', 'jenis_publikasi', 'type'], 'jurnal'));
             // Normalize jenis aliases
             $jenisMap = [
-                'jurnal' => 'jurnal', 'journal' => 'jurnal',
-                'prosiding' => 'prosiding', 'proceeding' => 'prosiding', 'proceedings' => 'prosiding',
-                'buku' => 'buku', 'book' => 'buku',
-                'book_chapter' => 'book_chapter', 'book chapter' => 'book_chapter', 'chapter' => 'book_chapter',
-                'paten' => 'paten', 'patent' => 'paten',
+                'jurnal' => 'jurnal',
+                'journal' => 'jurnal',
+                'prosiding' => 'prosiding',
+                'proceeding' => 'prosiding',
+                'proceedings' => 'prosiding',
+                'buku' => 'buku',
+                'book' => 'buku',
+                'book_chapter' => 'book_chapter',
+                'book chapter' => 'book_chapter',
+                'chapter' => 'book_chapter',
+                'paten' => 'paten',
+                'patent' => 'paten',
                 'hki' => 'hki',
             ];
             $jenis = $jenisMap[$jenis] ?? 'jurnal';
@@ -995,12 +1035,12 @@ class TriDharmaImportController extends Controller
                 $namaPublikasi = $judul; // Use judul as fallback
             }
 
-            $indexing = strtolower(trim((string)($assoc['indexing'] ?? '')));
+            $indexing = strtolower(trim((string) ($assoc['indexing'] ?? '')));
             if ($indexing === '') {
                 $indexing = null;
             }
 
-            $quartile = strtoupper(trim((string)($assoc['quartile'] ?? '')));
+            $quartile = strtoupper(trim((string) ($assoc['quartile'] ?? '')));
             if ($quartile === '') {
                 $quartile = null;
             }
@@ -1029,13 +1069,17 @@ class TriDharmaImportController extends Controller
             $jenis = strtolower($this->getVal($assoc, ['jenis', 'jenis_hibah', 'jenis_pengabdian', 'type'], 'mandiri'));
             // Normalize jenis aliases
             $jenisMap = [
-                'internal' => 'internal', 'hibah_internal' => 'internal', 'hibah internal' => 'internal',
-                'eksternal' => 'eksternal', 'hibah_eksternal' => 'eksternal', 'hibah eksternal' => 'eksternal',
+                'internal' => 'internal',
+                'hibah_internal' => 'internal',
+                'hibah internal' => 'internal',
+                'eksternal' => 'eksternal',
+                'hibah_eksternal' => 'eksternal',
+                'hibah eksternal' => 'eksternal',
                 'mandiri' => 'mandiri',
             ];
             $jenis = $jenisMap[$jenis] ?? 'mandiri';
 
-            $status = strtolower(trim((string)($assoc['status'] ?? 'proposal')));
+            $status = strtolower(trim((string) ($assoc['status'] ?? 'proposal')));
             if (!in_array($status, ['proposal', 'berjalan', 'selesai', 'ditolak'], true)) {
                 $status = 'proposal';
             }
@@ -1219,7 +1263,7 @@ class TriDharmaImportController extends Controller
     {
         $parts = [];
         foreach ($uniqueBy as $col) {
-            $parts[] = (string)($payload[$col] ?? '');
+            $parts[] = (string) ($payload[$col] ?? '');
         }
         return implode('|', $parts);
     }

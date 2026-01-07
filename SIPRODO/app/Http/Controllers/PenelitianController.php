@@ -43,10 +43,10 @@ class PenelitianController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('judul_penelitian', 'like', "%{$search}%")
-                  ->orWhere('abstrak', 'like', "%{$search}%")
-                  ->orWhereHas('user', function ($u) use ($search) {
-                      $u->where('name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('abstrak', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($u) use ($search) {
+                        $u->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -105,6 +105,9 @@ class PenelitianController extends Controller
             'file_proposal' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
             'file_laporan' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
             'catatan' => 'nullable|string',
+            'anggota_peneliti' => 'nullable|array',
+            'anggota_peneliti.*.nama' => 'required_with:anggota_peneliti|string',
+            'anggota_peneliti.*.nip' => 'nullable|string',
         ]);
 
         if (!Auth::check()) {
@@ -113,6 +116,11 @@ class PenelitianController extends Controller
 
         $validated['user_id'] = Auth::id();
         $validated['status_verifikasi'] = 'pending';
+
+        // Process Anggota Peneliti
+        if ($request->has('anggota_peneliti')) {
+            $validated['anggota'] = json_encode(array_values($request->anggota_peneliti));
+        }
 
         if ($request->hasFile('file_proposal')) {
             $originalName = $request->file('file_proposal')->getClientOriginalName();
@@ -183,7 +191,19 @@ class PenelitianController extends Controller
             'file_proposal' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
             'file_laporan' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
             'catatan' => 'nullable|string',
+            'anggota_peneliti' => 'nullable|array',
+            'anggota_peneliti.*.nama' => 'required_with:anggota_peneliti|string',
+            'anggota_peneliti.*.nip' => 'nullable|string',
         ]);
+
+        // Process Anggota Peneliti
+        if ($request->has('anggota_peneliti')) {
+            $validated['anggota'] = json_encode(array_values($request->anggota_peneliti));
+        } else {
+            // If not present (e.g. empty), it might be cleared or just not sent.
+            // Given the view sends empty array or hidden inputs, we should check if we need to explicitly set it to null or empty json.
+            // For now, let's assume if it is sent as array it overwrites.
+        }
 
         if ($request->hasFile('file_proposal')) {
             if ($penelitian->file_proposal) {
@@ -261,7 +281,7 @@ class PenelitianController extends Controller
         $filename = basename($penelitian->file_proposal);
         // Remove timestamp prefix (format: timestamp_filename)
         $originalName = preg_replace('/^\d+_/', '', $filename);
-        
+
         $filePath = Storage::disk('public')->path($penelitian->file_proposal);
         /** @phpstan-ignore-next-line */
         return Response::download($filePath, $originalName);
@@ -288,7 +308,7 @@ class PenelitianController extends Controller
         $filename = basename($penelitian->file_laporan);
         // Remove timestamp prefix (format: timestamp_filename)
         $originalName = preg_replace('/^\d+_/', '', $filename);
-        
+
         $filePath = Storage::disk('public')->path($penelitian->file_laporan);
         /** @phpstan-ignore-next-line */
         return Response::download($filePath, $originalName);

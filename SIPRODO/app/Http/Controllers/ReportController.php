@@ -51,7 +51,7 @@ class ReportController extends Controller
         $penelitianQuery = $tahun ?
             Penelitian::where('tahun', 'like', $tahun . '%') :
             Penelitian::rentangTahun(2022);
-        
+
         if ($semester) {
             $penelitianQuery->where('semester', $semester);
         }
@@ -151,7 +151,7 @@ class ReportController extends Controller
             $export->addSheet(new TriDharmaExport(
                 $penelitianData,
                 'penelitian',
-                ['No', 'Judul Penelitian', 'Nama Dosen', 'NIDN', 'Jenis', 'Tahun', 'Semester', 'Sumber Dana', 'Anggaran', 'Tanggal Mulai', 'Tanggal Selesai', 'Status', 'Status Verifikasi']
+                ['No', 'Judul Penelitian', 'Nama Dosen', 'NIP', 'Jenis', 'Tahun', 'Semester', 'Sumber Dana', 'Anggaran', 'Tanggal Mulai', 'Tanggal Selesai', 'Status', 'Status Verifikasi']
             ));
 
             // Add Publikasi sheet
@@ -159,7 +159,7 @@ class ReportController extends Controller
             $export->addSheet(new TriDharmaExport(
                 $publikasiData,
                 'publikasi',
-                ['No', 'Judul Publikasi', 'Nama Dosen', 'NIDN', 'Jenis', 'Nama Jurnal/Penerbit', 'Penerbit', 'ISSN/ISBN', 'Volume', 'Nomor', 'Halaman', 'Tanggal Terbit', 'Indexing', 'Quartile', 'DOI', 'URL', 'Tahun', 'Semester', 'Status Verifikasi']
+                ['No', 'Judul Publikasi', 'Nama Dosen', 'NIP', 'Jenis', 'Nama Jurnal/Penerbit', 'Penerbit', 'ISSN/ISBN', 'Volume', 'Nomor', 'Halaman', 'Tanggal Terbit', 'Indexing', 'Quartile', 'DOI', 'URL', 'Tahun', 'Semester', 'Status Verifikasi']
             ));
 
             // Add Pengmas sheet
@@ -167,7 +167,7 @@ class ReportController extends Controller
             $export->addSheet(new TriDharmaExport(
                 $pengmasData,
                 'pengmas',
-                ['No', 'Judul PKM', 'Nama Dosen', 'NIDN', 'Jenis Hibah', 'Skema', 'Mitra', 'Jumlah Peserta', 'Tahun', 'Semester', 'Sumber Dana', 'Anggaran', 'Tanggal Mulai', 'Tanggal Selesai', 'Tim Abdimas', 'Anggota Mahasiswa', 'SDG', 'Status', 'Status Verifikasi']
+                ['No', 'Judul PKM', 'Nama Dosen', 'NIP', 'Jenis Hibah', 'Skema', 'Mitra', 'Jumlah Peserta', 'Tahun', 'Semester', 'Sumber Dana', 'Anggaran', 'Tanggal Mulai', 'Tanggal Selesai', 'Tim Abdimas', 'Anggota Mahasiswa', 'SDG', 'Status', 'Status Verifikasi']
             ));
 
             return Excel::download($export, $filename);
@@ -176,19 +176,19 @@ class ReportController extends Controller
         // Single type export
         if ($jenis === 'penelitian') {
             $data = $this->getPenelitianExportData($tahun, $semester, $user_id);
-            $headings = ['No', 'Judul Penelitian', 'Nama Dosen', 'NIDN', 'Jenis', 'Tahun', 'Semester', 'Sumber Dana', 'Anggaran', 'Tanggal Mulai', 'Tanggal Selesai', 'Status', 'Status Verifikasi'];
+            $headings = ['No', 'Judul Penelitian', 'Nama Dosen', 'NIP', 'Jenis', 'Tahun', 'Semester', 'Sumber Dana', 'Anggaran', 'Tanggal Mulai', 'Tanggal Selesai', 'Status', 'Status Verifikasi'];
             return Excel::download(new TriDharmaExport($data, 'penelitian', $headings), $filename);
         }
 
         if ($jenis === 'publikasi') {
             $data = $this->getPublikasiExportData($tahun, $semester, $user_id);
-            $headings = ['No', 'Judul Publikasi', 'Nama Dosen', 'NIDN', 'Jenis', 'Nama Jurnal/Penerbit', 'Penerbit', 'ISSN/ISBN', 'Volume', 'Nomor', 'Halaman', 'Tanggal Terbit', 'Indexing', 'Quartile', 'DOI', 'URL', 'Tahun', 'Semester', 'Status Verifikasi'];
+            $headings = ['No', 'Judul Publikasi', 'Nama Dosen', 'NIP', 'Jenis', 'Nama Jurnal/Penerbit', 'Penerbit', 'ISSN/ISBN', 'Volume', 'Nomor', 'Halaman', 'Tanggal Terbit', 'Indexing', 'Quartile', 'DOI', 'URL', 'Tahun', 'Semester', 'Status Verifikasi'];
             return Excel::download(new TriDharmaExport($data, 'publikasi', $headings), $filename);
         }
 
         if ($jenis === 'pengmas') {
             $data = $this->getPengmasExportData($tahun, $semester, $user_id);
-            $headings = ['No', 'Judul PKM', 'Nama Dosen', 'NIDN', 'Jenis Hibah', 'Skema', 'Mitra', 'Jumlah Peserta', 'Tahun', 'Semester', 'Sumber Dana', 'Anggaran', 'Tanggal Mulai', 'Tanggal Selesai', 'Tim Abdimas', 'Anggota Mahasiswa', 'SDG', 'Status', 'Status Verifikasi'];
+            $headings = ['No', 'Judul PKM', 'Nama Dosen', 'NIP', 'Jenis Hibah', 'Skema', 'Mitra', 'Jumlah Peserta', 'Tahun', 'Semester', 'Sumber Dana', 'Anggaran', 'Tanggal Mulai', 'Tanggal Selesai', 'Tim Abdimas', 'Anggota Mahasiswa', 'SDG', 'Status', 'Status Verifikasi'];
             return Excel::download(new TriDharmaExport($data, 'pengmas', $headings), $filename);
         }
 
@@ -206,8 +206,10 @@ class ReportController extends Controller
         } else {
             $query->rentangTahun(2022);
         }
-        if ($semester) $query->where('semester', $semester);
-        if ($user_id) $query->where('user_id', $user_id);
+        if ($semester)
+            $query->where('semester', $semester);
+        if ($user_id)
+            $query->where('user_id', $user_id);
 
         $items = $query->orderBy('created_at', 'desc')->get();
         $data = collect();
@@ -218,12 +220,12 @@ class ReportController extends Controller
                 $no++,
                 $item->judul_penelitian,
                 $item->user ? $item->user->name : '-',
-                $item->user ? $item->user->nidn : '-',
+                $item->user ? $item->user->nip : '-',
                 $item->jenis,
                 $item->tahun,
                 $item->semester,
                 $item->sumber_dana ?? '-',
-                $item->anggaran ? number_format($item->anggaran, 0, ',', '.') : '-',
+                $item->anggaran ? number_format((float) $item->anggaran, 0, ',', '.') : '-',
                 $item->tanggal_mulai ?? '-',
                 $item->tanggal_selesai ?? '-',
                 $item->status,
@@ -245,7 +247,8 @@ class ReportController extends Controller
         } else {
             $query->rentangTahun(2022);
         }
-        if ($user_id) $query->where('user_id', $user_id);
+        if ($user_id)
+            $query->where('user_id', $user_id);
 
         $items = $query->orderBy('created_at', 'desc')->get();
         $data = collect();
@@ -256,7 +259,7 @@ class ReportController extends Controller
                 $no++,
                 $item->judul_publikasi,
                 $item->user ? $item->user->name : '-',
-                $item->user ? $item->user->nidn : '-',
+                $item->user ? $item->user->nip : '-',
                 $item->jenis,
                 $item->nama_publikasi ?? '-',
                 $item->penerbit ?? '-',
@@ -289,8 +292,10 @@ class ReportController extends Controller
         } else {
             $query->rentangTahun(2022);
         }
-        if ($semester) $query->where('semester', $semester);
-        if ($user_id) $query->where('user_id', $user_id);
+        if ($semester)
+            $query->where('semester', $semester);
+        if ($user_id)
+            $query->where('user_id', $user_id);
 
         $items = $query->orderBy('created_at', 'desc')->get();
         $data = collect();
@@ -301,7 +306,7 @@ class ReportController extends Controller
                 $no++,
                 $item->judul_pkm,
                 $item->user ? $item->user->name : '-',
-                $item->user ? $item->user->nidn : '-',
+                $item->user ? $item->user->nip : '-',
                 $item->jenis_hibah ?? '-',
                 $item->skema ?? '-',
                 $item->mitra ?? '-',
@@ -309,11 +314,11 @@ class ReportController extends Controller
                 $item->tahun,
                 $item->semester,
                 $item->sumber_dana ?? '-',
-                $item->anggaran ? number_format($item->anggaran, 0, ',', '.') : '-',
+                $item->anggaran ? number_format((float) $item->anggaran, 0, ',', '.') : '-',
                 $item->tanggal_mulai ?? '-',
                 $item->tanggal_selesai ?? '-',
-                implode(', ', $this->parseArrayField($item->getAttributes()['tim_abdimas'] ?? $item->tim_abdimas)),
-                implode(', ', $this->parseArrayField($item->getAttributes()['anggota_mahasiswa'] ?? $item->anggota_mahasiswa)),
+                implode("\n", $this->parseArrayField($item->getAttributes()['tim_abdimas'] ?? $item->tim_abdimas)),
+                implode("\n", $this->parseArrayField($item->getAttributes()['anggota_mahasiswa'] ?? $item->anggota_mahasiswa)),
                 $item->sdg ?? '-',
                 $item->status,
                 $item->status_verifikasi,
@@ -338,7 +343,7 @@ class ReportController extends Controller
 
         // Get data
         $data = [];
-        
+
         if ($jenis === 'all' || $jenis === 'penelitian') {
             // Handle tahun akademik kosong (semua periode)
             $query = Penelitian::with('user');
@@ -347,9 +352,11 @@ class ReportController extends Controller
             } else {
                 $query->rentangTahun(2022); // Semua tahun dari 2022
             }
-            
-            if ($semester) $query->where('semester', $semester);
-            if ($user_id) $query->where('user_id', $user_id);
+
+            if ($semester)
+                $query->where('semester', $semester);
+            if ($user_id)
+                $query->where('user_id', $user_id);
             $data['penelitian'] = $query->get();
         }
 
@@ -361,8 +368,9 @@ class ReportController extends Controller
             } else {
                 $query->rentangTahun(2022); // Semua tahun dari 2022
             }
-            
-            if ($user_id) $query->where('user_id', $user_id);
+
+            if ($user_id)
+                $query->where('user_id', $user_id);
             $data['publikasi'] = $query->get();
         }
 
@@ -374,9 +382,11 @@ class ReportController extends Controller
             } else {
                 $query->rentangTahun(2022); // Semua tahun dari 2022
             }
-            
-            if ($semester) $query->where('semester', $semester);
-            if ($user_id) $query->where('user_id', $user_id);
+
+            if ($semester)
+                $query->where('semester', $semester);
+            if ($user_id)
+                $query->where('user_id', $user_id);
             $data['pengmas'] = $query->get();
         }
 
@@ -418,7 +428,7 @@ class ReportController extends Controller
         }
 
         // Sort by total productivity
-        usort($productivity, function($a, $b) {
+        usort($productivity, function ($a, $b) {
             $totalA = $a['penelitian'] + $a['publikasi'] + $a['pengmas'];
             $totalB = $b['penelitian'] + $b['publikasi'] + $b['pengmas'];
             return $totalB - $totalA;

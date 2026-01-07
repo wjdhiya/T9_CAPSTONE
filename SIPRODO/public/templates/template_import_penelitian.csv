@@ -1,4 +1,4 @@
-nidn,judul,tahun,semester,jenis,abstrak,sumber_dana,anggaran,tanggal_mulai,tanggal_selesai,status
+nip,judul,tahun,semester,jenis,abstrak,sumber_dana,anggaran,tanggal_mulai,tanggal_selesai,status
 0402019001,Analisis Penerapan Machine Learning dalam Prediksi Cuaca,2024,ganjil,mandiri,Penelitian tentang penggunaan algoritma ML untuk memprediksi cuaca,Mandiri,5000000,2024-01-15,2024-06-15,selesai
 0403009901,Pengembangan Sistem Informasi Akademik Berbasis Web,2024,ganjil,hibah_internal,Penelitian pengembangan sistem informasi untuk perguruan tinggi,Hibah Internal,15000000,2024-02-01,2024-07-31,berjalan
 0402019001,Studi Komparasi Framework JavaScript untuk Aplikasi Mobile,2024,genap,kerjasama,Penelitian perbandingan performa framework React Native vs Flutter,Kerjasama Industri,25000000,2024-08-01,2024-12-31,proposal

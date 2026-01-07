@@ -10,13 +10,15 @@
 
     <div class="min-h-screen py-12" style="background-color: #f8f8f8;">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            
-            <form method="POST" action="{{ isset($penelitian) ? route('penelitian.update', $penelitian) : route('penelitian.store') }}" enctype="multipart/form-data">
+
+            <form method="POST"
+                action="{{ isset($penelitian) ? route('penelitian.update', $penelitian) : route('penelitian.store') }}"
+                enctype="multipart/form-data">
                 @csrf
                 @if(isset($penelitian))
                     @method('PUT')
                 @endif
-                
+
                 {{-- Header Card --}}
                 <div class="bg-white rounded-xl shadow-xl p-6 mb-6 border-l-4 border-telkom-green">
                     <div class="flex items-center gap-3">
@@ -33,30 +35,34 @@
                 {{-- Section 1: Informasi Utama --}}
                 <div class="bg-white rounded-xl shadow-xl p-6 mb-6">
                     <h2 class="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Informasi Utama</h2>
-                    
+
                     <div class="space-y-6">
-                        
+
                         <div>
-                            <label for="judul_penelitian" class="block text-sm font-medium text-gray-700 mb-2">Judul Penelitian <span class="text-red-600">*</span></label>
-                            <input type="text" id="judul_penelitian" name="judul_penelitian" value="{{ old('judul_penelitian', $penelitian->judul_penelitian ?? '') }}" required
-                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
-                                   placeholder="Masukkan judul penelitian">
+                            <label for="judul_penelitian" class="block text-sm font-medium text-gray-700 mb-2">Judul
+                                Penelitian <span class="text-red-600">*</span></label>
+                            <input type="text" id="judul_penelitian" name="judul_penelitian"
+                                value="{{ old('judul_penelitian', $penelitian->judul_penelitian ?? '') }}" required
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
+                                placeholder="Masukkan judul penelitian">
                             @error('judul_penelitian')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
-                            <label for="abstrak" class="block text-sm font-medium text-gray-700 mb-2">Abstrak <span class="text-red-600">*</span></label>
+                            <label for="abstrak" class="block text-sm font-medium text-gray-700 mb-2">Abstrak <span
+                                    class="text-red-600">*</span></label>
                             <textarea id="abstrak" name="abstrak" rows="4" required
-                                      class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all resize-none"
-                                      placeholder="Jelaskan secara singkat mengenai penelitian ini...">{{ old('abstrak', $penelitian->abstrak ?? '') }}</textarea>
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all resize-none"
+                                placeholder="Jelaskan secara singkat mengenai penelitian ini...">{{ old('abstrak', $penelitian->abstrak ?? '') }}</textarea>
                             @error('abstrak')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
-                                <label for="jenis" class="block text-sm font-medium text-gray-700 mb-2">Jenis Penelitian <span class="text-red-600">*</span></label>
+                                <label for="jenis" class="block text-sm font-medium text-gray-700 mb-2">Jenis Penelitian
+                                    <span class="text-red-600">*</span></label>
                                 <select id="jenis" name="jenis" required
-                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all bg-white">
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all bg-white">
                                     <option value="">Pilih Jenis</option>
                                     <option value="mandiri" {{ old('jenis', $penelitian->jenis ?? '') == 'mandiri' ? 'selected' : '' }}>Mandiri</option>
                                     <option value="hibah_internal" {{ old('jenis', $penelitian->jenis ?? '') == 'hibah_internal' ? 'selected' : '' }}>Hibah Internal</option>
@@ -66,217 +72,322 @@
                                 @error('jenis')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                             </div>
 
-                            <div>
-                                <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status Penelitian <span class="text-red-600">*</span></label>
-                                <select id="status" name="status" required
-                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all bg-white">
-                                    <option value="">Pilih Status</option>
-                                    <option value="proposal" {{ old('status', $penelitian->status ?? '') == 'proposal' ? 'selected' : '' }}>📋 Proposal</option>
-                                    <option value="berjalan" {{ old('status', $penelitian->status ?? '') == 'berjalan' ? 'selected' : '' }}>🏃 Berjalan</option>
-                                    <option value="selesai" {{ old('status', $penelitian->status ?? '') == 'selesai' ? 'selected' : '' }}>✅ Selesai</option>
-                                </select>
-                                @error('status')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                            {{-- Dynamic Team Section --}}
+                            <div x-data="{ 
+                                members: {{ isset($penelitian) && $penelitian->anggota ? json_encode(json_decode($penelitian->anggota)) : '[{ "nama": "", "nip": "", "id": ' . time() . ' }]' }},
+                                addMember() {
+                                    this.members.push({ id: Date.now(), nama: '', nip: '' });
+                                },
+                                removeMember(index) {
+                                    if (this.members.length > 1) {
+                                        this.members.splice(index, 1);
+                                    }
+                                }
+                             }" class="col-span-full mb-6">
 
-                {{-- Section 2: Waktu & Pelaksanaan --}}
-                <div class="bg-white rounded-xl shadow-xl p-6 mb-6">
-                    <h2 class="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Waktu & Pelaksanaan</h2>
-                    
-                    <div class="space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div>
-                                <label for="tahun" class="block text-sm font-medium text-gray-700 mb-2">Tahun <span class="text-red-600">*</span></label>
-                                <input type="text" id="tahun" name="tahun" value="{{ old('tahun', $penelitian->tahun ?? (date('Y') . '/' . (date('Y') + 1))) }}" required
-                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
-                                       placeholder="2024/2025">
-                                @error('tahun')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
-                            </div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <label class="block text-sm font-bold text-gray-800">Tim Peneliti</label>
+                                    <button type="button" @click="addMember()"
+                                        class="text-sm text-telkom-blue hover:text-blue-700 font-medium flex items-center">
+                                        <i class="fas fa-plus-circle mr-1"></i> Tambah Peneliti
+                                    </button>
+                                </div>
 
-                            <div>
-                                <label for="semester" class="block text-sm font-medium text-gray-700 mb-2">Semester <span class="text-red-600">*</span></label>
-                                <select id="semester" name="semester" required
-                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all bg-white">
-                                    <option value="">Pilih Semester</option>
-                                    <option value="ganjil" {{ old('semester', $penelitian->semester ?? '') == 'ganjil' ? 'selected' : '' }}>Ganjil</option>
-                                    <option value="genap" {{ old('semester', $penelitian->semester ?? '') == 'genap' ? 'selected' : '' }}>Genap</option>
-                                </select>
-                                @error('semester')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div>
-                                <label for="tanggal_mulai" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Mulai <span class="text-red-600">*</span></label>
-                                <input type="date" id="tanggal_mulai" name="tanggal_mulai" value="{{ old('tanggal_mulai', $penelitian->tanggal_mulai ?? '') }}" required
-                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all">
-                                @error('tanggal_mulai')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
-                            </div>
-
-                            <div>
-                                <label for="tanggal_selesai" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Selesai <span class="text-red-600">*</span></label>
-                                <input type="date" id="tanggal_selesai" name="tanggal_selesai" value="{{ old('tanggal_selesai', $penelitian->tanggal_selesai ?? '') }}" required
-                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all">
-                                @error('tanggal_selesai')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Section 3: Pendanaan --}}
-                <div class="bg-white rounded-xl shadow-xl p-6 mb-6">
-                    <h2 class="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Pendanaan</h2>
-                    
-                    <div class="space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div>
-                                <label for="anggaran" class="block text-sm font-medium text-gray-700 mb-2">Anggaran (Rp)</label>
-                                <input type="number" id="anggaran" name="anggaran" value="{{ old('anggaran', $penelitian->anggaran ?? '') }}" min="0"
-                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
-                                       placeholder="0">
-                                @error('anggaran')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
-                            </div>
-
-                            <div>
-                                <label for="sumber_dana" class="block text-sm font-medium text-gray-700 mb-2">Sumber Dana</label>
-                                <input type="text" id="sumber_dana" name="sumber_dana" value="{{ old('sumber_dana', $penelitian->sumber_dana ?? '') }}"
-                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
-                                       placeholder="Contoh: DIKTI, Internal, dll">
-                                @error('sumber_dana')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Section 4: Dokumen --}}
-                <div class="bg-white rounded-xl shadow-xl p-6 mb-6">
-                    <h2 class="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Dokumen</h2>
-                    
-                    <div class="space-y-6">
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            {{-- File Proposal --}}
-                            <div>
-                                <label for="file_proposal" class="block text-sm font-medium text-gray-700 mb-2">File Proposal (PDF, max 10MB)</label>
-                                
-                                @if(isset($penelitian) && $penelitian->file_proposal)
-                                    {{-- Tampilan jika file sudah ada --}}
-                                    <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card" id="file_proposal_card">
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex items-center">
-                                                <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3"></i>
-                                                <div>
-                                                    <p class="text-sm font-medium text-gray-900">{{ Str::limit(preg_replace('/^\d+_/', '', basename($penelitian->file_proposal)), 30, '...') }}</p>
-                                                    <p class="text-xs text-gray-500">Dokumen tersimpan</p>
-                                                </div>
+                                <div class="space-y-3">
+                                    <template x-for="(member, index) in members" :key="index">
+                                        <div
+                                            class="flex flex-col md:flex-row gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200 items-end hover:border-blue-200 transition-colors">
+                                            <div class="flex-1 w-full">
+                                                <label class="block text-xs font-medium text-gray-500 mb-1">Nama
+                                                    Peneliti</label>
+                                                <input type="text" :name="'anggota_peneliti[' + index + '][nama]'"
+                                                    x-model="member.nama"
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-telkom-blue focus:border-telkom-blue text-sm"
+                                                    placeholder="Nama Lengkap Peneliti" required />
                                             </div>
-                                            <a href="{{ Storage::url($penelitian->file_proposal) }}" target="_blank" class="text-telkom-blue hover:underline text-sm">Lihat</a>
+                                            <div class="flex-1 w-full">
+                                                <label class="block text-xs font-medium text-gray-500 mb-1">NIP</label>
+                                                <input type="text" :name="'anggota_peneliti[' + index + '][nip]'"
+                                                    x-model="member.nip"
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-telkom-blue focus:border-telkom-blue text-sm"
+                                                    placeholder="NIP Peneliti" />
+                                            </div>
+                                            <div class="w-auto">
+                                                <button type="button" @click="removeMember(index)"
+                                                    :disabled="members.length === 1"
+                                                    :class="members.length === 1 ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 hover:border-red-300 cursor-pointer shadow-sm'"
+                                                    class="w-[38px] h-[38px] flex items-center justify-center border rounded-md transition-all"
+                                                    title="Hapus Peneliti">
+                                                    <i class="fas fa-trash-alt w-4 h-4"></i>
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
-                                    {{-- Tampilan Upload Ganti File (Gaya Dropzone) --}}
-                                    <div class="file-upload-area" id="file_proposal_replace">
-                                        <label for="file_proposal" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-gray-500 mb-2"></i>
-                                                <p class="text-sm text-gray-600">
-                                                    <span class="text-gray-500 font-semibold">Klik untuk mengganti file</span> atau drag and drop
-                                                </p>
-                                                <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
-                                            </div>
-                                            <input type="file" id="file_proposal" name="file_proposal" accept=".pdf" class="hidden">
-                                        </label>
-                                    </div>
-                                @else
-                                    {{-- Tampilan Upload Kosong (Gaya Dropzone) --}}
-                                    <div class="file-upload-area" id="file_proposal_upload">
-                                        <label for="file_proposal" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-gray-500 mb-2"></i>
-                                                <p class="text-sm text-gray-600">
-                                                    <span class="text-gray-500 font-semibold">Klik untuk upload</span> atau drag and drop
-                                                </p>
-                                                <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
-                                            </div>
-                                            <input type="file" id="file_proposal" name="file_proposal" accept=".pdf" class="hidden">
-                                        </label>
-                                    </div>
-                                @endif
-                                @error('file_proposal')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                                    </template>
+                                </div>
                             </div>
 
-                            {{-- File Laporan --}}
-                            <div>
-                                <label for="file_laporan" class="block text-sm font-medium text-gray-700 mb-2">File Laporan (PDF, max 10MB)</label>
-                                
-                                @if(isset($penelitian) && $penelitian->file_laporan)
-                                    {{-- Tampilan jika file sudah ada --}}
-                                    <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card" id="file_laporan_card">
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex items-center">
-                                                <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3"></i>
-                                                <div>
-                                                    <p class="text-sm font-medium text-gray-900">{{ Str::limit(preg_replace('/^\d+_/', '', basename($penelitian->file_laporan)), 30, '...') }}</p>
-                                                    <p class="text-xs text-gray-500">Dokumen tersimpan</p>
-                                                </div>
-                                            </div>
-                                            <a href="{{ Storage::url($penelitian->file_laporan) }}" target="_blank" class="text-telkom-blue hover:underline text-sm">Lihat</a>
-                                        </div>
-                                    </div>
-                                    <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin mengganti dokumen.</p>
-                                    {{-- Tampilan Upload Ganti File (Gaya Dropzone) --}}
-                                    <div class="file-upload-area" id="file_laporan_replace">
-                                        <label for="file_laporan" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-gray-500 mb-2"></i>
-                                                <p class="text-sm text-gray-600">
-                                                    <span class="text-gray-500 font-semibold">Klik untuk mengganti file</span> atau drag and drop
-                                                </p>
-                                                <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
-                                            </div>
-                                            <input type="file" id="file_laporan" name="file_laporan" accept=".pdf" class="hidden">
-                                        </label>
-                                    </div>
-                                @else
-                                    {{-- Tampilan Upload Kosong (Gaya Dropzone) --}}
-                                    <div class="file-upload-area" id="file_laporan_upload">
-                                        <label for="file_laporan" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                                <i class="fas fa-cloud-upload-alt w-8 h-8 text-gray-500 mb-2"></i>
-                                                <p class="text-sm text-gray-600">
-                                                    <span class="text-gray-500 font-semibold">Klik untuk upload</span> atau drag and drop
-                                                </p>
-                                                <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
-                                            </div>
-                                            <input type="file" id="file_laporan" name="file_laporan" accept=".pdf" class="hidden">
-                                        </label>
-                                    </div>
-                                @endif
-                                @error('file_laporan')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status
+                                        Penelitian <span class="text-red-600">*</span></label>
+                                    <select id="status" name="status" required
+                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all bg-white">
+                                        <option value="">Pilih Status</option>
+                                        <option value="proposal" {{ old('status', $penelitian->status ?? '') == 'proposal' ? 'selected' : '' }}>📋 Proposal</option>
+                                        <option value="berjalan" {{ old('status', $penelitian->status ?? '') == 'berjalan' ? 'selected' : '' }}>🏃 Berjalan</option>
+                                        <option value="selesai" {{ old('status', $penelitian->status ?? '') == 'selesai' ? 'selected' : '' }}>✅ Selesai</option>
+                                    </select>
+                                    @error('status')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                                </div>
                             </div>
-                        </div>
-
-                        {{-- Catatan --}}
-                        <div>
-                            <label for="catatan" class="block text-sm font-medium text-gray-700 mb-2">Catatan (Opsional)</label>
-                            <textarea id="catatan" name="catatan" rows="4" placeholder="Tambahkan catatan atau informasi tambahan..."
-                                      class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all resize-none">{{ old('catatan', $penelitian->catatan ?? '') }}</textarea>
-                            @error('catatan')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
                         </div>
                     </div>
-                </div>
 
-                {{-- Action Buttons --}}
-                <div class="pt-6 flex justify-end gap-3">
-                    <a href="{{ route('penelitian.index') }}" class="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors shadow-sm font-medium">
-                        Batal
-                    </a>
-                    <button type="submit" class="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 hover:shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 font-semibold">
-                        Simpan Penelitian
-                    </button>
-                </div>
+                    {{-- Section 2: Waktu & Pelaksanaan --}}
+                    <div class="bg-white rounded-xl shadow-xl p-6 mb-6">
+                        <h2 class="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Waktu &
+                            Pelaksanaan</h2>
+
+                        <div class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label for="tahun" class="block text-sm font-medium text-gray-700 mb-2">Tahun <span
+                                            class="text-red-600">*</span></label>
+                                    <input type="text" id="tahun" name="tahun"
+                                        value="{{ old('tahun', $penelitian->tahun ?? (date('Y') . '/' . (date('Y') + 1))) }}"
+                                        required
+                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
+                                        placeholder="2024/2025">
+                                    @error('tahun')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                                </div>
+
+                                <div>
+                                    <label for="semester" class="block text-sm font-medium text-gray-700 mb-2">Semester
+                                        <span class="text-red-600">*</span></label>
+                                    <select id="semester" name="semester" required
+                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all bg-white">
+                                        <option value="">Pilih Semester</option>
+                                        <option value="ganjil" {{ old('semester', $penelitian->semester ?? '') == 'ganjil' ? 'selected' : '' }}>Ganjil</option>
+                                        <option value="genap" {{ old('semester', $penelitian->semester ?? '') == 'genap' ? 'selected' : '' }}>Genap</option>
+                                    </select>
+                                    @error('semester')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label for="tanggal_mulai"
+                                        class="block text-sm font-medium text-gray-700 mb-2">Tanggal Mulai <span
+                                            class="text-red-600">*</span></label>
+                                    <input type="date" id="tanggal_mulai" name="tanggal_mulai"
+                                        value="{{ old('tanggal_mulai', $penelitian->tanggal_mulai ?? '') }}" required
+                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all">
+                                    @error('tanggal_mulai')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div>
+                                    <label for="tanggal_selesai"
+                                        class="block text-sm font-medium text-gray-700 mb-2">Tanggal Selesai <span
+                                            class="text-red-600">*</span></label>
+                                    <input type="date" id="tanggal_selesai" name="tanggal_selesai"
+                                        value="{{ old('tanggal_selesai', $penelitian->tanggal_selesai ?? '') }}"
+                                        required
+                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all">
+                                    @error('tanggal_selesai')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Section 3: Pendanaan --}}
+                    <div class="bg-white rounded-xl shadow-xl p-6 mb-6">
+                        <h2 class="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Pendanaan</h2>
+
+                        <div class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label for="anggaran" class="block text-sm font-medium text-gray-700 mb-2">Anggaran
+                                        (Rp)</label>
+                                    <input type="number" id="anggaran" name="anggaran"
+                                        value="{{ old('anggaran', $penelitian->anggaran ?? '') }}" min="0"
+                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
+                                        placeholder="0">
+                                    @error('anggaran')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                                </div>
+
+                                <div>
+                                    <label for="sumber_dana" class="block text-sm font-medium text-gray-700 mb-2">Sumber
+                                        Dana</label>
+                                    <input type="text" id="sumber_dana" name="sumber_dana"
+                                        value="{{ old('sumber_dana', $penelitian->sumber_dana ?? '') }}"
+                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all"
+                                        placeholder="Contoh: DIKTI, Internal, dll">
+                                    @error('sumber_dana')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Section 4: Dokumen --}}
+                    <div class="bg-white rounded-xl shadow-xl p-6 mb-6">
+                        <h2 class="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Dokumen</h2>
+
+                        <div class="space-y-6">
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                {{-- File Proposal --}}
+                                <div>
+                                    <label for="file_proposal" class="block text-sm font-medium text-gray-700 mb-2">File
+                                        Proposal (PDF, max 10MB)</label>
+
+                                    @if(isset($penelitian) && $penelitian->file_proposal)
+                                        {{-- Tampilan jika file sudah ada --}}
+                                        <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card"
+                                            id="file_proposal_card">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center">
+                                                    <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3"></i>
+                                                    <div>
+                                                        <p class="text-sm font-medium text-gray-900">
+                                                            {{ Str::limit(preg_replace('/^\d+_/', '', basename($penelitian->file_proposal)), 30, '...') }}
+                                                        </p>
+                                                        <p class="text-xs text-gray-500">Dokumen tersimpan</p>
+                                                    </div>
+                                                </div>
+                                                <a href="{{ Storage::url($penelitian->file_proposal) }}" target="_blank"
+                                                    class="text-telkom-blue hover:underline text-sm">Lihat</a>
+                                            </div>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin
+                                            mengganti dokumen.</p>
+                                        {{-- Tampilan Upload Ganti File (Gaya Dropzone) --}}
+                                        <div class="file-upload-area" id="file_proposal_replace">
+                                            <label for="file_proposal"
+                                                class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                    <i class="fas fa-cloud-upload-alt w-8 h-8 text-gray-500 mb-2"></i>
+                                                    <p class="text-sm text-gray-600">
+                                                        <span class="text-gray-500 font-semibold">Klik untuk mengganti
+                                                            file</span> atau drag and drop
+                                                    </p>
+                                                    <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
+                                                </div>
+                                                <input type="file" id="file_proposal" name="file_proposal" accept=".pdf"
+                                                    class="hidden">
+                                            </label>
+                                        </div>
+                                    @else
+                                        {{-- Tampilan Upload Kosong (Gaya Dropzone) --}}
+                                        <div class="file-upload-area" id="file_proposal_upload">
+                                            <label for="file_proposal"
+                                                class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                    <i class="fas fa-cloud-upload-alt w-8 h-8 text-gray-500 mb-2"></i>
+                                                    <p class="text-sm text-gray-600">
+                                                        <span class="text-gray-500 font-semibold">Klik untuk upload</span>
+                                                        atau drag and drop
+                                                    </p>
+                                                    <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
+                                                </div>
+                                                <input type="file" id="file_proposal" name="file_proposal" accept=".pdf"
+                                                    class="hidden">
+                                            </label>
+                                        </div>
+                                    @endif
+                                    @error('file_proposal')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                {{-- File Laporan --}}
+                                <div>
+                                    <label for="file_laporan" class="block text-sm font-medium text-gray-700 mb-2">File
+                                        Laporan (PDF, max 10MB)</label>
+
+                                    @if(isset($penelitian) && $penelitian->file_laporan)
+                                        {{-- Tampilan jika file sudah ada --}}
+                                        <div class="p-4 bg-telkom-blue-light border border-gray-300 rounded-lg file-card"
+                                            id="file_laporan_card">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center">
+                                                    <i class="fas fa-file-pdf w-6 h-6 text-red-500 mr-3"></i>
+                                                    <div>
+                                                        <p class="text-sm font-medium text-gray-900">
+                                                            {{ Str::limit(preg_replace('/^\d+_/', '', basename($penelitian->file_laporan)), 30, '...') }}
+                                                        </p>
+                                                        <p class="text-xs text-gray-500">Dokumen tersimpan</p>
+                                                    </div>
+                                                </div>
+                                                <a href="{{ Storage::url($penelitian->file_laporan) }}" target="_blank"
+                                                    class="text-telkom-blue hover:underline text-sm">Lihat</a>
+                                            </div>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-1">Pilih file baru di bawah ini jika ingin
+                                            mengganti dokumen.</p>
+                                        {{-- Tampilan Upload Ganti File (Gaya Dropzone) --}}
+                                        <div class="file-upload-area" id="file_laporan_replace">
+                                            <label for="file_laporan"
+                                                class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                    <i class="fas fa-cloud-upload-alt w-8 h-8 text-gray-500 mb-2"></i>
+                                                    <p class="text-sm text-gray-600">
+                                                        <span class="text-gray-500 font-semibold">Klik untuk mengganti
+                                                            file</span> atau drag and drop
+                                                    </p>
+                                                    <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
+                                                </div>
+                                                <input type="file" id="file_laporan" name="file_laporan" accept=".pdf"
+                                                    class="hidden">
+                                            </label>
+                                        </div>
+                                    @else
+                                        {{-- Tampilan Upload Kosong (Gaya Dropzone) --}}
+                                        <div class="file-upload-area" id="file_laporan_upload">
+                                            <label for="file_laporan"
+                                                class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                    <i class="fas fa-cloud-upload-alt w-8 h-8 text-gray-500 mb-2"></i>
+                                                    <p class="text-sm text-gray-600">
+                                                        <span class="text-gray-500 font-semibold">Klik untuk upload</span>
+                                                        atau drag and drop
+                                                    </p>
+                                                    <p class="text-xs text-gray-400 mt-1">PDF (MAX. 10MB)</p>
+                                                </div>
+                                                <input type="file" id="file_laporan" name="file_laporan" accept=".pdf"
+                                                    class="hidden">
+                                            </label>
+                                        </div>
+                                    @endif
+                                    @error('file_laporan')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            {{-- Catatan --}}
+                            <div>
+                                <label for="catatan" class="block text-sm font-medium text-gray-700 mb-2">Catatan
+                                    (Opsional)</label>
+                                <textarea id="catatan" name="catatan" rows="4"
+                                    placeholder="Tambahkan catatan atau informasi tambahan..."
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-telkom-blue focus:border-transparent transition-all resize-none">{{ old('catatan', $penelitian->catatan ?? '') }}</textarea>
+                                @error('catatan')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Action Buttons --}}
+                    <div class="pt-6 flex justify-end gap-3">
+                        <a href="{{ route('penelitian.index') }}"
+                            class="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors shadow-sm font-medium">
+                            Batal
+                        </a>
+                        <button type="submit"
+                            class="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 hover:shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 font-semibold">
+                            Simpan Penelitian
+                        </button>
+                    </div>
             </form>
         </div>
     </div>
@@ -288,7 +399,7 @@
             const uploadArea = document.getElementById(uploadAreaId);
             const existingCard = document.getElementById(cardId);
 
-            input.addEventListener('change', function(e) {
+            input.addEventListener('change', function (e) {
                 const file = e.target.files[0];
                 if (file) {
                     // Hide upload area
@@ -352,7 +463,7 @@
 
             // prevent default for drag events
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                zone.addEventListener(eventName, function(e) {
+                zone.addEventListener(eventName, function (e) {
                     e.preventDefault();
                     e.stopPropagation();
                 }, false);
@@ -380,7 +491,7 @@
         }
 
         // Initialize file handlers and drag & drop
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             handleFileChange('file_proposal', 'file_proposal_upload', 'file_proposal_card');
             handleFileChange('file_proposal', 'file_proposal_replace', 'file_proposal_card');
             handleFileChange('file_laporan', 'file_laporan_upload', 'file_laporan_card');

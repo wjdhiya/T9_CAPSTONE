@@ -47,15 +47,15 @@ class DashboardController extends Controller
         // Build stats
         $stats = [
             'penelitian' => [
-                'total'    => (clone $penelitianQuery)->count(),
+                'total' => (clone $penelitianQuery)->count(),
                 'verified' => (clone $penelitianQuery)->where('status_verifikasi', 'verified')->count(),
             ],
             'publikasi' => [
-                'total'    => (clone $publikasiQuery)->count(),
+                'total' => (clone $publikasiQuery)->count(),
                 'verified' => (clone $publikasiQuery)->where('status_verifikasi', 'verified')->count(),
             ],
             'pengmas' => [
-                'total'    => (clone $pengmasQuery)->count(),
+                'total' => (clone $pengmasQuery)->count(),
                 'verified' => (clone $pengmasQuery)->where('status_verifikasi', 'verified')->count(),
             ],
         ];
@@ -68,23 +68,27 @@ class DashboardController extends Controller
             'publikasi' => 0,
             'pengmas' => 0,
         ];
-        
+
         if ($isKaprodi) {
             // Get top 5 most active lecturers in current semester
             $topLecturers = User::where('role', User::ROLE_DOSEN)
                 ->where('is_active', true)
-                ->select('id', 'name', 'nidn')
-                ->withCount(['penelitian as total_penelitian' => function($query) use ($semesterStart, $semesterEnd) {
-                    $query->whereBetween('created_at', [$semesterStart, $semesterEnd]);
-                }, 'publikasi as total_publikasi' => function($query) use ($semesterStart, $semesterEnd) {
-                    $query->whereBetween('created_at', [$semesterStart, $semesterEnd]);
-                }, 'pengabdianMasyarakat as total_pengmas' => function($query) use ($semesterStart, $semesterEnd) {
-                    $query->whereBetween('created_at', [$semesterStart, $semesterEnd]);
-                }])
+                ->select('id', 'name', 'nip')
+                ->withCount([
+                    'penelitian as total_penelitian' => function ($query) use ($semesterStart, $semesterEnd) {
+                        $query->whereBetween('created_at', [$semesterStart, $semesterEnd]);
+                    },
+                    'publikasi as total_publikasi' => function ($query) use ($semesterStart, $semesterEnd) {
+                        $query->whereBetween('created_at', [$semesterStart, $semesterEnd]);
+                    },
+                    'pengabdianMasyarakat as total_pengmas' => function ($query) use ($semesterStart, $semesterEnd) {
+                        $query->whereBetween('created_at', [$semesterStart, $semesterEnd]);
+                    }
+                ])
                 ->orderByRaw('(total_penelitian + total_publikasi + total_pengmas) DESC')
                 ->take(5)
                 ->get()
-                ->map(function($user) {
+                ->map(function ($user) {
                     $user->total_activities = $user->total_penelitian + $user->total_publikasi + $user->total_pengmas;
                     return $user;
                 });
@@ -173,7 +177,7 @@ class DashboardController extends Controller
 
         $topLecturers = User::where('role', User::ROLE_DOSEN)
             ->where('is_active', true)
-            ->select('id', 'name', 'nidn')
+            ->select('id', 'name', 'nip')
             ->withCount([
                 'penelitian as total_penelitian' => function ($query) use ($tahun, $semester) {
                     $query->where('tahun', 'like', $tahun . '%')
@@ -194,7 +198,7 @@ class DashboardController extends Controller
             ->map(function ($u) {
                 return [
                     'name' => $u->name,
-                    'nidn' => $u->nidn,
+                    'nip' => $u->nip,
                     'total_penelitian' => (int) ($u->total_penelitian ?? 0),
                     'total_publikasi' => (int) ($u->total_publikasi ?? 0),
                     'total_pengmas' => (int) ($u->total_pengmas ?? 0),

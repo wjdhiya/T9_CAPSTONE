@@ -34,12 +34,12 @@ class PublikasiController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('judul_publikasi', 'like', '%' . $search . '%')
-                  ->orWhere('penulis', 'like', '%' . $search . '%') // Pencarian Penulis (Manual input)
-                  ->orWhere('penerbit', 'like', '%' . $search . '%')
-                  // Tambahan: Cari berdasarkan nama user (Dosen pemilik data)
-                  ->orWhereHas('user', function ($subQ) use ($search) {
-                      $subQ->where('name', 'like', '%' . $search . '%');
-                  });
+                    ->orWhere('penulis', 'like', '%' . $search . '%') // Pencarian Penulis (Manual input)
+                    ->orWhere('penerbit', 'like', '%' . $search . '%')
+                    // Tambahan: Cari berdasarkan nama user (Dosen pemilik data)
+                    ->orWhereHas('user', function ($subQ) use ($search) {
+                        $subQ->where('name', 'like', '%' . $search . '%');
+                    });
             });
         }
 
@@ -107,7 +107,9 @@ class PublikasiController extends Controller
 
         $validated = $request->validate([
             'judul_publikasi' => 'required|string|max:500',
-            'penulis' => 'nullable|string',
+            'penulis' => 'nullable|array',
+            'penulis.*.nama' => 'required_with:penulis|string',
+            'penulis.*.nip' => 'nullable|string',
             'jenis' => 'required|in:jurnal,prosiding,buku,book_chapter,paten,hki',
             'penerbit' => 'nullable|string|max:255',
             'tanggal_terbit' => 'nullable|date',
@@ -127,6 +129,11 @@ class PublikasiController extends Controller
         ]);
 
         $validated['nama_publikasi'] = $validated['judul_publikasi'];
+
+        // Process Penulis
+        if ($request->has('penulis')) {
+            $validated['penulis'] = json_encode(array_values($request->penulis));
+        }
 
         $validated['user_id'] = Auth::id();
         $validated['status_verifikasi'] = 'pending';
@@ -200,7 +207,9 @@ class PublikasiController extends Controller
 
         $validated = $request->validate([
             'judul_publikasi' => 'required|string|max:500',
-            'penulis' => 'required|string|max:500',
+            'penulis' => 'nullable|array',
+            'penulis.*.nama' => 'required_with:penulis|string',
+            'penulis.*.nip' => 'nullable|string',
             'jenis' => 'required|in:jurnal,prosiding,buku,paten,hki',
             'penerbit' => 'required|string|max:255',
             'tanggal_publikasi' => 'required|date',
@@ -216,6 +225,11 @@ class PublikasiController extends Controller
             'file_publikasi' => 'nullable|file|mimes:pdf|max:10240',
             'catatan' => 'nullable|string',
         ]);
+
+        // Process Penulis
+        if ($request->has('penulis')) {
+            $validated['penulis'] = json_encode(array_values($request->penulis));
+        }
 
         // Handle file upload
         if ($request->hasFile('file_publikasi')) {
@@ -318,9 +332,9 @@ class PublikasiController extends Controller
         $filename = basename($publikasi->file_publikasi);
         // Remove timestamp prefix (format: timestamp_filename)
         $originalName = preg_replace('/^\d+_/', '', $filename);
-        
+
         $filePath = Storage::disk('public')->path($publikasi->file_publikasi);
-        
+
         return Response::download($filePath, $originalName);
     }
 }

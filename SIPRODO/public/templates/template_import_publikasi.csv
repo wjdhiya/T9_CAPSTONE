@@ -1,4 +1,4 @@
-nidn,judul,tahun,semester,jenis,nama_publikasi,penerbit,issn_isbn,volume,nomor,halaman,tanggal_terbit,doi,url
+nip,judul,tahun,semester,jenis,nama_publikasi,penerbit,issn_isbn,volume,nomor,halaman,tanggal_terbit,doi,url
 0402019001,Implementasi Deep Learning untuk Deteksi Penyakit Tanaman,2024,ganjil,jurnal,Jurnal Teknologi Informasi Indonesia,Asosiasi Perguruan Tinggi Informatika,1234-5678,10,2,45-56,2024-03-15,10.1234/jtii.2024.001,https://jurnal.example.com/article/1
 0403009901,Framework Hybrid untuk Aplikasi E-Commerce,2024,ganjil,prosiding,Prosiding Seminar Nasional Informatika,Universitas ABC,9876-5432,1,1,120-130,2024-05-20,,
 0402019001,Panduan Praktis Pemrograman Python untuk Data Science,2024,genap,buku,Buku Ajar Pemrograman,Penerbit Informatika,978-602-1234-56-7,,,1-250,2024-08-01,,

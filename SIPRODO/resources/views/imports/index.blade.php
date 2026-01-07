@@ -28,10 +28,11 @@
                         Format file didukung: CSV / XLSX.
                     </p>
                     <p class="text-gray-700 mt-2">
-                        Kolom minimal: nidn, judul_penelitian/judul_publikasi/judul_pkm, tahun, semester.
+                        Kolom minimal: nip, judul_penelitian/judul_publikasi/judul_pkm, tahun, semester.
                     </p>
                     <p class="text-gray-700 mt-2">
-                        Untuk single-file (campuran), gunakan kolom kategori/jenis_data (penelitian|publikasi|pengmas) atau sistem akan auto-detect dari field.
+                        Untuk single-file (campuran), gunakan kolom kategori/jenis_data (penelitian|publikasi|pengmas)
+                        atau sistem akan auto-detect dari field.
                     </p>
                     <p class="text-gray-700 mt-2">
                         Upsert key:
@@ -54,7 +55,8 @@
                         @error('file')
                             <div class="text-sm text-red-600 mt-2">{{ $message }}</div>
                         @enderror
-                        <button type="submit" class="mt-4 w-full px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-900">Import</button>
+                        <button type="submit"
+                            class="mt-4 w-full px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-900">Import</button>
                     </form>
                 </div>
             </div>
@@ -68,7 +70,8 @@
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Row</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Message</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Message
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200">

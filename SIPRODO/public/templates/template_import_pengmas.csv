@@ -1,4 +1,4 @@
-nidn,judul,tahun,semester,jenis,deskripsi,sumber_dana,anggaran,tanggal_mulai,tanggal_selesai,mitra,status
+nip,judul,tahun,semester,jenis,deskripsi,sumber_dana,anggaran,tanggal_mulai,tanggal_selesai,mitra,status
 0402019001,Pelatihan Digital Marketing untuk UMKM Desa Sukamaju,2024,ganjil,mandiri,Kegiatan pelatihan pemasaran digital untuk pelaku UMKM,Mandiri,5000000,2024-01-15,2024-03-15,UMKM Desa Sukamaju,selesai
 0403009901,Workshop Pembuatan Website untuk Karang Taruna,2024,ganjil,internal,Workshop pembuatan website sederhana,Hibah Internal,7500000,2024-02-01,2024-04-30,Karang Taruna Desa Mekar,berjalan
 0402019001,Sosialisasi Literasi Keuangan untuk Ibu-Ibu PKK,2024,genap,eksternal,Edukasi pengelolaan keuangan keluarga,Hibah Eksternal,10000000,2024-07-01,2024-09-30,PKK Kecamatan Maju,proposal

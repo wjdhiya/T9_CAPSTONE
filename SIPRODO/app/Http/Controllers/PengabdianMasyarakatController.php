@@ -34,12 +34,12 @@ class PengabdianMasyarakatController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('judul_pkm', 'like', '%' . $search . '%')
-                  ->orWhere('skema', 'like', '%' . $search . '%')
-                  ->orWhere('mitra', 'like', '%' . $search . '%')
-                  // Cari berdasarkan nama user (dosen pengusul)
-                  ->orWhereHas('user', function ($subQ) use ($search) {
-                      $subQ->where('name', 'like', '%' . $search . '%');
-                  });
+                    ->orWhere('skema', 'like', '%' . $search . '%')
+                    ->orWhere('mitra', 'like', '%' . $search . '%')
+                    // Cari berdasarkan nama user (dosen pengusul)
+                    ->orWhereHas('user', function ($subQ) use ($search) {
+                        $subQ->where('name', 'like', '%' . $search . '%');
+                    });
             });
         }
 
@@ -99,7 +99,7 @@ class PengabdianMasyarakatController extends Controller
 
             // Terima input 'deskripsi' atau 'abstrak'
             'deskripsi' => 'nullable|string',
-            'abstrak'   => 'nullable|string',
+            'abstrak' => 'nullable|string',
 
             'jenis_hibah' => 'required|string|in:internal,eksternal,mandiri',
             'skema' => 'required|string|max:255',
@@ -116,21 +116,21 @@ class PengabdianMasyarakatController extends Controller
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'anggaran' => 'nullable|numeric|min:0',
             'sumber_dana' => 'nullable|string|max:255',
-            
+
             // Validasi Anggota (Dosen)
             'tim_abdimas' => 'nullable|array',
             'tim_abdimas.*' => 'nullable|string|max:255',
             'dosen_nip' => 'nullable|array',
             'dosen_nip.*' => 'nullable|string|max:50',
-            
+
             // Validasi Mahasiswa (Input form bernama 'mahasiswa')
             'mahasiswa' => 'nullable|array',
             'mahasiswa.*' => 'nullable|string|max:255',
             'mahasiswa_nim' => 'nullable|array',
             'mahasiswa_nim.*' => 'nullable|string|max:50',
-            
-            'status' => 'required|string', 
-            
+
+            'status' => 'required|string',
+
             'file_proposal' => 'nullable|file|mimes:pdf|max:10240',
             'file_laporan' => 'nullable|file|mimes:pdf|max:10240',
             'file_dokumentasi' => 'nullable|file|mimes:pdf,jpg,jpeg,png,zip|max:20480',
@@ -138,7 +138,7 @@ class PengabdianMasyarakatController extends Controller
         ]);
 
         // 2. MAPPING DATA
-        
+
         // Mapping deskripsi ke abstrak jika diperlukan
         if (isset($validated['deskripsi']) && !isset($validated['abstrak'])) {
             $validated['abstrak'] = $validated['deskripsi'];
@@ -147,12 +147,12 @@ class PengabdianMasyarakatController extends Controller
 
         // Default abstrak
         if (empty($validated['abstrak'])) {
-            $validated['abstrak'] = '-'; 
+            $validated['abstrak'] = '-';
         }
 
         // Format data
-        $validated['semester'] = strtolower($validated['semester']); 
-        $validated['status'] = strtolower($validated['status']);    
+        $validated['semester'] = strtolower($validated['semester']);
+        $validated['status'] = strtolower($validated['status']);
 
         $validated['user_id'] = Auth::id();
         $validated['status_verifikasi'] = 'pending';
@@ -163,7 +163,7 @@ class PengabdianMasyarakatController extends Controller
         $timAbdimInput = $validated['tim_abdimas'] ?? [];
         $timAbdimClean = array_values(array_filter($timAbdimInput, fn($v) => !empty($v)));
         $validated['tim_abdimas'] = json_encode($timAbdimClean);
-        
+
         // 1b. Proses NIP Dosen
         $nipInput = $validated['dosen_nip'] ?? [];
         $nipClean = array_values(array_filter($nipInput, fn($v) => !empty($v)));
@@ -174,11 +174,11 @@ class PengabdianMasyarakatController extends Controller
         // Ini memastikan data tersimpan terlepas dari nama kolom mana yang dipakai di database/model Anda.
         $mahasiswaInput = $validated['mahasiswa'] ?? [];
         $mahasiswaClean = array_values(array_filter($mahasiswaInput, fn($v) => !empty($v)));
-        $mahasiswaJson  = json_encode($mahasiswaClean);
-        
+        $mahasiswaJson = json_encode($mahasiswaClean);
+
         $validated['mahasiswa'] = $mahasiswaJson;           // Untuk kolom 'mahasiswa'
         $validated['anggota_mahasiswa'] = $mahasiswaJson;  // Untuk kolom 'anggota_mahasiswa'
-        
+
         // 2b. Proses NIM Mahasiswa
         $nimInput = $validated['mahasiswa_nim'] ?? [];
         $nimClean = array_values(array_filter($nimInput, fn($v) => !empty($v)));
@@ -263,7 +263,7 @@ class PengabdianMasyarakatController extends Controller
         $validated = $request->validate([
             'judul_pkm' => 'required|string|max:500',
             'deskripsi' => 'nullable|string',
-            'abstrak'   => 'nullable|string',
+            'abstrak' => 'nullable|string',
             'jenis_hibah' => 'required|string|in:internal,eksternal,mandiri',
             'skema' => 'required|string|max:255',
             'mitra' => 'required|string|max:255',
@@ -278,19 +278,19 @@ class PengabdianMasyarakatController extends Controller
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'anggaran' => 'nullable|numeric|min:0',
             'sumber_dana' => 'nullable|string|max:255',
-            
+
             // Validasi Anggota
             'tim_abdimas' => 'nullable|array',
             'tim_abdimas.*' => 'nullable|string|max:255',
             'dosen_nip' => 'nullable|array',
             'dosen_nip.*' => 'nullable|string|max:50',
-            
+
             // Validasi Mahasiswa
             'mahasiswa' => 'nullable|array',
             'mahasiswa.*' => 'nullable|string|max:255',
             'mahasiswa_nim' => 'nullable|array',
             'mahasiswa_nim.*' => 'nullable|string|max:50',
-            
+
             'status' => 'required|string',
             'file_proposal' => 'nullable|file|mimes:pdf|max:10240',
             'file_laporan' => 'nullable|file|mimes:pdf|max:10240',
@@ -313,7 +313,7 @@ class PengabdianMasyarakatController extends Controller
         $timAbdimInput = $validated['tim_abdimas'] ?? [];
         $timAbdimClean = array_values(array_filter($timAbdimInput, fn($v) => !empty($v)));
         $validated['tim_abdimas'] = json_encode($timAbdimClean);
-        
+
         // 1b. Proses NIP Dosen
         $nipInput = $validated['dosen_nip'] ?? [];
         $nipClean = array_values(array_filter($nipInput, fn($v) => !empty($v)));
@@ -323,11 +323,11 @@ class PengabdianMasyarakatController extends Controller
         // Simpan ke dua key untuk keamanan kompatibilitas
         $mahasiswaInput = $validated['mahasiswa'] ?? [];
         $mahasiswaClean = array_values(array_filter($mahasiswaInput, fn($v) => !empty($v)));
-        $mahasiswaJson  = json_encode($mahasiswaClean);
+        $mahasiswaJson = json_encode($mahasiswaClean);
 
         $validated['mahasiswa'] = $mahasiswaJson;
         $validated['anggota_mahasiswa'] = $mahasiswaJson;
-        
+
         // 2b. Proses NIM Mahasiswa
         $nimInput = $validated['mahasiswa_nim'] ?? [];
         $nimClean = array_values(array_filter($nimInput, fn($v) => !empty($v)));
@@ -442,10 +442,10 @@ class PengabdianMasyarakatController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
-        
+
         // Admin/Kaprodi can download, others can only preview
         $canDownload = $user && $user->canReviewTriDharma();
-        
+
         if (!$pengma->file_proposal || !Storage::disk('public')->exists($pengma->file_proposal)) {
             abort(404, 'File not found.');
         }
@@ -453,7 +453,7 @@ class PengabdianMasyarakatController extends Controller
         $filePath = Storage::disk('public')->path($pengma->file_proposal);
         $filename = basename($pengma->file_proposal);
         $originalName = preg_replace('/^\d+_/', '', $filename);
-        
+
         // If admin/kaprodi, force download. Otherwise, inline preview
         if ($canDownload) {
             return Response::download($filePath, $originalName);
@@ -472,10 +472,10 @@ class PengabdianMasyarakatController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
-        
+
         // Admin/Kaprodi can download, others can only preview
         $canDownload = $user && $user->canReviewTriDharma();
-        
+
         if (!$pengma->file_laporan || !Storage::disk('public')->exists($pengma->file_laporan)) {
             abort(404, 'File not found.');
         }
@@ -483,7 +483,7 @@ class PengabdianMasyarakatController extends Controller
         $filePath = Storage::disk('public')->path($pengma->file_laporan);
         $filename = basename($pengma->file_laporan);
         $originalName = preg_replace('/^\d+_/', '', $filename);
-        
+
         // If admin/kaprodi, force download. Otherwise, inline preview
         if ($canDownload) {
             return Response::download($filePath, $originalName);
@@ -502,10 +502,10 @@ class PengabdianMasyarakatController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
-        
+
         // Admin/Kaprodi can download, others can only preview
         $canDownload = $user && $user->canReviewTriDharma();
-        
+
         if (!$pengma->file_dokumentasi || !Storage::disk('public')->exists($pengma->file_dokumentasi)) {
             abort(404, 'File not found.');
         }
@@ -514,7 +514,8 @@ class PengabdianMasyarakatController extends Controller
         $filename = basename($pengma->file_dokumentasi);
         $originalName = preg_replace('/^\d+_/', '', $filename);
         $mimeType = mime_content_type($filePath);
-        
+
+        // If admin/kaprodi, force download. Otherwise, inline preview for supported types
         // If admin/kaprodi, force download. Otherwise, inline preview for supported types
         if ($canDownload) {
             return Response::download($filePath, $originalName);
@@ -529,5 +530,74 @@ class PengabdianMasyarakatController extends Controller
                 return Response::download($filePath, $originalName);
             }
         }
+    }
+
+    /**
+     * Bulk destroy functionality
+     * @param Request $request
+     */
+    public function bulkDestroy(Request $request)
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!($user && $user->isAdmin())) {
+            abort(403, 'Anda tidak memiliki akses untuk menghapus data massal.');
+        }
+
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:pengabdian_masyarakat,id',
+        ]);
+
+        $count = 0;
+        $pengmasList = PengabdianMasyarakat::whereIn('id', $validated['ids'])->get();
+
+        foreach ($pengmasList as $pengma) {
+            if ($pengma->file_proposal) {
+                Storage::disk('public')->delete($pengma->file_proposal);
+            }
+            if ($pengma->file_laporan) {
+                Storage::disk('public')->delete($pengma->file_laporan);
+            }
+            if ($pengma->file_dokumentasi) {
+                Storage::disk('public')->delete($pengma->file_dokumentasi);
+            }
+            $pengma->delete();
+            $count++;
+        }
+
+        return redirect()->route('pengmas.index')->with('success', "{$count} data pengabdian masyarakat berhasil dihapus.");
+    }
+
+    /**
+     * Empty table functionality
+     * @param Request $request
+     */
+    public function emptyTable(Request $request)
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!($user && $user->isAdmin())) {
+            abort(403, 'Anda tidak memiliki akses untuk mengosongkan data.');
+        }
+
+        // Delete all files first
+        $allPengmas = PengabdianMasyarakat::all();
+        foreach ($allPengmas as $pengma) {
+            if ($pengma->file_proposal) {
+                Storage::disk('public')->delete($pengma->file_proposal);
+            }
+            if ($pengma->file_laporan) {
+                Storage::disk('public')->delete($pengma->file_laporan);
+            }
+            if ($pengma->file_dokumentasi) {
+                Storage::disk('public')->delete($pengma->file_dokumentasi);
+            }
+        }
+
+        // Truncate or delete all
+        PengabdianMasyarakat::truncate();
+
+        return redirect()->route('pengmas.index')->with('success', 'Semua data pengabdian masyarakat berhasil dihapus.');
     }
 }

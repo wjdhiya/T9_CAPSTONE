@@ -27,6 +27,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('penelitian/{penelitian}/verify', [PenelitianController::class, 'verify'])
         ->name('penelitian.verify')
         ->middleware('role:admin');
+    Route::post('penelitian/bulk-destroy', [PenelitianController::class, 'bulkDestroy'])
+        ->name('penelitian.bulk_destroy')
+        ->middleware('role:admin');
+    Route::post('penelitian/empty-table', [PenelitianController::class, 'emptyTable'])
+        ->name('penelitian.empty_table')
+        ->middleware('role:admin');
     Route::get('penelitian/{penelitian}/download-proposal', [PenelitianController::class, 'downloadProposal'])
         ->name('penelitian.download.proposal')
         ->middleware('role:admin,kaprodi');
@@ -40,6 +46,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('publikasi/{publikasi}/verify', [PublikasiController::class, 'verify'])
         ->name('publikasi.verify')
         ->middleware('role:admin');
+    Route::post('publikasi/bulk-destroy', [PublikasiController::class, 'bulkDestroy'])
+        ->name('publikasi.bulk_destroy')
+        ->middleware('role:admin');
+    Route::post('publikasi/empty-table', [PublikasiController::class, 'emptyTable'])
+        ->name('publikasi.empty_table')
+        ->middleware('role:admin');
     Route::get('publikasi/{publikasi}/download-publikasi', [PublikasiController::class, 'downloadPublikasi'])
         ->name('publikasi.download.publikasi')
         ->middleware('role:admin,kaprodi');
@@ -48,6 +60,12 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('pengmas', PengabdianMasyarakatController::class);
     Route::post('pengmas/{pengma}/verify', [PengabdianMasyarakatController::class, 'verify'])
         ->name('pengmas.verify')
+        ->middleware('role:admin');
+    Route::post('pengmas/bulk-destroy', [PengabdianMasyarakatController::class, 'bulkDestroy'])
+        ->name('pengmas.bulk_destroy')
+        ->middleware('role:admin');
+    Route::post('pengmas/empty-table', [PengabdianMasyarakatController::class, 'emptyTable'])
+        ->name('pengmas.empty_table')
         ->middleware('role:admin');
     Route::get('pengmas/{pengma}/download-proposal', [PengabdianMasyarakatController::class, 'downloadProposal'])
         ->name('pengmas.download.proposal')
@@ -82,4 +100,4 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // Authentication routes (from Breeze)
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

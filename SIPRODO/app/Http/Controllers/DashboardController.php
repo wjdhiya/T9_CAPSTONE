@@ -142,36 +142,33 @@ class DashboardController extends Controller
         $tahun = (string) $validated['tahun'];
         $semester = $validated['semester'];
 
-        $penelitianQuery = Penelitian::query()
-            ->where('tahun', 'like', $tahun . '%')
-            ->where('semester', $semester);
+        $tahun = (string) $validated['tahun'];
+        $semester = $validated['semester'];
 
-        $publikasiQuery = Publikasi::query()
-            ->where('tahun', 'like', $tahun . '%')
-            ->where('semester', $semester);
+        // Queries for Stats (Global / All Time per user request "keseluruhan data")
+        $penelitianStatsQuery = Penelitian::query();
+        $publikasiStatsQuery = Publikasi::query();
+        $pengmasStatsQuery = PengabdianMasyarakat::query();
 
-        $pengmasQuery = PengabdianMasyarakat::query()
-            ->where('tahun', 'like', $tahun . '%')
-            ->where('semester', $semester);
-
+        // Calculate Global Stats
         $stats = [
             'penelitian' => [
-                'total' => (clone $penelitianQuery)->count(),
-                'verified' => (clone $penelitianQuery)->where('status_verifikasi', 'verified')->count(),
-                'pending' => (clone $penelitianQuery)->where('status_verifikasi', 'pending')->count(),
-                'rejected' => (clone $penelitianQuery)->where('status_verifikasi', 'rejected')->count(),
+                'total' => (clone $penelitianStatsQuery)->count(),
+                'verified' => (clone $penelitianStatsQuery)->where('status_verifikasi', 'verified')->count(),
+                'pending' => (clone $penelitianStatsQuery)->where('status_verifikasi', 'pending')->count(),
+                'rejected' => (clone $penelitianStatsQuery)->where('status_verifikasi', 'rejected')->count(),
             ],
             'publikasi' => [
-                'total' => (clone $publikasiQuery)->count(),
-                'verified' => (clone $publikasiQuery)->where('status_verifikasi', 'verified')->count(),
-                'pending' => (clone $publikasiQuery)->where('status_verifikasi', 'pending')->count(),
-                'rejected' => (clone $publikasiQuery)->where('status_verifikasi', 'rejected')->count(),
+                'total' => (clone $publikasiStatsQuery)->count(),
+                'verified' => (clone $publikasiStatsQuery)->where('status_verifikasi', 'verified')->count(),
+                'pending' => (clone $publikasiStatsQuery)->where('status_verifikasi', 'pending')->count(),
+                'rejected' => (clone $publikasiStatsQuery)->where('status_verifikasi', 'rejected')->count(),
             ],
             'pengmas' => [
-                'total' => (clone $pengmasQuery)->count(),
-                'verified' => (clone $pengmasQuery)->where('status_verifikasi', 'verified')->count(),
-                'pending' => (clone $pengmasQuery)->where('status_verifikasi', 'pending')->count(),
-                'rejected' => (clone $pengmasQuery)->where('status_verifikasi', 'rejected')->count(),
+                'total' => (clone $pengmasStatsQuery)->count(),
+                'verified' => (clone $pengmasStatsQuery)->where('status_verifikasi', 'verified')->count(),
+                'pending' => (clone $pengmasStatsQuery)->where('status_verifikasi', 'pending')->count(),
+                'rejected' => (clone $pengmasStatsQuery)->where('status_verifikasi', 'rejected')->count(),
             ],
         ];
 

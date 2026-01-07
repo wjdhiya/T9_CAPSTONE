@@ -87,10 +87,39 @@
 
             <!-- TABLE SECTION -->
             <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden">
+                <div class="p-6 pb-0">
+                    @if(auth()->user()->isAdmin())
+                    <div class="mb-4 flex space-x-2">
+                         <form id="bulk-delete-form" action="{{ route('pengmas.bulk_destroy') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data yang dipilih?');">
+                            @csrf
+                            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded shadow text-sm">
+                                Hapus Terpilih
+                            </button>
+                        </form>
+                        
+                        <form action="{{ route('pengmas.empty_table') }}" method="POST" onsubmit="return confirm('PERINGATAN: Apakah Anda yakin ingin MENGHAPUS SEMUA data pengabdian masyarakat? Tindakan ini tidak dapat dibatalkan!');">
+                            @csrf
+                            <button type="submit" class="bg-red-800 hover:bg-red-900 text-white font-bold py-2 px-4 rounded shadow text-sm ml-2">
+                                Kosongkan Semua Data
+                            </button>
+                        </form>
+                    </div>
+                    @endif
+                </div>
+
                 <div class="overflow-x-auto">
+                    {{-- Form wrapper for table checkboxes --}}
+                    <form id="table-bulk-form" action="{{ route('pengmas.bulk_destroy') }}" method="POST">
+                        @csrf
+                        
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
+                                @if(auth()->user()->isAdmin())
+                                    <th scope="col" class="px-6 py-3 text-left">
+                                        <input type="checkbox" id="select-all" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    </th>
+                                @endif
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judul PKM & Tanggal</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dosen</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Skema & Mitra</th>
@@ -107,6 +136,11 @@
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse($pengmas as $item)
                             <tr class="hover:bg-gray-50 transition-colors">
+                                @if(auth()->user()->isAdmin())
+                                    <td class="px-6 py-4">
+                                        <input type="checkbox" name="ids[]" value="{{ $item->id }}" class="item-checkbox rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    </td>
+                                @endif
                                 <td class="px-6 py-4">
                                     <div class="text-sm font-bold text-gray-900 line-clamp-2" title="{{ $item->judul_pkm }}">
                                         {{ $item->judul_pkm }}
@@ -213,7 +247,36 @@
                             @endforelse
                         </tbody>
                     </table>
+                    </form>
                 </div>
+                
+                @if(auth()->user()->isAdmin())
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const selectAll = document.getElementById('select-all');
+                        const items = document.querySelectorAll('.item-checkbox');
+
+                        if(selectAll) {
+                            selectAll.addEventListener('change', function() {
+                                items.forEach(item => {
+                                    item.checked = selectAll.checked;
+                                });
+                            });
+                        }
+                        
+                        // Hook up the separate form button to submit the table form
+                        const bulkDeleteForm = document.getElementById('bulk-delete-form');
+                        if(bulkDeleteForm) {
+                            bulkDeleteForm.addEventListener('submit', function(e) {
+                                e.preventDefault();
+                                if(confirm('Apakah Anda yakin ingin menghapus data yang dipilih?')) {
+                                    document.getElementById('table-bulk-form').submit();
+                                }
+                            });
+                        }
+                    });
+                </script>
+                @endif
                 
                 {{-- Pagination --}}
                 <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">

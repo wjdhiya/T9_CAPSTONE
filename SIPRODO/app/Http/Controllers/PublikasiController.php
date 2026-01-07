@@ -337,4 +337,61 @@ class PublikasiController extends Controller
 
         return Response::download($filePath, $originalName);
     }
+
+    /**
+     * Bulk destroy functionality
+     * @param Request $request
+     */
+    public function bulkDestroy(Request $request)
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if (!($user && $user->isAdmin())) {
+            abort(403, 'Anda tidak memiliki akses untuk menghapus data massal.');
+        }
+
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:publikasi,id',
+        ]);
+
+        $count = 0;
+        $publikasis = Publikasi::whereIn('id', $validated['ids'])->get();
+
+        foreach ($publikasis as $publikasi) {
+            if ($publikasi->file_publikasi) {
+                Storage::disk('public')->delete($publikasi->file_publikasi);
+            }
+            $publikasi->delete();
+            $count++;
+        }
+
+        return redirect()->route('publikasi.index')->with('success', "{$count} data publikasi berhasil dihapus.");
+    }
+
+    /**
+     * Empty table functionality
+     * @param Request $request
+     */
+    public function emptyTable(Request $request)
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if (!($user && $user->isAdmin())) {
+            abort(403, 'Anda tidak memiliki akses untuk mengosongkan data.');
+        }
+
+        // Delete all files first
+        $allPublikasi = Publikasi::all();
+        foreach ($allPublikasi as $publikasi) {
+            if ($publikasi->file_publikasi) {
+                Storage::disk('public')->delete($publikasi->file_publikasi);
+            }
+        }
+
+        // Truncate or delete all
+        Publikasi::truncate();
+
+        return redirect()->route('publikasi.index')->with('success', 'Semua data publikasi berhasil dihapus.');
+    }
 }

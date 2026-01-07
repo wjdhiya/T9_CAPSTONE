@@ -443,9 +443,11 @@
                     if (semesterSelect.value === '') {
                         yearField.style.display = 'none';
                         yearInput.removeAttribute('required');
+                        yearInput.disabled = true;
                     } else {
                         yearField.style.display = 'block';
                         yearInput.setAttribute('required', 'required');
+                        yearInput.disabled = false;
                     }
                 }
 
@@ -534,20 +536,20 @@
                                     const total = (l.total_penelitian || 0) + (l.total_publikasi || 0) + (l.total_pengmas || 0);
                                     const topCategory = getTopCategory(l);
                                     html += `
-                                                <div class="flex items-center justify-between p-2 rounded-lg ${idx === 0 ? 'bg-yellow-50 border border-yellow-200' : 'bg-gray-50'}">
-                                                    <div class="flex items-center gap-3">
-                                                        <span class="w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${idx === 0 ? 'bg-yellow-400 text-white' : 'bg-gray-300 text-gray-700'}">${idx + 1}</span>
-                                                        <div>
-                                                            <p class="font-medium text-gray-900 text-sm">${l.name || 'N/A'}</p>
-                                                            <p class="text-xs text-gray-500">NIP: ${l.nip || '-'}</p>
+                                                        <div class="flex items-center justify-between p-2 rounded-lg ${idx === 0 ? 'bg-yellow-50 border border-yellow-200' : 'bg-gray-50'}">
+                                                            <div class="flex items-center gap-3">
+                                                                <span class="w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${idx === 0 ? 'bg-yellow-400 text-white' : 'bg-gray-300 text-gray-700'}">${idx + 1}</span>
+                                                                <div>
+                                                                    <p class="font-medium text-gray-900 text-sm">${l.name || 'N/A'}</p>
+                                                                    <p class="text-xs text-gray-500">NIP: ${l.nip || '-'}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div class="text-right">
+                                                                <p class="font-bold text-gray-900">${total} <span class="text-xs font-normal text-gray-500">kegiatan</span></p>
+                                                                <p class="text-xs ${topCategory.color}">${topCategory.label}</p>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="text-right">
-                                                        <p class="font-bold text-gray-900">${total} <span class="text-xs font-normal text-gray-500">kegiatan</span></p>
-                                                        <p class="text-xs ${topCategory.color}">${topCategory.label}</p>
-                                                    </div>
-                                                </div>
-                                            `;
+                                                    `;
                                 });
                                 html += '</div>';
                                 listEl.innerHTML = html;

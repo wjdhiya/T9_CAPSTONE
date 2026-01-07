@@ -127,13 +127,11 @@ class ReportController extends Controller
      */
     public function exportExcel(Request $request)
     {
-        // Handle tahun akademik - kosongkan jika "Semua Periode"
         $tahun = $request->get('tahun');
         $semester = $request->get('semester');
         $jenis = $request->get('jenis', 'all');
         $user_id = $request->get('user_id');
 
-        // Map semester values
         if ($semester == '1') {
             $semester = 'ganjil';
         } elseif ($semester == '2') {
@@ -142,57 +140,81 @@ class ReportController extends Controller
 
         $filename = "laporan_{$jenis}_" . ($tahun ?? 'semua_tahun') . ".xlsx";
 
-        // Create multi-sheet export for 'all', single sheet for specific type
+        \Illuminate\Support\Facades\Log::info("Exporting Excel: Jenis={$jenis}, Tahun={$tahun}, Semester={$semester}, UserID={$user_id}");
+
         if ($jenis === 'all') {
             $export = new MultiSheetTriDharmaExport();
 
-            // Add Penelitian sheet
-            $penelitianData = $this->getPenelitianExportData($tahun, $semester, $user_id);
+            $penelitianParams = $this->getPenelitianExportData($tahun, $semester, $user_id);
+            \Illuminate\Support\Facades\Log::info("Penelitian Count: " . $penelitianParams['data']->count());
+
             $export->addSheet(new TriDharmaExport(
-                $penelitianData,
+                $penelitianParams['data'],
                 'penelitian',
-                ['No', 'Judul Penelitian', 'Nama Dosen', 'NIP', 'Jenis', 'Tahun', 'Semester', 'Sumber Dana', 'Anggaran', 'Tanggal Mulai', 'Tanggal Selesai', 'Status', 'Status Verifikasi']
+                ['No', 'Judul Penelitian', 'Nama Dosen', 'NIP', 'Jenis', 'Tahun', 'Semester', 'Sumber Dana', 'Anggaran', 'Tanggal Mulai', 'Tanggal Selesai', 'Status', 'Status Verifikasi'],
+                $penelitianParams['merges']
             ));
 
-            // Add Publikasi sheet
-            $publikasiData = $this->getPublikasiExportData($tahun, $semester, $user_id);
+            $publikasiParams = $this->getPublikasiExportData($tahun, $semester, $user_id);
+            \Illuminate\Support\Facades\Log::info("Publikasi Count: " . $publikasiParams['data']->count());
+
             $export->addSheet(new TriDharmaExport(
-                $publikasiData,
+                $publikasiParams['data'],
                 'publikasi',
-                ['No', 'Judul Publikasi', 'Nama Dosen', 'NIP', 'Jenis', 'Nama Jurnal/Penerbit', 'Penerbit', 'ISSN/ISBN', 'Volume', 'Nomor', 'Halaman', 'Tanggal Terbit', 'Indexing', 'Quartile', 'DOI', 'URL', 'Tahun', 'Semester', 'Status Verifikasi']
+                ['No', 'Judul Publikasi', 'Nama Dosen', 'NIP', 'Jenis', 'Nama Jurnal/Penerbit', 'Penerbit', 'ISSN/ISBN', 'Volume', 'Nomor', 'Halaman', 'Tanggal Terbit', 'Indexing', 'Quartile', 'DOI', 'URL', 'Tahun', 'Semester', 'Status Verifikasi'],
+                $publikasiParams['merges']
             ));
 
-            // Add Pengmas sheet
-            $pengmasData = $this->getPengmasExportData($tahun, $semester, $user_id);
+            $pengmasParams = $this->getPengmasExportData($tahun, $semester, $user_id);
+            \Illuminate\Support\Facades\Log::info("Pengmas Count: " . $pengmasParams['data']->count());
+
             $export->addSheet(new TriDharmaExport(
-                $pengmasData,
+                $pengmasParams['data'],
                 'pengmas',
-                ['No', 'Judul PKM', 'Nama Dosen', 'NIP', 'Jenis Hibah', 'Skema', 'Mitra', 'Jumlah Peserta', 'Tahun', 'Semester', 'Sumber Dana', 'Anggaran', 'Tanggal Mulai', 'Tanggal Selesai', 'Tim Abdimas', 'Anggota Mahasiswa', 'SDG', 'Status', 'Status Verifikasi']
+                ['No', 'Judul PKM', 'Nama Dosen', 'NIP', 'Jenis Hibah', 'Skema', 'Mitra', 'Jumlah Peserta', 'Tahun', 'Semester', 'Sumber Dana', 'Anggaran', 'Tanggal Mulai', 'Tanggal Selesai', 'Tim Abdimas', 'NIP Anggota', 'Anggota Mahasiswa', 'NIM Mahasiswa', 'SDG', 'Status', 'Status Verifikasi'],
+                $pengmasParams['merges']
             ));
 
             return Excel::download($export, $filename);
         }
 
-        // Single type export
         if ($jenis === 'penelitian') {
-            $data = $this->getPenelitianExportData($tahun, $semester, $user_id);
+            $params = $this->getPenelitianExportData($tahun, $semester, $user_id);
             $headings = ['No', 'Judul Penelitian', 'Nama Dosen', 'NIP', 'Jenis', 'Tahun', 'Semester', 'Sumber Dana', 'Anggaran', 'Tanggal Mulai', 'Tanggal Selesai', 'Status', 'Status Verifikasi'];
-            return Excel::download(new TriDharmaExport($data, 'penelitian', $headings), $filename);
+            return Excel::download(new TriDharmaExport($params['data'], 'penelitian', $headings, $params['merges']), $filename);
         }
 
         if ($jenis === 'publikasi') {
-            $data = $this->getPublikasiExportData($tahun, $semester, $user_id);
+            $params = $this->getPublikasiExportData($tahun, $semester, $user_id);
             $headings = ['No', 'Judul Publikasi', 'Nama Dosen', 'NIP', 'Jenis', 'Nama Jurnal/Penerbit', 'Penerbit', 'ISSN/ISBN', 'Volume', 'Nomor', 'Halaman', 'Tanggal Terbit', 'Indexing', 'Quartile', 'DOI', 'URL', 'Tahun', 'Semester', 'Status Verifikasi'];
-            return Excel::download(new TriDharmaExport($data, 'publikasi', $headings), $filename);
+            return Excel::download(new TriDharmaExport($params['data'], 'publikasi', $headings, $params['merges']), $filename);
         }
 
         if ($jenis === 'pengmas') {
-            $data = $this->getPengmasExportData($tahun, $semester, $user_id);
-            $headings = ['No', 'Judul PKM', 'Nama Dosen', 'NIP', 'Jenis Hibah', 'Skema', 'Mitra', 'Jumlah Peserta', 'Tahun', 'Semester', 'Sumber Dana', 'Anggaran', 'Tanggal Mulai', 'Tanggal Selesai', 'Tim Abdimas', 'Anggota Mahasiswa', 'SDG', 'Status', 'Status Verifikasi'];
-            return Excel::download(new TriDharmaExport($data, 'pengmas', $headings), $filename);
+            $params = $this->getPengmasExportData($tahun, $semester, $user_id);
+            $headings = ['No', 'Judul PKM', 'Nama Dosen', 'NIP', 'Jenis Hibah', 'Skema', 'Mitra', 'Jumlah Peserta', 'Tahun', 'Semester', 'Sumber Dana', 'Anggaran', 'Tanggal Mulai', 'Tanggal Selesai', 'Tim Abdimas', 'NIP Anggota', 'Anggota Mahasiswa', 'NIM Mahasiswa', 'SDG', 'Status', 'Status Verifikasi'];
+            return Excel::download(new TriDharmaExport($params['data'], 'pengmas', $headings, $params['merges']), $filename);
         }
 
         return back()->with('error', 'Jenis laporan tidak valid.');
+    }
+
+    private function getReportQuery($modelClass, $tahun, $semester, $user_id)
+    {
+        $query = $modelClass::with('user');
+
+        if ($tahun) {
+            $query->where('tahun', 'like', $tahun . '%');
+        }
+
+        if ($semester) {
+            $query->where('semester', $semester);
+        }
+        if ($user_id) {
+            $query->where('user_id', $user_id);
+        }
+
+        return $query;
     }
 
     /**
@@ -200,17 +222,7 @@ class ReportController extends Controller
      */
     private function getPenelitianExportData($tahun, $semester, $user_id)
     {
-        $query = Penelitian::with('user');
-        if ($tahun) {
-            $query->where('tahun', 'like', $tahun . '%');
-        } else {
-            $query->rentangTahun(2022);
-        }
-        if ($semester)
-            $query->where('semester', $semester);
-        if ($user_id)
-            $query->where('user_id', $user_id);
-
+        $query = $this->getReportQuery(Penelitian::class, $tahun, $semester, $user_id);
         $items = $query->orderBy('created_at', 'desc')->get();
         $data = collect();
         $no = 1;
@@ -233,7 +245,7 @@ class ReportController extends Controller
             ]);
         }
 
-        return $data;
+        return ['data' => $data, 'merges' => []];
     }
 
     /**
@@ -241,15 +253,7 @@ class ReportController extends Controller
      */
     private function getPublikasiExportData($tahun, $semester, $user_id)
     {
-        $query = Publikasi::with('user');
-        if ($tahun) {
-            $query->where('tahun', 'like', $tahun . '%');
-        } else {
-            $query->rentangTahun(2022);
-        }
-        if ($user_id)
-            $query->where('user_id', $user_id);
-
+        $query = $this->getReportQuery(Publikasi::class, $tahun, $semester, $user_id);
         $items = $query->orderBy('created_at', 'desc')->get();
         $data = collect();
         $no = 1;
@@ -278,7 +282,7 @@ class ReportController extends Controller
             ]);
         }
 
-        return $data;
+        return ['data' => $data, 'merges' => []];
     }
 
     /**
@@ -286,46 +290,72 @@ class ReportController extends Controller
      */
     private function getPengmasExportData($tahun, $semester, $user_id)
     {
-        $query = PengabdianMasyarakat::with('user');
-        if ($tahun) {
-            $query->where('tahun', 'like', $tahun . '%');
-        } else {
-            $query->rentangTahun(2022);
-        }
-        if ($semester)
-            $query->where('semester', $semester);
-        if ($user_id)
-            $query->where('user_id', $user_id);
-
+        $query = $this->getReportQuery(PengabdianMasyarakat::class, $tahun, $semester, $user_id);
         $items = $query->orderBy('created_at', 'desc')->get();
         $data = collect();
+        $merges = [];
         $no = 1;
 
+        // Current excel row starts at 2 (1 is header)
+        $currentRow = 2;
+
         foreach ($items as $item) {
-            $data->push([
-                $no++,
-                $item->judul_pkm,
-                $item->user ? $item->user->name : '-',
-                $item->user ? $item->user->nip : '-',
-                $item->jenis_hibah ?? '-',
-                $item->skema ?? '-',
-                $item->mitra ?? '-',
-                $item->jumlah_peserta ?? '-',
-                $item->tahun,
-                $item->semester,
-                $item->sumber_dana ?? '-',
-                $item->anggaran ? number_format((float) $item->anggaran, 0, ',', '.') : '-',
-                $item->tanggal_mulai ?? '-',
-                $item->tanggal_selesai ?? '-',
-                implode("\n", $this->parseArrayField($item->getAttributes()['tim_abdimas'] ?? $item->tim_abdimas)),
-                implode("\n", $this->parseArrayField($item->getAttributes()['anggota_mahasiswa'] ?? $item->anggota_mahasiswa)),
-                $item->sdg ?? '-',
-                $item->status,
-                $item->status_verifikasi,
-            ]);
+            $timAbdimas = $this->parseArrayField($item->getAttributes()['tim_abdimas'] ?? $item->tim_abdimas);
+            $dosenNip = $this->parseArrayField($item->getAttributes()['dosen_nip'] ?? $item->dosen_nip);
+            $anggotaMahasiswa = $this->parseArrayField($item->getAttributes()['anggota_mahasiswa'] ?? $item->anggota_mahasiswa);
+            $mahasiswaNim = $this->parseArrayField($item->getAttributes()['mahasiswa_nim'] ?? $item->mahasiswa_nim);
+
+            $countTim = count($timAbdimas);
+            $countMhs = count($anggotaMahasiswa);
+            $maxRows = max($countTim, $countMhs, 1);
+
+            // Calculate Merges
+            if ($maxRows > 1) {
+                $endRow = $currentRow + $maxRows - 1;
+                // Columns A-N (1-14) shared
+                $sharedCols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N'];
+                foreach ($sharedCols as $col) {
+                    $merges[] = "{$col}{$currentRow}:{$col}{$endRow}";
+                }
+                // Tail columns: S (19), T (20), U (21)
+                $tailCols = ['S', 'T', 'U'];
+                foreach ($tailCols as $col) {
+                    $merges[] = "{$col}{$currentRow}:{$col}{$endRow}";
+                }
+            }
+
+            for ($i = 0; $i < $maxRows; $i++) {
+                $data->push([
+                    $i === 0 ? $no++ : '',
+                    $item->judul_pkm,
+                    $item->user ? $item->user->name : '-',
+                    $item->user ? $item->user->nip : '-',
+                    $item->jenis_hibah ?? '-',
+                    $item->skema ?? '-',
+                    $item->mitra ?? '-',
+                    $item->jumlah_peserta ?? '-',
+                    $item->tahun,
+                    $item->semester,
+                    $item->sumber_dana ?? '-',
+                    $item->anggaran ? number_format((float) $item->anggaran, 0, ',', '.') : '-',
+                    $item->tanggal_mulai ?? '-',
+                    $item->tanggal_selesai ?? '-',
+                    // Member data
+                    $timAbdimas[$i] ?? '-',
+                    $dosenNip[$i] ?? '-',
+                    $anggotaMahasiswa[$i] ?? '-',
+                    $mahasiswaNim[$i] ?? '-',
+
+                    $item->sdg ?? '-',
+                    $item->status,
+                    $item->status_verifikasi,
+                ]);
+            }
+
+            $currentRow += $maxRows;
         }
 
-        return $data;
+        return ['data' => $data, 'merges' => $merges];
     }
 
     /**
@@ -333,24 +363,20 @@ class ReportController extends Controller
      */
     public function exportPdf(Request $request)
     {
-        // Handle tahun akademik - kosongkan jika "Semua Periode"
         $tahun = $request->get('tahun');
         $semester = $request->get('semester');
         $jenis = $request->get('jenis', 'all');
         $user_id = $request->get('user_id');
 
         $stats = $this->getStatistics($tahun, $semester, $user_id);
-
-        // Get data
         $data = [];
 
         if ($jenis === 'all' || $jenis === 'penelitian') {
-            // Handle tahun akademik kosong (semua periode)
             $query = Penelitian::with('user');
             if ($tahun) {
                 $query->where('tahun', 'like', $tahun . '%');
             } else {
-                $query->rentangTahun(2022); // Semua tahun dari 2022
+                $query->rentangTahun(2022);
             }
 
             if ($semester)
@@ -361,12 +387,11 @@ class ReportController extends Controller
         }
 
         if ($jenis === 'all' || $jenis === 'publikasi') {
-            // Handle tahun akademik kosong (semua periode)
             $query = Publikasi::with('user');
             if ($tahun) {
                 $query->where('tahun', 'like', $tahun . '%');
             } else {
-                $query->rentangTahun(2022); // Semua tahun dari 2022
+                $query->rentangTahun(2022);
             }
 
             if ($user_id)
@@ -375,12 +400,11 @@ class ReportController extends Controller
         }
 
         if ($jenis === 'all' || $jenis === 'pengmas') {
-            // Handle tahun akademik kosong (semua periode)
             $query = PengabdianMasyarakat::with('user');
             if ($tahun) {
                 $query->where('tahun', 'like', $tahun . '%');
             } else {
-                $query->rentangTahun(2022); // Semua tahun dari 2022
+                $query->rentangTahun(2022);
             }
 
             if ($semester)
@@ -390,8 +414,6 @@ class ReportController extends Controller
             $data['pengmas'] = $query->get();
         }
 
-        // For now, return HTML view
-        // TODO: Implement proper PDF export using DomPDF or similar
         return view('reports.pdf', compact('stats', 'data', 'tahun', 'semester', 'jenis'));
     }
 
@@ -402,7 +424,6 @@ class ReportController extends Controller
     {
         $tahun = $request->get('tahun', date('Y'));
 
-        // Get all active dosen
         $dosens = User::where('role', 'dosen')
             ->where('is_active', true)
             ->get();
@@ -427,7 +448,6 @@ class ReportController extends Controller
             ];
         }
 
-        // Sort by total productivity
         usort($productivity, function ($a, $b) {
             $totalA = $a['penelitian'] + $a['publikasi'] + $a['pengmas'];
             $totalB = $b['penelitian'] + $b['publikasi'] + $b['pengmas'];
@@ -468,4 +488,3 @@ class ReportController extends Controller
         }
     }
 }
-

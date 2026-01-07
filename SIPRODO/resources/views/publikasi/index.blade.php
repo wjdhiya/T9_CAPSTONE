@@ -130,10 +130,39 @@
 
             {{-- Table --}}
             <div class="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+                <div class="p-6 pb-0">
+                    @if(auth()->user()->isAdmin())
+                    <div class="mb-4 flex space-x-2">
+                         <form id="bulk-delete-form" action="{{ route('publikasi.bulk_destroy') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data yang dipilih?');">
+                            @csrf
+                            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded shadow text-sm">
+                                Hapus Terpilih
+                            </button>
+                        </form>
+                        
+                        <form action="{{ route('publikasi.empty_table') }}" method="POST" onsubmit="return confirm('PERINGATAN: Apakah Anda yakin ingin MENGHAPUS SEMUA data publikasi? Tindakan ini tidak dapat dibatalkan!');">
+                            @csrf
+                            <button type="submit" class="bg-red-800 hover:bg-red-900 text-white font-bold py-2 px-4 rounded shadow text-sm ml-2">
+                                Kosongkan Semua Data
+                            </button>
+                        </form>
+                    </div>
+                    @endif
+                </div>
+
                 <div class="overflow-x-auto">
+                    {{-- Form wrapper for table checkboxes --}}
+                    <form id="table-bulk-form" action="{{ route('publikasi.bulk_destroy') }}" method="POST">
+                        @csrf
+                    
                     <table class="min-w-full">
                         <thead class="bg-gray-50 border-b border-gray-200">
                             <tr>
+                                @if(auth()->user()->isAdmin())
+                                    <th class="px-6 py-4 text-left">
+                                        <input type="checkbox" id="select-all" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    </th>
+                                @endif
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Judul Publikasi</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">PENULIS</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">JENIS</th>
@@ -146,6 +175,11 @@
                         <tbody class="divide-y divide-gray-200">
                             @forelse ($publikasi as $item)
                                 <tr class="hover:bg-gray-50 transition-colors">
+                                    @if(auth()->user()->isAdmin())
+                                        <td class="px-6 py-4">
+                                            <input type="checkbox" name="ids[]" value="{{ $item->id }}" class="item-checkbox rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                        </td>
+                                    @endif
                                     {{-- Kolom Judul --}}
                                     <td class="px-6 py-4">
                                         <div class="max-w-xs">
@@ -239,7 +273,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                                    <td colspan="8" class="px-6 py-12 text-center text-gray-500">
                                         <div class="flex flex-col items-center justify-center">
                                             <div class="bg-gray-100 rounded-full p-4 mb-3">
                                                 <i class="fas fa-folder-open text-gray-400 text-3xl"></i>
@@ -252,7 +286,36 @@
                             @endforelse
                         </tbody>
                     </table>
+                    </form>
                 </div>
+
+                @if(auth()->user()->isAdmin())
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const selectAll = document.getElementById('select-all');
+                        const items = document.querySelectorAll('.item-checkbox');
+
+                        if(selectAll) {
+                            selectAll.addEventListener('change', function() {
+                                items.forEach(item => {
+                                    item.checked = selectAll.checked;
+                                });
+                            });
+                        }
+                        
+                        // Hook up the separate form button to submit the table form
+                        const bulkDeleteForm = document.getElementById('bulk-delete-form');
+                        if(bulkDeleteForm) {
+                            bulkDeleteForm.addEventListener('submit', function(e) {
+                                e.preventDefault();
+                                if(confirm('Apakah Anda yakin ingin menghapus data yang dipilih?')) {
+                                    document.getElementById('table-bulk-form').submit();
+                                }
+                            });
+                        }
+                    });
+                </script>
+                @endif
 
                 {{-- Pagination --}}
                 <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">

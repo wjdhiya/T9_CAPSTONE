@@ -19,12 +19,14 @@ class TriDharmaExport implements FromCollection, WithHeadings, WithTitle, WithSt
     protected $data;
     protected $type;
     protected $headings;
+    protected $mergeRanges;
 
-    public function __construct(Collection $data, string $type, array $headings)
+    public function __construct(Collection $data, string $type, array $headings, array $mergeRanges = [])
     {
         $this->data = $data;
         $this->type = $type;
         $this->headings = $headings;
+        $this->mergeRanges = $mergeRanges;
     }
 
     public function collection()
@@ -52,6 +54,11 @@ class TriDharmaExport implements FromCollection, WithHeadings, WithTitle, WithSt
         $lastRow = $this->data->count() + 1;
         $lastColumn = count($this->headings);
         $lastColumnLetter = $this->getColumnLetter($lastColumn);
+
+        // Apply merges
+        foreach ($this->mergeRanges as $range) {
+            $sheet->mergeCells($range);
+        }
 
         // Header style
         $sheet->getStyle("A1:{$lastColumnLetter}1")->applyFromArray([
@@ -83,7 +90,8 @@ class TriDharmaExport implements FromCollection, WithHeadings, WithTitle, WithSt
         if ($lastRow > 1) {
             $sheet->getStyle("A2:{$lastColumnLetter}{$lastRow}")->applyFromArray([
                 'alignment' => [
-                    'vertical' => Alignment::VERTICAL_TOP,
+                    'vertical' => Alignment::VERTICAL_CENTER, // Center vertically for merged cells look better
+                    'horizontal' => Alignment::HORIZONTAL_LEFT,
                     'wrapText' => true,
                 ],
             ]);

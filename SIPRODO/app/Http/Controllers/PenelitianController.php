@@ -343,4 +343,67 @@ class PenelitianController extends Controller
         return redirect()->back()
             ->with('success', "Penelitian berhasil {$status}.");
     }
+
+    /**
+     * Bulk destroy functionality
+     * @param Request $request
+     */
+    public function bulkDestroy(Request $request)
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!($user && $user->isAdmin())) {
+            abort(403, 'Anda tidak memiliki akses untuk menghapus data massal.');
+        }
+
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:penelitian,id',
+        ]);
+
+        $count = 0;
+        $penelitians = Penelitian::whereIn('id', $validated['ids'])->get();
+
+        foreach ($penelitians as $penelitian) {
+            if ($penelitian->file_proposal) {
+                Storage::disk('public')->delete($penelitian->file_proposal);
+            }
+            if ($penelitian->file_laporan) {
+                Storage::disk('public')->delete($penelitian->file_laporan);
+            }
+            $penelitian->delete();
+            $count++;
+        }
+
+        return redirect()->route('penelitian.index')->with('success', "{$count} data penelitian berhasil dihapus.");
+    }
+
+    /**
+     * Empty table functionality
+     * @param Request $request
+     */
+    public function emptyTable(Request $request)
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!($user && $user->isAdmin())) {
+            abort(403, 'Anda tidak memiliki akses untuk mengosongkan data.');
+        }
+
+        // Delete all files first
+        $allPenelitian = Penelitian::all();
+        foreach ($allPenelitian as $penelitian) {
+            if ($penelitian->file_proposal) {
+                Storage::disk('public')->delete($penelitian->file_proposal);
+            }
+            if ($penelitian->file_laporan) {
+                Storage::disk('public')->delete($penelitian->file_laporan);
+            }
+        }
+
+        // Truncate or delete all
+        Penelitian::truncate();
+
+        return redirect()->route('penelitian.index')->with('success', 'Semua data penelitian berhasil dihapus.');
+    }
 }

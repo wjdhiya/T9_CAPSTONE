@@ -589,8 +589,21 @@ class TriDharmaImportController extends Controller
             $debug = [];
             $user = $this->resolveUserForImport($assoc, $row, $nidnUserCache, $debug);
             if (!$user) {
-                $extra = count($debug) ? (' Detected: ' . implode(', ', array_slice($debug, 0, 4)) . '.') : '';
-                $errors[] = ['row' => $rowNumber, 'message' => 'Identitas dosen tidak ditemukan. Isi salah satu: user_id / nip / email / nidn (dan pastikan dosen terdaftar).' . $extra];
+                // Determine if any identifier columns even had data
+                $idValues = [];
+                foreach (['nip', 'nidn', 'email', 'nama', 'user_id', 'dosen_id'] as $keyPart) {
+                    foreach ($assoc as $k => $v) {
+                        if (str_contains($k, $keyPart) && !empty($v)) {
+                            $idValues[] = "$k=$v";
+                        }
+                    }
+                }
+
+                $extra = count($debug) ?
+                    (' (Nilai terdeteksi: ' . implode(', ', array_slice($debug, 0, 4)) . ')') :
+                    (count($idValues) ? ' (Nilai kolom: ' . implode(', ', array_slice($idValues, 0, 3)) . ')' : ' (Tidak ada data identitas dosen yang terbaca di baris ini)');
+
+                $errors[] = ['row' => $rowNumber, 'message' => 'Dosen tidak ditemukan di database.' . $extra . ' Pastikan NIP/NIDN/Email sesuai user terdaftar.'];
                 continue;
             }
 
@@ -772,8 +785,21 @@ class TriDharmaImportController extends Controller
             $debug = [];
             $user = $this->resolveUserForImport($assoc, $row, $nidnUserCache, $debug);
             if (!$user) {
-                $extra = count($debug) ? (' Detected: ' . implode(', ', array_slice($debug, 0, 4)) . '.') : '';
-                $errors[] = ['row' => $rowNumber, 'message' => 'Identitas dosen tidak ditemukan. Isi salah satu: user_id / nip / email / nidn (dan pastikan dosen terdaftar).' . $extra];
+                // Determine if any identifier columns even had data
+                $idValues = [];
+                foreach (['nip', 'nidn', 'email', 'nama', 'user_id', 'dosen_id'] as $keyPart) {
+                    foreach ($assoc as $k => $v) {
+                        if (str_contains($k, $keyPart) && !empty($v)) {
+                            $idValues[] = "$k=$v";
+                        }
+                    }
+                }
+
+                $extra = count($debug) ?
+                    (' (Nilai terdeteksi: ' . implode(', ', array_slice($debug, 0, 4)) . ')') :
+                    (count($idValues) ? ' (Nilai kolom: ' . implode(', ', array_slice($idValues, 0, 3)) . ')' : ' (Tidak ada data identitas dosen yang terbaca di baris ini)');
+
+                $errors[] = ['row' => $rowNumber, 'message' => 'Dosen tidak ditemukan di database.' . $extra . ' Pastikan NIP/NIDN/Email sesuai user terdaftar.'];
                 continue;
             }
 
@@ -1085,18 +1111,34 @@ class TriDharmaImportController extends Controller
             }
 
             $timAbdimasText = $this->getVal($assoc, ['tim_abdimas', 'tim abdimas', 'tim'], null);
-            $anggotaAbdimasText = $this->getVal($assoc, ['anggota_abdimas', 'anggota abdimas', 'anggota_mahasiswa', 'mahasiswa_terlibat'], null);
-            $extractedNips = $this->extractNipsFromText($timAbdimasText);
-            $extractedNims = $this->extractNimsFromText($anggotaAbdimasText);
+            $parsedTim = $this->parseNameNumberMixed($timAbdimasText);
 
-            $dosenNipJson = $this->toJsonArray($this->getVal($assoc, ['dosen_nip', 'nip'], null));
-            if ($dosenNipJson === null && count($extractedNips) > 0) {
-                $dosenNipJson = json_encode($extractedNips);
+            $anggotaAbdimasText = $this->getVal($assoc, ['anggota_abdimas', 'anggota abdimas', 'anggota_mahasiswa', 'mahasiswa_terlibat'], null);
+            $parsedMhs = $this->parseNameNumberMixed($anggotaAbdimasText);
+
+            // Logic: 
+            // 1. Dosen Name -> tim_abdimas
+            // 2. Dosen NIP -> dosen_nip (priority: explicit column > parsed numbers)
+
+            // 1. Mahasiswa Name -> anggota_mahasiswa
+            // 2. Mahasiswa NIM -> mahasiswa_nim (priority: explicit column > parsed numbers)
+
+            $timAbdimasFinal = count($parsedTim['names']) > 0 ? json_encode($parsedTim['names']) : null;
+
+            $dosenNipExplicit = $this->toJsonArray($this->getVal($assoc, ['dosen_nip', 'nip'], null));
+            $dosenNipFinal = $dosenNipExplicit;
+            if ($dosenNipFinal === null && count($parsedTim['numbers']) > 0) {
+                // No explicit NIP column, use parsed numbers from mixed string
+                $dosenNipFinal = json_encode($parsedTim['numbers']);
             }
 
-            $mahasiswaNimJson = $this->toJsonArray($this->getVal($assoc, ['mahasiswa_nim', 'nim'], null));
-            if ($mahasiswaNimJson === null && count($extractedNims) > 0) {
-                $mahasiswaNimJson = json_encode($extractedNims);
+            $anggotaMhsFinal = count($parsedMhs['names']) > 0 ? json_encode($parsedMhs['names']) : null;
+
+            $mahasiswaNimExplicit = $this->toJsonArray($this->getVal($assoc, ['mahasiswa_nim', 'nim'], null));
+            $mahasiswaNimFinal = $mahasiswaNimExplicit;
+            if ($mahasiswaNimFinal === null && count($parsedMhs['numbers']) > 0) {
+                // No explicit NIM column, use parsed numbers from mixed string
+                $mahasiswaNimFinal = json_encode($parsedMhs['numbers']);
             }
 
             return array_merge($base, [
@@ -1110,10 +1152,10 @@ class TriDharmaImportController extends Controller
                 'mitra' => $this->getVal($assoc, ['mitra'], null),
                 'jumlah_peserta' => $this->toInt($this->getVal($assoc, ['jumlah_peserta', 'peserta'], null)),
                 'status' => $status,
-                'tim_abdimas' => $this->toJsonArray($timAbdimasText),
-                'dosen_nip' => $dosenNipJson,
-                'anggota_mahasiswa' => $this->toJsonArray($this->getVal($assoc, ['anggota_mahasiswa', 'mahasiswa_terlibat', 'anggota_abdimas', 'anggota abdimas'], null)),
-                'mahasiswa_nim' => $mahasiswaNimJson,
+                'tim_abdimas' => $timAbdimasFinal,
+                'dosen_nip' => $dosenNipFinal,
+                'anggota_mahasiswa' => $anggotaMhsFinal,
+                'mahasiswa_nim' => $mahasiswaNimFinal,
                 'catatan' => $this->getVal($assoc, ['catatan'], null),
 
                 // Optional analytics/extra columns (if provided)
@@ -1266,5 +1308,64 @@ class TriDharmaImportController extends Controller
             $parts[] = (string) ($payload[$col] ?? '');
         }
         return implode('|', $parts);
+    }
+
+    /**
+     * Parse mixed string "Name Number" or "Number Name" into separate arrays.
+     * Splitting logic:
+     * - Digits -> put to 'numbers'
+     * - Letters/Text -> put to 'names'
+     */
+    private function parseNameNumberMixed($input): array
+    {
+        $names = [];
+        $numbers = [];
+
+        if ($input === null || trim((string) $input) === '') {
+            return ['names' => [], 'numbers' => []];
+        }
+
+        // 1. Normalize delimiters (comma, newline, semicolon) to newline
+        $normalized = str_replace([',', ';'], "\n", (string) $input);
+
+        // 2. Split by newline to get individual person entries
+        $lines = explode("\n", $normalized);
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '')
+                continue;
+
+            // 3. Extract all digits as Number (NIP/NIM)
+            // Use regex to look for sequence of digits (at least 5 to be safe identifier, or just ANY digits?)
+            // User request: "AMBIL ANGKA NYA SAJA".
+            // Let's assume NIP/NIM is a contiguous block of digits. 
+            // If there are multiple blocks (e.g. "123 456"), we might need to join them or pick the longest.
+            // Let's pick all digit sequences.
+            preg_match_all('/\d+/', $line, $matches);
+            $digitsFound = implode('', $matches[0] ?? []); // Join all digits found (e.g. "1990 01 01" -> "19900101")
+
+            if ($digitsFound !== '') {
+                $numbers[] = $digitsFound;
+            }
+
+            // 4. Extract Letters as Name
+            // Remove digits and common number-separators
+            $namePart = preg_replace('/[\d]+/', '', $line);
+            // Clean up: remove () [] - if they were wrapping the number
+            $namePart = str_replace(['(', ')', '[', ']', ':', '-'], ' ', $namePart);
+            // Trim whitespace
+            $namePart = trim(preg_replace('/\s+/', ' ', $namePart));
+
+            if ($namePart !== '') {
+                $names[] = $namePart;
+            }
+        }
+
+        // Return distinct values
+        return [
+            'names' => array_values(array_unique($names)),
+            'numbers' => array_values(array_unique($numbers)),
+        ];
     }
 }

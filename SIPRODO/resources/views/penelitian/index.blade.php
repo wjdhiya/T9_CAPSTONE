@@ -5,7 +5,8 @@
                 {{ __('Data Penelitian') }}
             </h2>
             @if(auth()->user()->canInputTriDharma())
-                <a href="{{ route('penelitian.create') }}" class="px-4 py-2 text-white rounded-lg hover:opacity-90 transition" style="background-color: #a02127;">
+                <a href="{{ route('penelitian.create') }}"
+                    class="px-4 py-2 text-white rounded-lg hover:opacity-90 transition" style="background-color: #a02127;">
                     Tambah Penelitian
                 </a>
             @endif
@@ -14,9 +15,10 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            
+
             @if(session('success'))
-                <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative"
+                    role="alert">
                     <span class="block sm:inline">{{ session('success') }}</span>
                 </div>
             @endif
@@ -24,18 +26,22 @@
             <!-- Filters -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6">
-                    <form method="GET" action="{{ route('penelitian.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <form method="GET" action="{{ route('penelitian.index') }}"
+                        class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Cari</label>
                             {{-- Placeholder diperbarui untuk indikasi pencarian dosen --}}
-                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Judul penelitian atau Nama Dosen..." class="w-full rounded-md border-gray-300 shadow-sm">
+                            <input type="text" name="search" value="{{ request('search') }}"
+                                placeholder="Judul penelitian atau Nama Dosen..."
+                                class="w-full rounded-md border-gray-300 shadow-sm">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Tahun</label>
                             <select name="tahun" class="w-full rounded-md border-gray-300 shadow-sm">
                                 <option value="">Semua Tahun</option>
                                 @for($year = date('Y'); $year >= date('Y') - 5; $year--)
-                                    <option value="{{ $year }}" {{ request('tahun') == $year ? 'selected' : '' }}>{{ $year }}</option>
+                                    <option value="{{ $year }}" {{ request('tahun') == $year ? 'selected' : '' }}>{{ $year }}
+                                    </option>
                                 @endfor
                             </select>
                         </div>
@@ -43,13 +49,17 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
                             <select name="status" class="w-full rounded-md border-gray-300 shadow-sm">
                                 <option value="">Semua Status</option>
-                                <option value="proposal" {{ request('status') == 'proposal' ? 'selected' : '' }}>Proposal</option>
-                                <option value="berjalan" {{ request('status') == 'berjalan' ? 'selected' : '' }}>Berjalan</option>
-                                <option value="selesai" {{ request('status') == 'selesai' ? 'selected' : '' }}>Selesai</option>
+                                <option value="proposal" {{ request('status') == 'proposal' ? 'selected' : '' }}>Proposal
+                                </option>
+                                <option value="berjalan" {{ request('status') == 'berjalan' ? 'selected' : '' }}>Berjalan
+                                </option>
+                                <option value="selesai" {{ request('status') == 'selesai' ? 'selected' : '' }}>Selesai
+                                </option>
                             </select>
                         </div>
                         <div class="flex items-end">
-                            <button type="submit" class="w-full px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700">
+                            <button type="submit"
+                                class="w-full px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700">
                                 Filter
                             </button>
                         </div>
@@ -60,87 +70,169 @@
             <!-- Table -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
+                    @if(auth()->user()->isAdmin())
+                        <div class="mb-4 flex space-x-2">
+                            <form id="bulk-delete-form" action="{{ route('penelitian.bulk_destroy') }}" method="POST"
+                                onsubmit="return confirm('Apakah Anda yakin ingin menghapus data yang dipilih?');">
+                                @csrf
+                                <button type="submit"
+                                    class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded shadow">
+                                    Hapus Terpilih
+                                </button>
+                            </form>
+
+                            <form action="{{ route('penelitian.empty_table') }}" method="POST"
+                                onsubmit="return confirm('PERINGATAN: Apakah Anda yakin ingin MENGHAPUS SEMUA data penelitian? Tindakan ini tidak dapat dibatalkan!');">
+                                @csrf
+                                <button type="submit"
+                                    class="bg-red-800 hover:bg-red-900 text-white font-bold py-2 px-4 rounded shadow ml-2">
+                                    Kosongkan Semua Data
+                                </button>
+                            </form>
+                        </div>
+                    @endif
+
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Judul Penelitian</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dosen</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jenis</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tahun</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Verifikasi</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                @forelse($penelitian as $item)
-                                <tr>
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-gray-900">{{ Str::limit($item->judul_penelitian, 50) }}</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">{{ $item->user->name }}</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                            {{ ucwords(str_replace('_', ' ', $item->jenis)) }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ $item->tahun }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 text-xs font-semibold rounded-full 
-                                            {{ $item->status === 'selesai'
-                                                ? 'bg-green-100 text-green-800'
-                                                : ($item->status === 'berjalan'
-                                                    ? 'bg-yellow-100 text-yellow-800'
-                                                    : 'bg-gray-100 text-gray-800') }}">
-                                            {{ ucfirst($item->status) }}
-                                        </span>
-                                    </td>
-                                    {{-- Kolom Status Verifikasi dengan Bahasa Indonesia --}}
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 text-xs font-semibold rounded-full
-                                            @if(in_array($item->status_verifikasi, ['verified', 'disetujui'])) bg-green-100 text-green-800
-                                            @elseif(in_array($item->status_verifikasi, ['rejected', 'ditolak'])) bg-red-100 text-red-800
-                                            @else bg-yellow-100 text-yellow-800
-                                            @endif">
-                                            @if(in_array($item->status_verifikasi, ['verified', 'disetujui']))
-                                                Disetujui
-                                            @elseif(in_array($item->status_verifikasi, ['rejected', 'ditolak']))
-                                                Ditolak
-                                            @else
-                                                Menunggu
-                                            @endif
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 text-sm font-medium">
-                                        <a href="{{ route('penelitian.show', $item->id) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Lihat</a>
-                                        
-                                        {{-- LOGIKA DIUBAH: Tombol Edit & Hapus HANYA muncul jika status BELUM diverifikasi (pending/menunggu) --}}
-                                        {{-- Status 'verified', 'rejected', 'disetujui', 'ditolak' akan menyembunyikan tombol --}}
-                                        @if (!in_array($item->status_verifikasi, ['verified', 'rejected', 'disetujui', 'ditolak']) && auth()->user()->canInputTriDharma() && $item->user_id === auth()->id())
-                                            <a href="{{ route('penelitian.edit', $item->id) }}" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
-                                            <button type="button" onclick="document.getElementById('delete-form-{{ $item->id }}').submit()" class="text-red-600 hover:text-red-900">Hapus</button>
-                                            <form id="delete-form-{{ $item->id }}" action="{{ route('penelitian.destroy', $item->id) }}" method="POST" class="hidden">
-                                                @csrf
-                                                @method('DELETE')
-                                            </form>
+                        {{-- Form wrapper for table checkboxes --}}
+                        <form id="table-bulk-form" action="{{ route('penelitian.bulk_destroy') }}" method="POST">
+                            @csrf
+
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        @if(auth()->user()->isAdmin())
+                                            <th class="px-6 py-3 text-left">
+                                                <input type="checkbox" id="select-all"
+                                                    class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                            </th>
                                         @endif
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">
-                                        Tidak ada data penelitian.
-                                    </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                            Judul Penelitian</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                            Dosen</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                            Jenis</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                            Tahun</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                            Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                            Verifikasi</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @forelse($penelitian as $item)
+                                                                    <tr>
+                                                                        @if(auth()->user()->isAdmin())
+                                                                            <td class="px-6 py-4">
+                                                                                <input type="checkbox" name="ids[]" value="{{ $item->id }}"
+                                                                                    class="item-checkbox rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                                                            </td>
+                                                                        @endif
+                                                                        <td class="px-6 py-4">
+                                                                            <div class="text-sm font-medium text-gray-900">
+                                                                                {{ Str::limit($item->judul_penelitian, 50) }}</div>
+                                                                        </td>
+                                                                        <td class="px-6 py-4 whitespace-nowrap">
+                                                                            <div class="text-sm text-gray-900">{{ $item->user->name }}</div>
+                                                                        </td>
+                                                                        <td class="px-6 py-4 whitespace-nowrap">
+                                                                            <span
+                                                                                class="px-2 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                                                {{ ucwords(str_replace('_', ' ', $item->jenis)) }}
+                                                                            </span>
+                                                                        </td>
+                                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                                            {{ $item->tahun }}
+                                                                        </td>
+                                                                        <td class="px-6 py-4 whitespace-nowrap">
+                                                                            <span class="px-2 text-xs font-semibold rounded-full 
+                                                                            {{ $item->status === 'selesai'
+                                        ? 'bg-green-100 text-green-800'
+                                        : ($item->status === 'berjalan'
+                                            ? 'bg-yellow-100 text-yellow-800'
+                                            : 'bg-gray-100 text-gray-800') }}">
+                                                                                {{ ucfirst($item->status) }}
+                                                                            </span>
+                                                                        </td>
+                                                                        {{-- Kolom Status Verifikasi dengan Bahasa Indonesia --}}
+                                                                        <td class="px-6 py-4 whitespace-nowrap">
+                                                                            <span class="px-2 text-xs font-semibold rounded-full
+                                                                            @if(in_array($item->status_verifikasi, ['verified', 'disetujui'])) bg-green-100 text-green-800
+                                                                            @elseif(in_array($item->status_verifikasi, ['rejected', 'ditolak'])) bg-red-100 text-red-800
+                                                                            @else bg-yellow-100 text-yellow-800
+                                                                            @endif">
+                                                                                @if(in_array($item->status_verifikasi, ['verified', 'disetujui']))
+                                                                                    Disetujui
+                                                                                @elseif(in_array($item->status_verifikasi, ['rejected', 'ditolak']))
+                                                                                    Ditolak
+                                                                                @else
+                                                                                    Menunggu
+                                                                                @endif
+                                                                            </span>
+                                                                        </td>
+                                                                        <td class="px-6 py-4 text-sm font-medium">
+                                                                            <a href="{{ route('penelitian.show', $item->id) }}"
+                                                                                class="text-indigo-600 hover:text-indigo-900 mr-3">Lihat</a>
+
+                                                                            {{-- LOGIKA DIUBAH: Tombol Edit & Hapus HANYA muncul jika status BELUM
+                                                                            diverifikasi (pending/menunggu) --}}
+                                                                            {{-- Status 'verified', 'rejected', 'disetujui', 'ditolak' akan
+                                                                            menyembunyikan tombol --}}
+                                                                            @if (!in_array($item->status_verifikasi, ['verified', 'rejected', 'disetujui', 'ditolak']) && auth()->user()->canInputTriDharma() && $item->user_id === auth()->id())
+                                                                                <a href="{{ route('penelitian.edit', $item->id) }}"
+                                                                                    class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
+                                                                                <button type="button"
+                                                                                    onclick="document.getElementById('delete-form-{{ $item->id }}').submit()"
+                                                                                    class="text-red-600 hover:text-red-900">Hapus</button>
+                                                                                <form id="delete-form-{{ $item->id }}"
+                                                                                    action="{{ route('penelitian.destroy', $item->id) }}" method="POST"
+                                                                                    class="hidden">
+                                                                                    @csrf
+                                                                                    @method('DELETE')
+                                                                                </form>
+                                                                            @endif
+                                                                        </td>
+                                                                    </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="8" class="px-6 py-4 text-center text-gray-500">
+                                                Tidak ada data penelitian.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </form>
                     </div>
+
+                    @if(auth()->user()->isAdmin())
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function () {
+                                const selectAll = document.getElementById('select-all');
+                                const items = document.querySelectorAll('.item-checkbox');
+
+                                selectAll.addEventListener('change', function () {
+                                    items.forEach(item => {
+                                        item.checked = selectAll.checked;
+                                    });
+                                });
+
+                                // Hook up the separate form button to submit the table form
+                                const bulkDeleteForm = document.getElementById('bulk-delete-form');
+                                if (bulkDeleteForm) {
+                                    bulkDeleteForm.addEventListener('submit', function (e) {
+                                        e.preventDefault();
+                                        if (confirm('Apakah Anda yakin ingin menghapus data yang dipilih?')) {
+                                            document.getElementById('table-bulk-form').submit();
+                                        }
+                                    });
+                                }
+                            });
+                        </script>
+                    @endif
 
                     <!-- Pagination -->
                     <div class="mt-4">

@@ -6,6 +6,9 @@ use App\Models\Penelitian;
 use App\Models\Publikasi;
 use App\Models\PengabdianMasyarakat;
 use App\Models\User;
+use App\Exports\TriDharmaExport;
+use App\Exports\MultiSheetTriDharmaExport;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -137,126 +140,187 @@ class ReportController extends Controller
             $semester = 'genap';
         }
 
-        // For now, return a simple CSV
-        // TODO: Implement proper Excel export using Laravel Excel package
+        $filename = "laporan_{$jenis}_" . ($tahun ?? 'semua_tahun') . ".xlsx";
 
-        $filename = "laporan_{$jenis}_" . ($tahun ?? 'semua_tahun') . ".csv";
-        
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
-        ];
+        // Create multi-sheet export for 'all', single sheet for specific type
+        if ($jenis === 'all') {
+            $export = new MultiSheetTriDharmaExport();
 
-        $callback = function() use ($tahun, $semester, $jenis, $user_id) {
-            $file = fopen('php://output', 'w');
+            // Add Penelitian sheet
+            $penelitianData = $this->getPenelitianExportData($tahun, $semester, $user_id);
+            $export->addSheet(new TriDharmaExport(
+                $penelitianData,
+                'penelitian',
+                ['No', 'Judul Penelitian', 'Nama Dosen', 'NIDN', 'Jenis', 'Tahun', 'Semester', 'Sumber Dana', 'Anggaran', 'Tanggal Mulai', 'Tanggal Selesai', 'Status', 'Status Verifikasi']
+            ));
 
-            if ($jenis === 'all' || $jenis === 'penelitian') {
-                // Penelitian header
-                fputcsv($file, ['LAPORAN PENELITIAN']);
-                fputcsv($file, ['Judul', 'Dosen', 'Jenis', 'Tahun Akademik', 'Semester', 'Dana', 'Status', 'Verifikasi']);
+            // Add Publikasi sheet
+            $publikasiData = $this->getPublikasiExportData($tahun, $semester, $user_id);
+            $export->addSheet(new TriDharmaExport(
+                $publikasiData,
+                'publikasi',
+                ['No', 'Judul Publikasi', 'Nama Dosen', 'NIDN', 'Jenis', 'Nama Jurnal/Penerbit', 'Penerbit', 'ISSN/ISBN', 'Volume', 'Nomor', 'Halaman', 'Tanggal Terbit', 'Indexing', 'Quartile', 'DOI', 'URL', 'Tahun', 'Semester', 'Status Verifikasi']
+            ));
 
-                // Handle tahun akademik kosong (semua periode)
-                $query = Penelitian::with('user');
-                if ($tahun) {
-                    $query->where('tahun', 'like', $tahun . '%');
-                } else {
-                    $query->rentangTahun(2022); // Semua tahun dari 2022
-                }
-                
-                if ($semester) $query->where('semester', $semester);
-                if ($user_id) $query->where('user_id', $user_id);
+            // Add Pengmas sheet
+            $pengmasData = $this->getPengmasExportData($tahun, $semester, $user_id);
+            $export->addSheet(new TriDharmaExport(
+                $pengmasData,
+                'pengmas',
+                ['No', 'Judul PKM', 'Nama Dosen', 'NIDN', 'Jenis Hibah', 'Skema', 'Mitra', 'Jumlah Peserta', 'Tahun', 'Semester', 'Sumber Dana', 'Anggaran', 'Tanggal Mulai', 'Tanggal Selesai', 'Tim Abdimas', 'Anggota Mahasiswa', 'SDG', 'Status', 'Status Verifikasi']
+            ));
 
-                foreach ($query->get() as $item) {
-                    fputcsv($file, [
-                        $item->judul_penelitian,
-                        $item->user ? $item->user->name : 'N/A',
-                        $item->jenis,
-                        $item->tahun,
-                        $item->semester,
-                        $item->anggaran,
-                        $item->status,
-                        $item->status_verifikasi,
-                    ]);
-                }
-                fputcsv($file, []); // Empty line
-            }
+            return Excel::download($export, $filename);
+        }
 
-            if ($jenis === 'all' || $jenis === 'publikasi') {
-                // Publikasi header
-                fputcsv($file, ['LAPORAN PUBLIKASI']);
-                fputcsv($file, ['Judul', 'Penulis', 'Jenis', 'Penerbit', 'Tanggal Terbit', 'Indexing', 'Quartile', 'Verifikasi']);
+        // Single type export
+        if ($jenis === 'penelitian') {
+            $data = $this->getPenelitianExportData($tahun, $semester, $user_id);
+            $headings = ['No', 'Judul Penelitian', 'Nama Dosen', 'NIDN', 'Jenis', 'Tahun', 'Semester', 'Sumber Dana', 'Anggaran', 'Tanggal Mulai', 'Tanggal Selesai', 'Status', 'Status Verifikasi'];
+            return Excel::download(new TriDharmaExport($data, 'penelitian', $headings), $filename);
+        }
 
-                // Handle tahun akademik kosong (semua periode)
-                $query = Publikasi::with('user');
-                if ($tahun) {
-                    $query->where('tahun', 'like', $tahun . '%');
-                } else {
-                    $query->rentangTahun(2022); // Semua tahun dari 2022
-                }
-                
-                if ($user_id) $query->where('user_id', $user_id);
+        if ($jenis === 'publikasi') {
+            $data = $this->getPublikasiExportData($tahun, $semester, $user_id);
+            $headings = ['No', 'Judul Publikasi', 'Nama Dosen', 'NIDN', 'Jenis', 'Nama Jurnal/Penerbit', 'Penerbit', 'ISSN/ISBN', 'Volume', 'Nomor', 'Halaman', 'Tanggal Terbit', 'Indexing', 'Quartile', 'DOI', 'URL', 'Tahun', 'Semester', 'Status Verifikasi'];
+            return Excel::download(new TriDharmaExport($data, 'publikasi', $headings), $filename);
+        }
 
-                foreach ($query->get() as $item) {
-                    fputcsv($file, [
-                        $item->judul_publikasi,
-                        implode(', ', $this->parseArrayField($item->getAttributes()['penulis'] ?? $item->penulis)),
-                        $item->jenis,
-                        $item->penerbit,
-                        $item->tanggal_terbit,
-                        $item->indexing ?? '-',
-                        $item->quartile ?? '-',
-                        $item->status_verifikasi,
-                    ]);
-                }
-                fputcsv($file, []); // Empty line
-            }
+        if ($jenis === 'pengmas') {
+            $data = $this->getPengmasExportData($tahun, $semester, $user_id);
+            $headings = ['No', 'Judul PKM', 'Nama Dosen', 'NIDN', 'Jenis Hibah', 'Skema', 'Mitra', 'Jumlah Peserta', 'Tahun', 'Semester', 'Sumber Dana', 'Anggaran', 'Tanggal Mulai', 'Tanggal Selesai', 'Tim Abdimas', 'Anggota Mahasiswa', 'SDG', 'Status', 'Status Verifikasi'];
+            return Excel::download(new TriDharmaExport($data, 'pengmas', $headings), $filename);
+        }
 
-            if ($jenis === 'all' || $jenis === 'pengmas') {
-                // Pengmas header
-                fputcsv($file, ['LAPORAN PENGABDIAN MASYARAKAT']);
-                fputcsv($file, ['Judul', 'Dosen', 'Skema', 'Mitra', 'Peserta', 'Tahun', 'Semester', 'Jenis Hibah', 'Tim Abdimas', 'Dosen NIP', 'Anggota Mahasiswa', 'Mahasiswa NIM', 'Sumber Dana', 'Tipe Pendanaan', 'Anggaran', 'SDG', 'Kesesuaian Roadmap KK', 'Status Kegiatan', 'Status', 'Verifikasi']);
+        return back()->with('error', 'Jenis laporan tidak valid.');
+    }
 
-                // Handle tahun akademik kosong (semua periode)
-                $query = PengabdianMasyarakat::with('user');
-                if ($tahun) {
-                    $query->where('tahun', 'like', $tahun . '%');
-                } else {
-                    $query->rentangTahun(2022); // Semua tahun dari 2022
-                }
-                
-                if ($semester) $query->where('semester', $semester);
-                if ($user_id) $query->where('user_id', $user_id);
+    /**
+     * Get Penelitian data for export
+     */
+    private function getPenelitianExportData($tahun, $semester, $user_id)
+    {
+        $query = Penelitian::with('user');
+        if ($tahun) {
+            $query->where('tahun', 'like', $tahun . '%');
+        } else {
+            $query->rentangTahun(2022);
+        }
+        if ($semester) $query->where('semester', $semester);
+        if ($user_id) $query->where('user_id', $user_id);
 
-                foreach ($query->get() as $item) {
-                    fputcsv($file, [
-                        $item->judul_pkm,
-                        $item->user ? $item->user->name : 'N/A',
-                        $item->skema,
-                        $item->mitra,
-                        $item->jumlah_peserta,
-                        $item->tahun,
-                        $item->semester,
-                        $item->jenis_hibah,
-                        implode(', ', $this->parseArrayField($item->getAttributes()['tim_abdimas'] ?? $item->tim_abdimas)),
-                        implode(', ', $this->parseArrayField($item->getAttributes()['dosen_nip'] ?? $item->dosen_nip)),
-                        implode(', ', $this->parseArrayField($item->getAttributes()['anggota_mahasiswa'] ?? $item->anggota_mahasiswa)),
-                        implode(', ', $this->parseArrayField($item->getAttributes()['mahasiswa_nim'] ?? $item->mahasiswa_nim)),
-                        $item->sumber_dana,
-                        $item->tipe_pendanaan,
-                        $item->anggaran,
-                        $item->sdg,
-                        $item->kesesuaian_roadmap_kk,
-                        $item->status_kegiatan,
-                        $item->status,
-                        $item->status_verifikasi,
-                    ]);
-                }
-            }
+        $items = $query->orderBy('created_at', 'desc')->get();
+        $data = collect();
+        $no = 1;
 
-            fclose($file);
-        };
+        foreach ($items as $item) {
+            $data->push([
+                $no++,
+                $item->judul_penelitian,
+                $item->user ? $item->user->name : '-',
+                $item->user ? $item->user->nidn : '-',
+                $item->jenis,
+                $item->tahun,
+                $item->semester,
+                $item->sumber_dana ?? '-',
+                $item->anggaran ? number_format($item->anggaran, 0, ',', '.') : '-',
+                $item->tanggal_mulai ?? '-',
+                $item->tanggal_selesai ?? '-',
+                $item->status,
+                $item->status_verifikasi,
+            ]);
+        }
 
-        return response()->stream($callback, 200, $headers);
+        return $data;
+    }
+
+    /**
+     * Get Publikasi data for export
+     */
+    private function getPublikasiExportData($tahun, $semester, $user_id)
+    {
+        $query = Publikasi::with('user');
+        if ($tahun) {
+            $query->where('tahun', 'like', $tahun . '%');
+        } else {
+            $query->rentangTahun(2022);
+        }
+        if ($user_id) $query->where('user_id', $user_id);
+
+        $items = $query->orderBy('created_at', 'desc')->get();
+        $data = collect();
+        $no = 1;
+
+        foreach ($items as $item) {
+            $data->push([
+                $no++,
+                $item->judul_publikasi,
+                $item->user ? $item->user->name : '-',
+                $item->user ? $item->user->nidn : '-',
+                $item->jenis,
+                $item->nama_publikasi ?? '-',
+                $item->penerbit ?? '-',
+                $item->issn_isbn ?? '-',
+                $item->volume ?? '-',
+                $item->nomor ?? '-',
+                $item->halaman ?? '-',
+                $item->tanggal_terbit ?? '-',
+                $item->indexing ?? '-',
+                $item->quartile ?? '-',
+                $item->doi ?? '-',
+                $item->url ?? '-',
+                $item->tahun,
+                $item->semester,
+                $item->status_verifikasi,
+            ]);
+        }
+
+        return $data;
+    }
+
+    /**
+     * Get Pengmas data for export
+     */
+    private function getPengmasExportData($tahun, $semester, $user_id)
+    {
+        $query = PengabdianMasyarakat::with('user');
+        if ($tahun) {
+            $query->where('tahun', 'like', $tahun . '%');
+        } else {
+            $query->rentangTahun(2022);
+        }
+        if ($semester) $query->where('semester', $semester);
+        if ($user_id) $query->where('user_id', $user_id);
+
+        $items = $query->orderBy('created_at', 'desc')->get();
+        $data = collect();
+        $no = 1;
+
+        foreach ($items as $item) {
+            $data->push([
+                $no++,
+                $item->judul_pkm,
+                $item->user ? $item->user->name : '-',
+                $item->user ? $item->user->nidn : '-',
+                $item->jenis_hibah ?? '-',
+                $item->skema ?? '-',
+                $item->mitra ?? '-',
+                $item->jumlah_peserta ?? '-',
+                $item->tahun,
+                $item->semester,
+                $item->sumber_dana ?? '-',
+                $item->anggaran ? number_format($item->anggaran, 0, ',', '.') : '-',
+                $item->tanggal_mulai ?? '-',
+                $item->tanggal_selesai ?? '-',
+                implode(', ', $this->parseArrayField($item->getAttributes()['tim_abdimas'] ?? $item->tim_abdimas)),
+                implode(', ', $this->parseArrayField($item->getAttributes()['anggota_mahasiswa'] ?? $item->anggota_mahasiswa)),
+                $item->sdg ?? '-',
+                $item->status,
+                $item->status_verifikasi,
+            ]);
+        }
+
+        return $data;
     }
 
     /**
